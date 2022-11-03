@@ -1,0 +1,312 @@
+{ "@context": "https://w3id.org/ro/crate/1.1/context", 
+  "@graph": [
+    {
+        "@type": "CreativeWork",
+        "@id": "ro-crate-metadata.json",
+        "conformsTo": {"@id": "https://w3id.org/ro/crate/1.1"},
+        "about": {"@id": "./"}
+    },
+    {
+        "@id": "./", 
+        "@type": "Dataset",
+        "identifier": "https://doi.org/10.1093/bioinformatics/btp163",              
+        "name" : "MetaGoFlow Results for Sample EMOBON00001",                       
+        "description" : "This is the RO-Crate for the MetaGOflow analysis results of EMO BON sample XXXX",
+        "datePublished": "2022-11-02",                                              
+        "license": {"@id": "Creative Commons (CC-BY 4.0)"},                      
+        "publisher": {"@id": "https://ror.org/0038zss60"},                          
+        "hasPart": [
+                        {"@id": "wgs-SRR1620013.yml"},          
+                        {"@id": "https://fake.build/net-http.html"},       
+                        {"@id": "https://fake.build/net-http.html"},       
+                        {"@id": "https://fake.build/net-http.html"},       
+                        {"@id": "https://fake.build/net-http.html"},       
+                        {"@id": "https://fake.build/net-http.html"},       
+                        {"@id": "results/"}                      
+                    ] 
+    },
+        {
+            "@id": "https://ror.org/0038zss60",
+            "@type": "Organization",
+            "name": "European Marine Biological Resource Centre",
+            "url": "https://ror.org/0038zss60",
+            "contactPoint": {"@id": "mailto:help@embrc.org"}
+        },
+            {
+                "@id": "mailto:help@embrc.org",
+                "@type": "ContactPoint",
+                "contactType": "Help Desk",
+                "email": "help@embrc.org",
+                "identifier": "help@embrc.org",
+                "url": "https://www.embrc.eu/about-us/contact-us"
+            },
+        {
+            "@id": "https://creativecommons.org/licenses/by/4.0",
+            "@type": "CreativeWork",
+            "identifier": "https://creativecommons.org/licenses/by/4.0",
+            "name": "Creative Commons (CC-BY 4.0)"
+        },
+    {
+        "@id": "wgs-SRR1620013.yml",
+        "@type": "File",                 
+        "name": "MetaGOflow YAML configuration file",
+        "description": "YAML configuration file for execution of MetaGOflow workflow.",
+        "encodingFormat": "text/plain"
+    },    
+    {
+        "@id": "https://fake.build/net-http.html", 
+        "@type": "File",
+        "name": "Raw sequence data for sample EMOBON00001 (forward reads)",
+        "description": "Raw sequence data and laboratory sequence generation metadata",
+        "encodingFormat": "text/plain"
+    },
+    {
+        "@id": "https://fake.build/net-http.html", 
+        "@type": "File",
+        "name": "Raw sequence data for sample EMOBON00001 (reverse reads)",
+        "description": "Raw sequence data and laboratory sequence generation metadata",
+        "encodingFormat": "text/plain"
+    },
+    {
+        "@id": "https://fake.build/net-http.html",
+        "@type": "File",
+        "name": "Sample Metadata RO-Crate",
+        "description": "Sample metadata",
+        "encodingFormat": "application/zip"
+    },
+    {
+        "@id": "https://fake.build/net-http.html", 
+        "@type": "File",
+        "name": "MetaGOflow-Sequence-Data-RO-Crate",
+        "description": "Sequence Data from MetaGOflow execution. Includes Quality-Controlled read sequences, and assembled contigs.",
+        "encodingFormat": "application/zip"
+    },
+    {
+        "@id": "https://fake.build/net-http.html", 
+        "@type": "File",
+        "name": "MetaGOflow-Workflow-Version-RO-Crate",
+        "description": "Metadata for the version of the MetaGOflow workflow used to generate the data",
+        "encodingFormat": "application/zip"
+    },
+    {
+        "@id": "results/",
+        "@type": "Dataset",
+        "name": "MetaGOflow results for the sample EMOBON00001",
+        "description": "Results from the execution of MetaGOflow.",
+        "hasPart": [
+            {"id@": "functional_annotation/"},
+            {"id@": "sequence-categorisation/"},
+            {"id@": "taxonomic_summary/"},
+            {"id@": "fastp.html"},
+            {"id@": "qc_summary"},
+            {"id@": "RNA-counts"}
+        ]
+    },
+    {
+        "@id": "functional_annotation/",
+        "@type": "Dataset",
+        "name": "Functional Annotation Results",
+        "description": "Functional annotation of reads",
+        "hasPart": [
+            {"id@": "stats/"},
+            {"id@": "wgs-paired-SRR1620013.merged_CDS.I5.tsv.gz"},
+            {"id@": "wgs-paired-SRR1620013.merged.hmm.tsv.gz"},
+            {"id@": "wgs-paired-SRR1620013.merged.summary.go"},
+            {"id@": "wgs-paired-SRR1620013.merged.summary.go_slim"},
+            {"id@": "wgs-paired-SRR1620013.merged.summary.ips"},
+            {"id@": "wgs-paired-SRR1620013.merged.summary.ko"},
+            {"id@": "wgs-paired-SRR1620013.merged.summary.pfam"}
+        ]
+    },
+        {
+            "@id": "stats/",
+            "@type": "Dataset",
+            "name": "Summary statistic for functional annotation",
+            "hasPart": [
+                {"id@": "go.stats"},
+                {"id@": "interproscan.stats"},
+                {"id@": "ko.stats"},
+                {"id@": "orf.stats"},
+                {"id@": "pfam.stats"}
+            ]
+        },
+                {
+                    "@id": "go.stats",
+                    "@type": "File",
+                    "name": "Geno Ontology summary statistics",
+                    "encodingFormat": "text/plain"
+                },
+                {
+                    "@id": "interproscan.stats",
+                    "@type": "File",
+                    "name": "InterProScan summary statistics",
+                    "encodingFormat": "text/plain"
+                },
+                {
+                    "@id": "ko.stats",
+                    "@type": "File",
+                    "name": "Kegg Ontology summary statistics",
+                    "encodingFormat": "text/plain"
+                },
+                {
+                    "@id": "orf.stats",
+                    "@type": "File",
+                    "name": "ORF summary statistics",
+                    "encodingFormat": "text/plain"
+                },
+                {
+                    "@id": "pfam.stats",
+                    "@type": "File",
+                    "name": "Pfam summary statistcs",
+                    "encodingFormat": "text/plain"
+                },
+            {
+                "@id": "wgs-paired-SRR1620013.merged_CDS.I5.tsv.gz",
+                "@type": "File",
+                "encodingFormat": "application/zip"
+            },
+            {
+                "@id": "wgs-paired-SRR1620013.merged.hmm.tsv.gz",
+                "@type": "File",
+                "encodingFormat": "application/zip"
+            },
+            {
+                "@id": "wgs-paired-SRR1620013.merged.summary.go",
+                "@type": "File",
+                "encodingFormat": "text/plain"
+            },
+            {
+                "@id": "wgs-paired-SRR1620013.merged.summary.go_slim",
+                "@type": "File",
+                "encodingFormat": "text/plain"
+            },
+            {
+                "@id": "wgs-paired-SRR1620013.merged.summary.ips",
+                "@type": "File",
+                "encodingFormat": "text/plain"
+            },
+            {
+                "@id": "wgs-paired-SRR1620013.merged.summary.ko",
+                "@type": "File",
+                "encodingFormat": "text/plain"
+            },
+            {
+                "@id": "wgs-paired-SRR1620013.merged.summary.pfam",
+                "@type": "File",
+                "encodingFormat": "text/plain"
+            },
+    {
+        "@id": "sequence-categorisation/",
+        "@type": "Dataset",
+        "name": "RNA sequence identification",
+        "description": "LSU, SSU, and transfer RNA sequences identified in the sample.",
+        "hasPart": [
+            {"@id": "LSU_rRNA_bacteria.RF02541.fa.gz"},
+            {"@id": "SSU_rRNA_bacteria.RF00177.fa.gz"},
+            {"@id": "tRNA.RF00005.fasta.gz"}
+        ]
+    },
+            {
+                "@id": "LSU_rRNA_bacteria.RF02541.fa.gz",
+                "@type": "File",
+                "name": "LSU rRNA sequences in FASTA format",
+                "encodingFormat": "application/zip"
+            },
+            {
+                "@id": "SSU_rRNA_bacteria.RF02541.fa.gz",
+                "@type": "File",
+                "name": "SSU rRNA sequences in FASTA format",
+                "encodingFormat": "application/zip"
+            },
+            {
+                "@id": "tRNA.RF00005.fasta.gz",
+                "@type": "File",
+                "name": "Transfer rRNA sequences in FASTA format",
+                "encodingFormat": "application/zip"
+            },
+    {
+        "@id": "taxonomic_summary/",
+        "@type": "Dataset",
+        "name": "Taxonomic summary",
+        "description": "Summary of taxonomic identification results",
+        "hasPart": [
+            {"@id": "LSU/"},
+            {"@id": "SSU/"}
+        ]
+    },
+            {
+                "@id": "LSU/",
+                "@type": "Dataset",
+                "name": "Summary of LSU taxonomic indentification results",
+                "hasPart": [
+                            {"@id": "LSU-Krona"},
+                            {"@id": "wgs-paired-SRR1620013.merged_LSU.fasta.mseq.gz"},
+                            {"@id": "wgs-paired-SRR1620013.merged_LSU.fasta.mseq_json.biom"}
+                            ]
+            },
+                {
+                    "@id": "LSU_Krona",
+                    "@type": "File",
+                    "name": "Krona summary of LSU taxonomic inventory",
+                    "encodingFormat": "application/html"
+                },
+                {
+                    "@id": "wgs-paired-SRR1620013.merged_LSU.fasta.mseq.gz",
+                    "@type": "File",
+                    "name": "LSU sequences used for indentification",
+                    "encodingFormat": "application/zip"
+                },
+                {
+                    "@id": "wgs-paired-SRR1620013.merged_LSU.fasta.mseq_json.biom",
+                    "@type": "File",
+                    "name": "BIOM formatted taxon counts for LSU sequences",
+                    "encodingFormat": "application/json-ld"
+                },
+            {
+                "@id": "SSU/",
+                "@type": "Dataset",
+                "name": "Summary of SSU taxonomic indentification results",
+                "hasPart": [
+                            {"@id": "SSU-Krona"},
+                            {"@id": "wgs-paired-SRR1620013.merged_SSU.fasta.mseq.gz"},
+                            {"@id": "wgs-paired-SRR1620013.merged_SSU.fasta.mseq_json.biom"}
+                            ]
+            },
+                {
+                    "@id": "SSU_Krona",
+                    "@type": "File",
+                    "name": "Krona summary of SSU taxonomic inventory",
+                    "encodingFormat": "application/html"
+                },
+                {
+                    "@id": "wgs-paired-SRR1620013.merged_SSU.fasta.mseq.gz",
+                    "@type": "File",
+                    "name": "LSU sequences used for indentification",
+                    "encodingFormat": "application/zip"
+                },
+                {
+                    "@id": "wgs-paired-SRR1620013.merged_SSU.fasta.mseq_json.biom",
+                    "@type": "File",
+                    "name": "BIOM formatted taxon counts for SSU sequences",
+                    "encodingFormat": "application/json-ld"
+                },
+    {
+        "@id": "fastp.html",
+        "@type": "File",
+        "name": "FASTP summary analysis of reads in HTML format",
+        "encodingFormat": "application/html"
+    },
+    {
+        "@id": "qc_summary",
+        "@type": "File",
+        "name": "Summary of quality control of data.",
+        "encodingFormat": "text/plain"
+    },
+    {
+        "@id": "RNA-counts",
+        "@type": "File",
+        "name": "Numbers of RNA's counted",
+        "encodingFormat": "text/plain"
+    }
+]
+}
