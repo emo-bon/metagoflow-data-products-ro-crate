@@ -21,8 +21,11 @@
                         {"@id": "https://fake.build/net-http.html"},       
                         {"@id": "https://fake.build/net-http.html"},       
                         {"@id": "https://fake.build/net-http.html"},       
-                        {"@id": "https://fake.build/net-http.html"},       
-                        {"@id": "results/"}                      
+                        {"@id": "https://fake.build/net-http.html"},            
+                        {"id@": "functional_annotation/"},
+                        {"id@": "sequence-categorisation/"},
+                        {"id@": "taxonomic_summary/"},
+                        {"id@": "RNA-counts"}               
                     ] 
     },
         {
@@ -77,30 +80,16 @@
     {
         "@id": "https://fake.build/net-http.html", 
         "@type": "File",
-        "name": "MetaGOflow-Sequence-Data-RO-Crate",
+        "name": "MetaGOflowSequence Data RO-Crate",
         "description": "Sequence Data from MetaGOflow execution. Includes Quality-Controlled read sequences, and assembled contigs.",
         "encodingFormat": "application/zip"
     },
     {
         "@id": "https://fake.build/net-http.html", 
         "@type": "File",
-        "name": "MetaGOflow-Workflow-Version-RO-Crate",
+        "name": "MetaGOflow Workflow Version RO-Crate",
         "description": "Metadata for the version of the MetaGOflow workflow used to generate the data",
         "encodingFormat": "application/zip"
-    },
-    {
-        "@id": "results/",
-        "@type": "Dataset",
-        "name": "MetaGOflow results for the sample EMOBON00001",
-        "description": "Results from the execution of MetaGOflow.",
-        "hasPart": [
-            {"id@": "functional_annotation/"},
-            {"id@": "sequence-categorisation/"},
-            {"id@": "taxonomic_summary/"},
-            {"id@": "fastp.html"},
-            {"id@": "qc_summary"},
-            {"id@": "RNA-counts"}
-        ]
     },
     {
         "@id": "functional_annotation/",
@@ -276,7 +265,7 @@
                     "@id": "SSU_Krona",
                     "@type": "File",
                     "name": "Krona summary of SSU taxonomic inventory",
-                    "encodingFormat": "application/html"
+                    "encodingFormat": "text/html"
                 },
                 {
                     "@id": "wgs-paired-SRR1620013.merged_SSU.fasta.mseq.gz",
@@ -290,18 +279,6 @@
                     "name": "BIOM formatted taxon counts for SSU sequences",
                     "encodingFormat": "application/json-ld"
                 },
-    {
-        "@id": "fastp.html",
-        "@type": "File",
-        "name": "FASTP summary analysis of reads in HTML format",
-        "encodingFormat": "application/html"
-    },
-    {
-        "@id": "qc_summary",
-        "@type": "File",
-        "name": "Summary of quality control of data.",
-        "encodingFormat": "text/plain"
-    },
     {
         "@id": "RNA-counts",
         "@type": "File",

@@ -60,47 +60,4 @@ The current RO-Crate does not include these data to keep it light. However, some
 of this provenace may go in the
 [MetaGOflow-Sequence-Data-RO-Crate](https://github.com/emo-bon/MetaGOflow-Sequence-Data-RO-Crate)
 
-The example RO-Crate Metadata File Descriptor ([example-ro-crate-metadata.json](./example-ro-crate-metadata.json)) generates the
- [EMOBON00001-MetaGOflow-Data-Products.tar.bz](EMOBON00001-MetaGOflow-Data-Products.tar.bz) RO-Crate and has the following manifest:
-
-```
-[EMOBON00001-MetaGOflow-Data-Products]$ tree
-.
-├── results
-│   ├── fastp.html
-│   ├── functional-annotation
-│   │   ├── stats
-│   │   │   ├── go.stats
-│   │   │   ├── interproscan.stats
-│   │   │   ├── ko.stats
-│   │   │   ├── orf.stats
-│   │   │   └── pfam.stats
-│   │   ├── wgs-paired-SRR1620013.merged_CDS.I5.tsv.gz
-│   │   ├── wgs-paired-SRR1620013.merged.hmm.tsv.gz
-│   │   ├── wgs-paired-SRR1620013.merged.summary.go
-│   │   ├── wgs-paired-SRR1620013.merged.summary.go_slim
-│   │   ├── wgs-paired-SRR1620013.merged.summary.ips
-│   │   ├── wgs-paired-SRR1620013.merged.summary.ko
-│   │   └── wgs-paired-SRR1620013.merged.summary.pfam
-│   ├── qc_summary
-│   ├── RNA-counts
-│   ├── sequence-categorisation
-│   │   ├── LSU_rRNA_bacteria.RF02541.fa.gz
-│   │   ├── SSU_rRNA_bacteria.RF00177.fa.gz
-│   │   └── tRNA.RF00005.fasta
-│   └── taxonomy-summary
-│       ├── LSU
-│       │   ├── krona.html
-│       │   ├── wgs-paired-SRR1620013.merged_LSU.fasta.mseq.gz
-│       │   └── wgs-paired-SRR1620013.merged_LSU.fasta.mseq_json.biom
-│       └── SSU
-│           ├── krona.html
-│           ├── wgs-paired-SRR1620013.merged_SSU.fasta.mseq.gz
-│           └── wgs-paired-SRR1620013.merged_SSU.fasta.mseq_json.biom
-├── ro-crate-metadata.json
-└── wgs-SRR1620013.yml
-
-7 directories, 26 files
-```
-
 The [result.json](./result.json) is the validation result using the ["rocrateValidator"](https://github.com/ResearchObject/ro-crate-validator-py) library.
