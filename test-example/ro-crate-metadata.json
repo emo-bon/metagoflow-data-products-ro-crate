@@ -355,8 +355,10 @@
                 "hasPart": [
                             {"@id": "krona.html"},
                             {"@id": "DBB.merged_LSU.fasta.mseq.gz"},
+                            {"@id": "DBB.merged_LSU.fasta.mseq_hdf5.biom"},
                             {"@id": "DBB.merged_LSU.fasta.mseq_json.biom"},
-                            {"@id": "DBB.merged_LSU.fasta.mseq.tsv"}
+                            {"@id": "DBB.merged_LSU.fasta.mseq.tsv"},
+                            {"@id": "DBB.merged_LSU.fasta.mseq.txt"}
                             ]
             },
                 {
@@ -372,6 +374,12 @@
                     "encodingFormat": "application/zip"
                 },
                 {
+                    "@id": "DBB.merged_LSU.fasta.mseq_hdf5.biom",
+                    "@type": "File",
+                    "name": "BIOM formatted hdf5 taxon counts for LSU sequences",
+                    "encodingFormat": "application/json-ld"
+                },
+                {
                     "@id": "DBB.merged_LSU.fasta.mseq_json.biom",
                     "@type": "File",
                     "name": "BIOM formatted taxon counts for LSU sequences",
@@ -383,15 +391,23 @@
                     "name": "Tab-separated formatted taxon counts for LSU sequences",
                     "encodingFormat": "application/json-ld"
                 },
+                {
+                    "@id": "DBB.merged_LSU.fasta.mseq.txt",
+                    "@type": "File",
+                    "name": "Text-based taxon counts for LSU sequences",
+                    "encodingFormat": "application/json-ld"
+                },
             {
                 "@id": "SSU/",
                 "@type": "Dataset",
                 "name": "Summary of SSU taxonomic indentification results",
                 "hasPart": [
-                            {"@id": "SSU-Krona"},
+                            {"@id": "krona.html"},
                             {"@id": "DBB.merged_SSU.fasta.mseq.gz"},
+                            {"@id": "DBB.merged_SSU.fasta.mseq_hdf5.biom"},
                             {"@id": "DBB.merged_SSU.fasta.mseq_json.biom"},
-                            {"@id": "DBB.merged_SSU.fasta.mseq.tsv"}
+                            {"@id": "DBB.merged_SSU.fasta.mseq.tsv"},
+                            {"@id": "DBB.merged_SSU.fasta.mseq.txt"}
                             ]
             },
                 {
@@ -407,6 +423,12 @@
                     "encodingFormat": "application/zip"
                 },
                 {
+                    "@id": "DBB.merged_SSU.fasta.mseq_hdf5.biom",
+                    "@type": "File",
+                    "name": "BIOM formatted hdf5 taxon counts for SSU sequences",
+                    "encodingFormat": "application/json-ld"
+                },
+                {
                     "@id": "DBB.merged_SSU.fasta.mseq_json.biom",
                     "@type": "File",
                     "name": "BIOM formatted taxon counts for SSU sequences",
@@ -417,7 +439,12 @@
                     "@type": "File",
                     "name": "Tab-separated formatted taxon counts for SSU sequences",
                     "encodingFormat": "application/json-ld"
+                },
+                {
+                    "@id": "DBB.merged_SSU.fasta.mseq.txt",
+                    "@type": "File",
+                    "name": "Text-based formatted taxon counts for SSU sequences",
+                    "encodingFormat": "application/json-ld"
                 }
-
 ]
 }
