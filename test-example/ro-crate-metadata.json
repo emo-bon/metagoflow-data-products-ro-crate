@@ -16,9 +16,8 @@
         "license": {"@id": "Creative Commons (CC-BY 4.0)"},                      
         "publisher": {"@id": "https://ror.org/0038zss60"},                          
         "hasPart": [
-                        {"@id": "https://fake.build/net-http.html"},          
-                        {"@id": "https://fake.build/net-http.html"},       
-                        {"@id": "https://fake.build/net-http.html"},
+                        {"@id": "https://www.ebi.ac.uk/ena/browser/view/ERR479354"},
+                        {"@id": ""},          
                         {"@id": "run.yml"},  
                         {"@id": "functional_annotation/"},
                         {"@id": "sequence-categorisation/"},
@@ -49,23 +48,16 @@
             "name": "Creative Commons (CC-BY 4.0)"
         }, 
     {
-        "@id": "https://fake.build/net-http.html", 
+        "@id": "https://www.ebi.ac.uk/ena/browser/view/ERR479354", 
         "@type": "File",
-        "name": "ENA accession for run raw sequence data: forward and reverse reads",
-        "description": "Raw sequence data and laboratory sequence generation metadata",
+        "name": "FAKE: ENA accession for run raw sequence data: forward and reverse reads",
+        "description": "FAKE: Raw sequence data and laboratory sequence generation metadata",
         "encodingFormat": "text/plain"
     },
     {
-        "@id": "https://fake.build/net-http.html", 
+        "@id": "https://github.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/blob/main/test-example/Dummy-MetaGOFlow-Version-RO-Crate.gz", 
         "@type": "File",
-        "name": "MetaGOflowSequence Data RO-Crate ---- Includes the merged fasta",
-        "description": "Sequence Data from MetaGOflow execution. Includes Quality-Controlled read sequences, and assembled contigs.",
-        "encodingFormat": "application/zip"
-    },
-    {
-        "@id": "https://fake.build/net-http.html", 
-        "@type": "File",
-        "name": "MetaGOflow Workflow Version RO-Crate",
+        "name": "Dummy MetaGOflow Workflow Version RO-Crate",
         "description": "Metadata for the version of the MetaGOflow workflow used to generate the data",
         "encodingFormat": "application/zip"
     },
