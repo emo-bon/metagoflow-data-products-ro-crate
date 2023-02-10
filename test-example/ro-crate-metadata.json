@@ -50,7 +50,7 @@
     {
         "@id": "https://www.ebi.ac.uk/ena/browser/view/ERR479354", 
         "@type": "File",
-        "name": "FAKE: ENA accession for run raw sequence data: forward and reverse reads",
+        "name": "Dummy ENA accession for run raw sequence data: forward and reverse reads",
         "description": "FAKE: Raw sequence data and laboratory sequence generation metadata",
         "encodingFormat": "text/plain"
     },
