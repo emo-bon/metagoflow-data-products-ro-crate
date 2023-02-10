@@ -133,6 +133,7 @@ $ du -hs ./*
 ```
 
 Intermediate files:
+
     a) cleaned, trimmed, reads in uncompressed fasta file for each direction:
     DBB_AAADOSDA_1_1_HWLTKDRXY.UDI210_clean.fastq.trimmed.fasta
     DBB_AAADOSDA_1_2_HWLTKDRXY.UDI210_clean.fastq.trimmed.fasta
