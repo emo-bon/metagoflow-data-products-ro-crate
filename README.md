@@ -11,6 +11,17 @@ This work is licensed under a
 [cc-by-image]: https://i.creativecommons.org/l/by/4.0/88x31.png
 [cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
 
+# How to create RO-Crate:
+
+
+`$ create-ro-crate.py target_directory yaml_configuration`
+
+where:
+
+- *target_directory* is the toplevel output directory of MetaGOflow.
+        Note that the name of the directory cannot have a "." in it!
+- *yaml_configuration* is a YAML file of metadata specific to this ro-crate. [Template](https://github.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/ro-crate-config.yaml)
+
 # Test example of Data Products RO-Crate
 
 ```
