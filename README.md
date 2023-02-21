@@ -20,7 +20,7 @@ where:
 
 - *target_directory* is the toplevel output directory of MetaGOflow.
         Note that the name of the directory cannot have a "." in it!
-- *yaml_configuration* is a YAML file of metadata specific to this ro-crate. [Template](https://github.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/ro-crate-config.yaml)
+- *yaml_configuration* is a YAML file of metadata specific to this ro-crate. Template file is ro-crate-config.yaml
 
 # Test example of Data Products RO-Crate
 
