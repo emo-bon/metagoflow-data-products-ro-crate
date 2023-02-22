@@ -9,8 +9,8 @@
     {
         "@id": "./", 
         "@type": "Dataset",
-        "name" : "MetaGoFlow Results for ENA Run Accession Number {accession_number}",                       
-        "description" : "RO-Crate for the MetaGOflow analysis EMO BON ENA Accession {accession_number} data ",
+        "name" : "MetaGoFlow Results for ENA Run Accession Number {ena_accession_raw_data}",                       
+        "description" : "RO-Crate for the MetaGOflow analysis EMO BON ENA Accession {ena_accession_raw_data} data ",
         "datePublished": "{datePublished}",                                              
         "license": {"@id": "https://creativecommons.org/licenses/by/4.0/legalcode"},                      
         "publisher": {"@id": "https://ror.org/0038zss60"},                          
@@ -187,164 +187,8 @@
         "@id": "sequence-categorisation/",
         "@type": "Dataset",
         "name": "Sequence categorisation",
-        "description": "Identify specific loci in the sample.",
-        "hasPart": [
-
-            {"@id": "5_8S.fa.gz"},
-            {"@id": "alpha_tmRNA.RF01849.fasta.gz"},
-            {"@id": "Bacteria_large_SRP.RF01854.fasta.gz"},
-            {"@id": "Bacteria_small_SRP.RF00169.fasta.gz"},
-            {"@id": "cyano_tmRNA.RF01851.fasta.gz"},
-            {"@id": "LSU.fasta.gz"},
-            {"@id": "LSU_rRNA_archaea.RF02540.fa.gz"},
-            {"@id": "LSU_rRNA_bacteria.RF02541.fa.gz"},
-            {"@id": "LSU_rRNA_eukarya.RF02543.fa.gz"},
-            {"@id": "Metazoa_SRP.RF00017.fasta.gz"},
-            {"@id": "Protozoa_SRP.RF01856.fasta.gz"},
-            {"@id": "RNase_MRP.RF00030.fasta.gz"},
-            {"@id": "RNaseP_bact_a.RF00010.fasta.gz"},
-            {"@id": "RNaseP_nuc.RF00009.fasta.gz"},
-            {"@id": "SSU.fasta.gz"},
-            {"@id": "SSU_rRNA_archaea.RF01959.fa.gz"},
-            {"@id": "SSU_rRNA_bacteria.RF00177.fa.gz"},
-            {"@id": "SSU_rRNA_eukarya.RF01960.fa.gz"},
-            {"@id": "tmRNA.RF00023.fasta.gz"},
-            {"@id": "tRNA.RF00005.fasta.gz"},
-            {"@id": "tRNA-Sec.RF01852.fasta.gz"}
-        ]
+        "description": "Identify specific loci in the sample."
     },
-            {
-                "@id": "5_8S.fa.gz",
-                "@type": "File",
-                "name": "5.8S RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "alpha_tmRNA.RF01849.fasta.gz",
-                "@type": "File",
-                "name": "Alphaproteobacteria tmRNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "Bacteria_large_SRP.RF01854.fasta.gz",
-                "@type": "File",
-                "name": "Bacterial large signal recognition particle RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "Bacteria_small_SRP.RF00169.fasta.gz",
-                "@type": "File",
-                "name": "Bacterial small signal recognition particle RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "cyano_tmRNA.RF01851.fasta.gz",
-                "@type": "File",
-                "name": "Cyanobacterial tmRNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "LSU.fasta.gz",
-                "@type": "File",
-                "name": "Large ribosomal subunit RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "LSU_rRNA_archaea.RF02540.fa.gz",
-                "@type": "File",
-                "name": "Archaeal large ribosomal subunit RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "LSU_rRNA_bacteria.RF02541.fa.gz",
-                "@type": "File",
-                "name": "Bacterial large ribosomal subunit RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "LSU_rRNA_eukarya.RF02543.fa.gz",
-                "@type": "File",
-                "name": "Eukaryotic large ribosomal subunit RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "Metazoa_SRP.RF00017.fasta.gz",
-                "@type": "File",
-                "name": "Metazoan signal recognition particle RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "Protozoa_SRP.RF01856.fasta.gz",
-                "@type": "File",
-                "name": "Protozoan signal recognition particle RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "RNase_MRP.RF00030.fasta.gz",
-                "@type": "File",
-                "name": "RNAse for mitochondrial RNA processing sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "RNaseP_bact_a.RF00010.fasta.gz",
-                "@type": "File",
-                "name": "Bacterial RNASE P class A sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "RNaseP_nuc.RF00009.fasta.gz",
-                "@type": "File",
-                "name": "Nuclear RNASE P sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "SSU.fasta.gz",
-                "@type": "File",
-                "name": "Small subunit ribosomal RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "SSU_rRNA_archaea.RF01959.fa.gz",
-                "@type": "File",
-                "name": "Archeal small subunit ribosomal RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "SSU_rRNA_bacteria.RF00177.fa.gz",
-                "@type": "File",
-                "name": "Bacterial small subunit ribosomal RNA sequences in fasta format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "SSU_rRNA_eukarya.RF01960.fa.gz",
-                "@type": "File",
-                "name": "Eukaryotic small subunit ribosomal RNA sequences in FASTA format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "tRNA.RF00005.fasta.gz",
-                "@type": "File",
-                "name": "Transfer rRNA sequences in FASTA format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "tRNA.RF00005.fasta.gz",
-                "@type": "File",
-                "name": "Transfer rRNA sequences in FASTA format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "tmRNA.RF00023.fasta.gz",
-                "@type": "File",
-                "name": "Transfer messenger RNA sequences in FASTA format",
-                "encodingFormat": "application/zip"
-            },
-            {
-                "@id": "tRNA-Sec.RF01852.fasta.gz",
-                "@type": "File",
-                "name": "Selenocysteine transfer RNA sequences in FASTA format",
-                "encodingFormat": "application/zip"
-            },
     {
         "@id": "taxonomic-summary/",
         "@type": "Dataset",
