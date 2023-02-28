@@ -111,16 +111,18 @@ def joinInterProScanOutputFiles(target_directory, conf):
     An issue has been raised to fix the workflow, but for the
     time being we are going to cat them here
     """
-    print("Cat'ing the IPS chunk files...")
+    print("Cat'ing the IPS chunk files... (this could take some time...)")
     s = "{prefix}.merged_CDS.I5*tsv.gz".format(**conf)
-    r = glob.glob(os.path.join(target_directory, "results", "functional_annotation", s))
+    path = os.path.join(target_directory, "results", "functional-annotation", s)
+    #print("path -> %s" % path)
+    r = glob.glob(path)
     if len(r) < 2:
         print("Unable to locate 2 or more InterProScan files")
         print("They should be of the form: {prefix}.merged_CDS.I5_00{1-9}.tsv.gz")
         print("Bailing...")
         sys.exit()
     #cat the chunks together
-    outfile = os.join(target_directory, "results", "functional_annotation",
+    outfile = os.path.join(target_directory, "results", "functional-annotation",
             "{prefix}.merged_CDS.I5.tsv.gz".format(**conf))
     cmd = "cat %s > %s" % (" ".join(r), outfile)
     child = subprocess.Popen(str(cmd), stdout=subprocess.PIPE,
@@ -213,7 +215,7 @@ def main(target_directory, yaml_config):
 
     #format the filepaths:
     filepaths = [f.format(**conf) for f in mandatory_files]
-    print(f"{filepaths}")
+    #print(f"{filepaths}")
     #The fixed file paths
     for filepath in filepaths:
         path = os.path.join(target_directory, "results", filepath)
@@ -229,10 +231,10 @@ def main(target_directory, yaml_config):
             sys.exit()
 
     ### if the IPS files are split, join them
-    ipsf = os.path.join("functional_annotation",
+    ipsf = os.path.join("functional-annotation",
             "{prefix}.merged_CDS.I5.tsv.gz".format(**conf))
-    ipsf_path = os.join(target_directory, "results", ipsf)
-    if not os.path.exists(target_directory):
+    ipsf_path = os.path.join(target_directory, "results", ipsf)
+    if not os.path.exists(ipsf_path):
         ### deal with split DBB.merged_CDS.I5_001.tsv.gz files
         joinInterProScanOutputFiles(target_directory, conf)
     filepaths.append(ipsf)
@@ -246,7 +248,7 @@ def main(target_directory, yaml_config):
     req = requests.get(url)
     if req.status_code == requests.codes.ok:
         template = req.json()
-        print("%s" % template)
+        #print("%s" % template)
     else:
         print("Unable to download the metadata.json file from Github")
         print(f"Check {url}")
@@ -284,9 +286,9 @@ def main(target_directory, yaml_config):
     metadata_json_formatted = json.dumps(template, indent=4)
 
     #Debug to disk
-    with open("testing-ro-crate-metadata.json", "w") as outfile:
-        outfile.write(metadata_json_formatted)
-    sys.exit()
+    #with open("testing-ro-crate-metadata.json", "w") as outfile:
+    #    outfile.write(metadata_json_formatted)
+    #sys.exit()
 
     #OK, all's good, let's build the RO-Crate
     print("Copying data files..."),
@@ -300,7 +302,7 @@ def main(target_directory, yaml_config):
         output_dirs = ["functional-annotation/stats", "sequence-categorisation",
         "taxonomy-summary/LSU", "taxonomy-summary/SSU"]
         for d in output_dirs:
-            os.makedirs(d)
+            os.makedirs(os.path.join(tmpdirname, d))
         #Loop over results files and sequence categorisation files
         for fp in filepaths:
             source = os.path.join(target_directory, "results", fp)
@@ -313,7 +315,7 @@ def main(target_directory, yaml_config):
             outfile.write(metadata_json_formatted)
 
         #Zip it up:
-        print("Zipping data to ro-crate...")
+        print("Zipping data to ro-crate... (this could take some time...)")
         ro_crate_name = "%s-ro-crate" % os.path.split(target_directory)[1]
         shutil.make_archive(ro_crate_name, "zip", tmpdirname)
         print("done")
