@@ -182,7 +182,7 @@ def main(target_directory, yaml_config):
     #Check yaml parameters
     for param in yaml_parameters:
         if param == "datePublished":
-            if conf[param] is False:
+            if conf[param] is "False":
                 continue
             else:
                 if not isinstance(conf[param], str):
