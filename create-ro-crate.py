@@ -269,7 +269,7 @@ def main(target_directory, yaml_config):
     if "datePublished" in conf:
         template["@graph"][1]["datePublished"] = template["@graph"][1]["datePublished"].format(**conf)
     else:
-        template["@graph"][1]["datePublished"] = datetime.datetime.now().strftime('%Y/%m/%d')
+        template["@graph"][1]["datePublished"] = datetime.datetime.now().strftime('%Y-%m-%d')
 
     # deal with sequence_categorisation separately
     template, seq_cat_files  = sequence_categorisation_stanzas(target_directory, template)
