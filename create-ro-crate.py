@@ -49,6 +49,7 @@ import tempfile
 import shutil
 import glob
 import subprocess
+import logging as log
 
 #This is the workflow YAML file, the prefix is the "-n" parameter of the
 #"run_wf.sh" script:
@@ -111,15 +112,14 @@ def joinInterProScanOutputFiles(target_directory, conf):
     An issue has been raised to fix the workflow, but for the
     time being we are going to cat them here
     """
-    print("Cat'ing the IPS chunk files... (this could take some time...)")
+    log.info("Cat'ing the IPS chunk files... (this could take some time...)")
     s = "{prefix}.merged_CDS.I5*tsv.gz".format(**conf)
     path = os.path.join(target_directory, "results", "functional-annotation", s)
-    #print("path -> %s" % path)
     r = glob.glob(path)
     if len(r) < 2:
-        print("Unable to locate 2 or more InterProScan files")
-        print("They should be of the form: {prefix}.merged_CDS.I5_00{1-9}.tsv.gz")
-        print("Bailing...")
+        log.error("Unable to locate 2 or more InterProScan files")
+        log.error("They should be of the form: {prefix}.merged_CDS.I5_00{1-9}.tsv.gz")
+        log.error("Bailing...")
         sys.exit()
     #cat the chunks together
     outfile = os.path.join(target_directory, "results", "functional-annotation",
@@ -130,12 +130,12 @@ def joinInterProScanOutputFiles(target_directory, conf):
     stdoutdata, stderrdata = child.communicate()
     return_code = child.returncode
     if return_code != 0:
-        print("Error whilst trying to concatenate IPS files")
-        print("Stderr: %s " % stderrdata)
-        print("Files = %s" % r)
-        print("Command: %s" % cmd)
-        print("Return code: %s" % return_code)
-        print("Bailing...")
+        log.error("Error whilst trying to concatenate IPS files")
+        log.debug("Stderr: %s " % stderrdata)
+        log.debug("Files = %s" % r)
+        log.debug("Command: %s" % cmd)
+        log.debug("Return code: %s" % return_code)
+        log.error("Bailing...")
         sys.exit()
 
 def sequence_categorisation_stanzas(target_directory, template):
@@ -162,20 +162,27 @@ def sequence_categorisation_stanzas(target_directory, template):
         template["@graph"].insert(sq_index+1, d)
     return template, seq_cat_files
 
-def main(target_directory, yaml_config):
+def main(target_directory, yaml_config, debug):
+
+    #Logging
+    if debug:
+        log_level = log.DEBUG
+    else:
+        log_level = log.INFO
+    log.basicConfig(format='\t%(levelname)s: %(message)s', level=log_level)
 
     #Check the data directory name
     data_dir = os.path.split(target_directory)[1]
     if "." in data_dir:
-        print(f"The target data directory ({data_dir}) cannot have a '.' period in it!")
-        print("Change it to '-' and try again")
-        print("Bailing...")
+        log.error(f"The target data directory ({data_dir}) cannot have a '.' period in it!")
+        log.error("Change it to '-' and try again")
+        log.error("Bailing...")
         sys.exit()
 
     #Read the YAML configuration
     if not os.path.exists(yaml_config):
-        print(f"YAML configuration file does not exist at {yaml_config}")
-        print("Bailing...")
+        log.error(f"YAML configuration file does not exist at {yaml_config}")
+        log.error("Bailing...")
         sys.exit()
     with open(yaml_config, "r") as f:
         conf = yaml.safe_load(f)
@@ -186,7 +193,7 @@ def main(target_directory, yaml_config):
                 continue
             else:
                 if not isinstance(conf[param], str):
-                    print("'dataPublished' should either be a string or False. Bailing...")
+                    log.error("'dataPublished' should either be a string or False. Bailing...")
                     sys.exit()
         elif param == "missing_files":
             if not param in conf:
@@ -194,14 +201,14 @@ def main(target_directory, yaml_config):
             else:
                 for filename in conf[param]:
                     if not isinstance(filename, str):
-                        print(f"Parameter '{filename}' in 'missing_files' list in YAML file must be a string.")
-                        print("Bailing...")
+                        log.error(f"Parameter '{filename}' in 'missing_files' list in YAML file must be a string.")
+                        log.error("Bailing...")
                         sys.exit()
         else:
-            #print("%s" % conf[param])
+            log.debug("Config paramater: %s" % conf[param])
             if not conf[param] or not isinstance(conf[param], str):
-                print(f"Parameter '{param}' in YAML file must be a string.")
-                print("Bailing...")
+                log.error(f"Parameter '{param}' in YAML file must be a string.")
+                log.error("Bailing...")
                 sys.exit()
 
     #Check all files are present
@@ -210,24 +217,24 @@ def main(target_directory, yaml_config):
     filename = yaml_file.format(**conf)
     path = os.path.join(target_directory, filename)
     if not os.path.exists(path):
-        print(YAML_ERROR)
+        log.error(YAML_ERROR)
         sys.exit()
 
     #format the filepaths:
     filepaths = [f.format(**conf) for f in mandatory_files]
-    #print(f"{filepaths}")
     #The fixed file paths
     for filepath in filepaths:
+        log.debug(f"{filepath}")
         path = os.path.join(target_directory, "results", filepath)
         if not os.path.exists(path):
             if "missing_files" in conf:
                 if os.path.split(filepath)[1] in conf["missing_files"]:
                     #This file is known to be missing, ignoring
                     continue
-            print("Could not find the file '%s' at the following path: %s" %
+            log.error("Could not find the file '%s' at the following path: %s" %
                         (filepath, path))
-            print("Consider adding it to the 'missing_files' list in the YAML configuration.")
-            print("Bailing...")
+            log.error("Consider adding it to the 'missing_files' list in the YAML configuration.")
+            log.error("Bailing...")
             sys.exit()
 
     ### if the IPS files are split, join them
@@ -239,7 +246,7 @@ def main(target_directory, yaml_config):
         joinInterProScanOutputFiles(target_directory, conf)
     filepaths.append(ipsf)
 
-    print("Data look good...")
+    log.info("Data look good...")
 
     #Let's deal with the JSON metadata file
     # Grab the template from Github
@@ -248,11 +255,10 @@ def main(target_directory, yaml_config):
     req = requests.get(url)
     if req.status_code == requests.codes.ok:
         template = req.json()
-        #print("%s" % template)
     else:
-        print("Unable to download the metadata.json file from Github")
-        print(f"Check {url}")
-        print("Bailing...")
+        log.error("Unable to download the metadata.json file from Github")
+        log.error(f"Check {url}")
+        log.error("Bailing...")
         sys.exit()
 
     #Metadata template on disk
@@ -260,7 +266,7 @@ def main(target_directory, yaml_config):
     #with open(metadata_json_template, "r") as f:
     #   template = json.load(f)
 
-    print("Writing ro-crate-metadata.json...")
+    log.info("Writing ro-crate-metadata.json...")
     #Deal with the ./ dataset stanza separately
     #"accession_number"
     template["@graph"][1]["name"] = template["@graph"][1]["name"].format(**conf)
@@ -289,9 +295,10 @@ def main(target_directory, yaml_config):
     #with open("testing-ro-crate-metadata.json", "w") as outfile:
     #    outfile.write(metadata_json_formatted)
     #sys.exit()
+    log.debug("%s" % metadata_json_formatted)
 
     #OK, all's good, let's build the RO-Crate
-    print("Copying data files..."),
+    log.info("Copying data files...")
     with tempfile.TemporaryDirectory() as tmpdirname:
         #Deal with the YAML file
         yf = yaml_file.format(**conf)
@@ -306,8 +313,8 @@ def main(target_directory, yaml_config):
         #Loop over results files and sequence categorisation files
         for fp in filepaths:
             source = os.path.join(target_directory, "results", fp)
-            #print("source = %s" % source)
-            #print("dest = %s" % os.path.join(tmpdirname, fp))
+            log.debug("source = %s" % source)
+            log.debug("dest = %s" % os.path.join(tmpdirname, fp))
             shutil.copy(source, os.path.join(tmpdirname, fp))
 
         #Write the json metadata file:
@@ -315,10 +322,10 @@ def main(target_directory, yaml_config):
             outfile.write(metadata_json_formatted)
 
         #Zip it up:
-        print("Zipping data to ro-crate... (this could take some time...)")
+        log.info("Zipping data to ro-crate... (this could take some time...)")
         ro_crate_name = "%s-ro-crate" % os.path.split(target_directory)[1]
         shutil.make_archive(ro_crate_name, "zip", tmpdirname)
-        print("done")
+        log.info("done")
 
 if __name__ == "__main__":
 
@@ -333,6 +340,9 @@ if __name__ == "__main__":
     parser.add_argument("yaml_config",
                         help="Name of YAML config file for building RO-Crate"
                         )
+    parser.add_argument('-d', '--debug',
+                    action='store_true',
+                    help="DEBUG logging")
     args = parser.parse_args()
-    main(args.target_directory, args.yaml_config)
+    main(args.target_directory, args.yaml_config, args.debug)
 

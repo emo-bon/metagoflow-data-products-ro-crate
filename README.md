@@ -21,10 +21,10 @@ where:
 - *target_directory* is the toplevel output directory of MetaGOflow.
         Note that the name of the directory cannot have a "." in it!
 - *yaml_configuration* is a YAML file of metadata specific to this ro-crate. [Template](https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/main/ro-crate-config.yaml)
+- -d Provide debugging output (Default: False)
 
 NB. this script will automatically concatenate InterProScan files if they are chunked. It will also include all the sequence-categorisation/*.gz bins by dynamically writing the ro-crate-metadata.json file.
 
-TODO: add support for automatically generating the ro-crate HTML preview files; use the Python logging library.
 
 
 # Test example of Data Products RO-Crate
