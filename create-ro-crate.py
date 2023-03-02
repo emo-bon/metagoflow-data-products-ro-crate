@@ -108,7 +108,7 @@ def writeHTMLpreview(tmpdirname):
     """
     rochtml_path = shutil.which("rochtml")
     if not rochtml_path:
-       print("HTML preview file cannot be written due to missing executable (rochtml)")
+       log.info("HTML preview file cannot be written due to missing executable (rochtml)")
     else:
         cmd = "%s %s" % (rochtml_path, os.path.join(tmpdirname, "ro-crate-metadata.json"))
         child = subprocess.Popen(str(cmd), stdout=subprocess.PIPE,
@@ -116,12 +116,14 @@ def writeHTMLpreview(tmpdirname):
         stdoutdata, stderrdata = child.communicate()
         return_code = child.returncode
         if return_code != 0:
-            print("Error whilst trying write HTML file")
-            print("Stderr: %s " % stderrdata)
-            print("Command: %s" % cmd)
-            print("Return code: %s" % return_code)
-            print("Bailing...")
+            log.error("Error whilst trying write HTML file")
+            log.error("Stderr: %s " % stderrdata)
+            log.error("Command: %s" % cmd)
+            log.error("Return code: %s" % return_code)
+            log.error("Bailing...")
             sys.exit()
+        else:
+            log.info("Written HTML preview file")
 
 def joinInterProScanOutputFiles(target_directory, conf):
     """IPS outputs one, or many, files (sigh)
@@ -207,14 +209,25 @@ def main(target_directory, yaml_config, debug):
         sys.exit()
     with open(yaml_config, "r") as f:
         conf = yaml.safe_load(f)
-    #Check yaml parameters
+    #Check yaml parameters are formated correctly, but not necessarily sane
     for param in yaml_parameters:
+        log.debug("Config paramater: %s" % conf[param])
         if param == "datePublished":
-            if conf[param] is "False":
+            if conf[param] == "None":
+                #No specified date, delete from conf
+                #Its absence will trigger formatting
+                #with today's date
+                del conf[param]
                 continue
             else:
                 if not isinstance(conf[param], str):
-                    log.error("'dataPublished' should either be a string or False. Bailing...")
+                    log.error("'dataPublished' should either be a string or 'None'. Bailing...")
+                    sys.exit()
+                try:
+                    datetime.datetime.fromisoformat(conf[param])
+                except ValueError:
+                    log.error(f"'datePublished' must conform to ISO 8601: {param}")
+                    log.error("Bailing...")
                     sys.exit()
         elif param == "missing_files":
             if not param in conf:
@@ -226,7 +239,6 @@ def main(target_directory, yaml_config, debug):
                         log.error("Bailing...")
                         sys.exit()
         else:
-            log.debug("Config paramater: %s" % conf[param])
             if not conf[param] or not isinstance(conf[param], str):
                 log.error(f"Parameter '{param}' in YAML file must be a string.")
                 log.error("Bailing...")
@@ -245,14 +257,17 @@ def main(target_directory, yaml_config, debug):
     filepaths = [f.format(**conf) for f in mandatory_files]
     #The fixed file paths
     for filepath in filepaths:
-        log.debug(f"{filepath}")
+        log.debug(f"File path: {filepath}")
         path = os.path.join(target_directory, "results", filepath)
         if not os.path.exists(path):
             if "missing_files" in conf:
                 if os.path.split(filepath)[1] in conf["missing_files"]:
                     #This file is known to be missing, ignoring
+                    log.info("Ignoring specified missing file: %s" %
+                            os.path.split(filepath)[1])
+                    filepaths.remove(filepath)
                     continue
-            log.error("Could not find the file '%s' at the following path: %s" %
+            log.error("Could not find the mandatory file '%s' at the following path: %s" %
                         (filepath, path))
             log.error("Consider adding it to the 'missing_files' list in the YAML configuration.")
             log.error("Bailing...")
