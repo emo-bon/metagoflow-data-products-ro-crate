@@ -102,6 +102,27 @@ Configure the "run_parameter" with "-n" parameter value in the config.yml file:
 "run_parameter": "green"
 """
 
+def writeHTMLpreview(tmpdirname):
+    """Write the HTML preview file using rochtml-
+    https://www.npmjs.com/package/ro-crate-html
+    """
+    rochtml_path = shutil.which("rochtml")
+    if not rochtml_path:
+       print("HTML preview file cannot be written due to missing executable (rochtml)")
+    else:
+        cmd = "%s %s" % (rochtml_path, os.path.join(tmpdirname, "ro-crate-metadata.json"))
+        child = subprocess.Popen(str(cmd), stdout=subprocess.PIPE,
+             stderr=subprocess.PIPE, shell=True)
+        stdoutdata, stderrdata = child.communicate()
+        return_code = child.returncode
+        if return_code != 0:
+            print("Error whilst trying write HTML file")
+            print("Stderr: %s " % stderrdata)
+            print("Command: %s" % cmd)
+            print("Return code: %s" % return_code)
+            print("Bailing...")
+            sys.exit()
+
 def joinInterProScanOutputFiles(target_directory, conf):
     """IPS outputs one, or many, files (sigh)
 
@@ -189,7 +210,7 @@ def main(target_directory, yaml_config, debug):
     #Check yaml parameters
     for param in yaml_parameters:
         if param == "datePublished":
-            if conf[param] is False:
+            if conf[param] is "False":
                 continue
             else:
                 if not isinstance(conf[param], str):
@@ -275,7 +296,7 @@ def main(target_directory, yaml_config, debug):
     if "datePublished" in conf:
         template["@graph"][1]["datePublished"] = template["@graph"][1]["datePublished"].format(**conf)
     else:
-        template["@graph"][1]["datePublished"] = datetime.datetime.now().strftime('%Y/%m/%d')
+        template["@graph"][1]["datePublished"] = datetime.datetime.now().strftime('%Y-%m-%d')
 
     # deal with sequence_categorisation separately
     template, seq_cat_files  = sequence_categorisation_stanzas(target_directory, template)
@@ -320,6 +341,9 @@ def main(target_directory, yaml_config, debug):
         #Write the json metadata file:
         with open(os.path.join(tmpdirname, "ro-crate-metadata.json"), "w") as outfile:
             outfile.write(metadata_json_formatted)
+
+        #Write the HTML preview file
+        writeHTMLpreview(tmpdirname)
 
         #Zip it up:
         log.info("Zipping data to ro-crate... (this could take some time...)")
