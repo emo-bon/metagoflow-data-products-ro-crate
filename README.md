@@ -13,7 +13,7 @@ This work is licensed under a
 
 # How to create RO-Crate:
 
-** Note that this ro-crate is designed specifically for the data products needed for the FAIR-EASE UC and includes output from all 5 steps**
+**Note that this ro-crate is designed specifically for the data products needed for the FAIR-EASE UC and includes output from all 5 steps**
 
 
 `$ create-ro-crate.py target_directory yaml_configuration`
