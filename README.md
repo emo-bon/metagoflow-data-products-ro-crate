@@ -1,19 +1,8 @@
 # MetaGOflow-Data-Products-RO-Crate
+This ro-crate is specifically for the [FAIR-EASE Biodiversity Use Case VRE data products](https://fairease.eu/use-cases/biodiversity-observation) - it does not include all of the MetaGOflow output.
 
-Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
-
-This work is licensed under a
-[Creative Commons Attribution 4.0 International License][cc-by].
-
-[![CC BY 4.0][cc-by-image]][cc-by]
-
-[cc-by]: http://creativecommons.org/licenses/by/4.0/
-[cc-by-image]: https://i.creativecommons.org/l/by/4.0/88x31.png
-[cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
 
 # How to create RO-Crate:
-
-**Note that this ro-crate is designed specifically for the data products needed for the FAIR-EASE UC and includes output from all 5 steps**
 
 
 `$ create-ro-crate.py target_directory yaml_configuration`
@@ -59,9 +48,9 @@ $ tree
 │   ├── seq-length.out.sub-set > discard
 │   ├── seq-length.out.sub-set_bin > discard
 │   ├── seq-length.out.sub-set_pcbin > discard
-│   └── summary.out > discard
+│   └── summary.out > include
 ├── DBB_AAADOSDA_1_1_HWLTKDRXY.UDI210_clean.fastq.gz.sha1 > discard
-├── DBB_AAADOSDA_1_1_HWLTKDRXY.UDI210_clean.fastq.trimmed.fasta > discard
+├── DBB_AAADOSDA_1_1_HWLTKDRXY.UDI210_clean.fastq.trimmed.fasta > discard (?)
 ├── DBB_AAADOSDA_1_2_HWLTKDRXY.UDI210_clean 
 │   ├── GC-distribution.out.sub-set > discard
 │   ├── GC-distribution.out.sub-set_bin > discard
@@ -70,12 +59,12 @@ $ tree
 │   ├── seq-length.out.sub-set > discard
 │   ├── seq-length.out.sub-set_bin > disacard
 │   ├── seq-length.out.sub-set_pcbin > discard
-│   └── summary.out > discard
+│   └── summary.out > include
 ├── DBB_AAADOSDA_1_2_HWLTKDRXY.UDI210_clean.fastq.gz.sha1 > discard
-├── DBB_AAADOSDA_1_2_HWLTKDRXY.UDI210_clean.fastq.trimmed.fasta > discard
+├── DBB_AAADOSDA_1_2_HWLTKDRXY.UDI210_clean.fastq.trimmed.fasta > discard (?)
 ├── DBB.merged_CDS.faa > upload to MGnify
 ├── DBB.merged_CDS.ffn > upload to MGnify
-├── DBB.merged.cmsearch.all.tblout.deoverlapped > discard
+├── DBB.merged.cmsearch.all.tblout.deoverlapped > discard (?)
 ├── DBB.merged.fasta > upload to MGnify
 ├── DBB.merged.motus.tsv > discard
 ├── DBB.merged.unfiltered_fasta > discard
@@ -163,34 +152,14 @@ $ du -hs ./*
 1.8T	./tmp
 ```
 
-# Intermediate files:
 
-    a) cleaned, trimmed, reads in uncompressed fasta file for each direction:
-    DBB_AAADOSDA_1_1_HWLTKDRXY.UDI210_clean.fastq.trimmed.fasta
-    DBB_AAADOSDA_1_2_HWLTKDRXY.UDI210_clean.fastq.trimmed.fasta
-    2.3GB each
+Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
 
-    b) merged reads, unfiltered in uncompressed fastq
-    DBB.merged.unfiltered_fasta
-    21G
+This work is licensed under a
+[Creative Commons Attribution 4.0 International License][cc-by].
 
-    b) Merged reads in uncompressed fasta - these should be uploaded to MGnify
-    as they are the primary data used to generate the taxonomic
-    inventories and functional annotations
-    DBB.merged.fasta 12G
+[![CC BY 4.0][cc-by-image]][cc-by]
 
-    d) Merged coding nucleotide sequences in uncompressed fasta
-    DBB.merged_CDS.ffn
-    Upload to MGnify
-    4.9G
-
-    e) Merged coding peptide sequences in uncompressed fasta
-    DBB.merged_CDS.faa
-    Upload to MGnify
-    4.9G
-
-    f) MegaHit assembled contigs uncompressed fasta
-    Uplaod to MGnify AND include in RO-Crate
-    These are the "third" data product - we need these for F-E
-    123M
-
+[cc-by]: http://creativecommons.org/licenses/by/4.0/
+[cc-by-image]: https://i.creativecommons.org/l/by/4.0/88x31.png
+[cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
