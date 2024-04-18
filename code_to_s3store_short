@@ -1,0 +1,169 @@
+*** 2024 Mar 19
+
+**** installing s5cmd
+https://github.com/peak/s5cmd
+
+tar -xvf s5cmd_2.2.2_Linux-64bit.tar.gz
+
+and cp to bin
+
+in home dir
+mkdir .aws
+cd .aws
+touch config
+
+vi and shift I and place 
+[default]
+region = other-v2-signature
+
+touch credentials
+vi credentials 
+*** key obtained from Tomas via email (Frederico for more info)
+[eosc-fairease1]
+aws_access_key_id = 6ed46d977b764a0081646fb615645f09
+aws_secret_access_key = c0268aab378648f68f43ccc92f8a340f
+
+
+**** make a bucket on s3store
+s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr mb s3://eosc-fairease-test3
+*** check buckets
+s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr ls
+
+*** to upload a file (here AA.txt)
+s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr cp AA.txt s3://eosc-fairease-test3
+
+*** to check if it is there
+s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr ls s3://eosc-fairease-test3
+
+*** to download (for now not publically available, though)
+s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr cp  s3://eosc-fairease-test3/EMOBON00092-products-ro-crate.zip .
+
+*** to rm (remove a file in a bucket)
+s5cm --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr rm  s3://eosc-fairease-test3/anonymous_access.json
+
+**** making buckets publically available (pushing permission file, though not sure if needed)
+s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr cp anonymous_access.json s3://eosc-fairease-test3
+
+*** French help on 24 March 2024 (in the .config file called .s3cfg placed in /home)
+[default]
+access_key = XXXX
+secret_key = YYYY
+host_base = s3.mesocentre.uca.fr
+host_bucket = %(bucket)s.s3.mesocentre.uca.fr
+server_side_encryption = False
+use_https = True
+
+*** full content of the .s3cfg
+[default]
+access_key = 6ed46d977b764a0081646fb615645f09
+access_token = 
+add_encoding_exts = 
+add_headers = 
+bucket_location = EU
+ca_certs_file = 
+cache_file = 
+check_ssl_certificate = True
+check_ssl_hostname = True
+default_mime_type = binary/octet-stream
+delay_updates = False
+delete_after = False
+delete_after_fetch = False
+delete_removed = False
+dry_run = False
+enable_multipart = True
+encoding = UTF-8
+encrypt = False
+expiry_date = 
+expiry_days = 
+expiry_prefix = 
+follow_symlinks = False
+force = False
+get_continue = False
+gpg_command = /usr/local/bin/gpg
+gpg_decrypt = %(gpg_command)s -d --verbose --no-use-agent --batch --yes --passph
+rase-fd %(passphrase_fd)s -o %(output_file)s %(input_file)s
+gpg_encrypt = %(gpg_command)s -c --verbose --no-use-agent --batch --yes --passph
+rase-fd %(passphrase_fd)s -o %(output_file)s %(input_file)s
+guess_mime_type = True
+host_base = s3.mesocentre.uca.fr
+host_bucket = %(eosc-fairease-test3)s.s3.mesocentre.uca.fr
+human_readable_sizes = False
+invalidate_default_index_on_cf = False
+invalidate_default_index_root_on_cf = True
+invalidate_on_cf = False
+kms_key = 
+limitrate = 0
+list_md5 = False
+log_target_prefix = 
+long_listing = False
+max_delete = -1
+mime_type = 
+multipart_chunk_size_mb = 15
+multipart_max_chunks = 10000
+preserve_attrs = True
+progress_meter = True
+proxy_host = 
+proxy_port = 0
+put_continue = False
+recursive = False
+recv_chunk = 65536
+reduced_redundancy = False
+requester_pays = False
+restore_days = 1
+secret_key = c0268aab378648f68f43ccc92f8a340f
+send_chunk = 65536
+server_side_encryption = False
+signature_v2 = False
+skip_existing = False
+socket_timeout = 300
+stats = False
+stop_on_error = False
+storage_class = 
+urlencoding_mode = normal
+use_https = True
+use_mime_magic = True
+verbosity = WARNING
+
+
+*** the only significant change from our try-and-error is "use_https = False" was changed to "use_https = True" that did the trick !!!
+
+
+*** set policy - works from the s3store directory where anonymous_access-json file is located - i.e. the json policy file needs to be placed locally and not in s3store (?)
+s3cmd setpolicy anonymous_access.json s3://eosc-fairease-test3
+
+*** test availability
+https://eosc-fairease-test3.s3.mesocentre.uca.fr/
+*** it displays a different message
+
+
+*** tests
+*** push a new file with a header of "this is a test file - created on 25th March 2024"
+s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr cp newAA.txt s3://eosc-fairease-test3
+cp newAA.txt s3://eosc-fairease-test3/newAA.txt
+*** in firefox: https://eosc-fairease-test3.s3.mesocentre.uca.fr/newAA.txt 
+*** and displays "this is a test file - created on 25th March 2024"
+
+
+*** to download a file using s5cmd (for now web basd URL download has permissions issues)
+s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr cp s3://eosc-fairease-test3/AA.txt .
+
+*** an example object file
+https://eosc-fairease-test3.s3.mesocentre.uca.fr/torocrate.txt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
