@@ -13,6 +13,7 @@ import shutil
 import glob
 import subprocess
 import logging as log
+from pathlib import Path
 
 desc = """
 Build a MetaGOflow Data Products ro-crate from a YAML configuration.
@@ -120,7 +121,7 @@ def writeHTMLpreview(tmpdirname):
     else:
         cmd = "%s %s" % (
             rochtml_path,
-            os.path.join(tmpdirname, "ro-crate-metadata.json"),
+            Path(tmpdirname, "ro-crate-metadata.json"),
         )
         child = subprocess.Popen(
             str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
@@ -144,9 +145,7 @@ def sequence_categorisation_stanzas(target_directory, template):
 
     Return updated template, and list of sequence category filenames
     """
-    search = os.path.join(
-        target_directory, "results", "sequence-categorisation", "*.gz"
-    )
+    search = Path(target_directory, "results", "sequence-categorisation", "*.gz")
     seq_cat_paths = glob.glob(search)
     seq_cat_files = [os.path.split(f)[1] for f in seq_cat_paths]
     # Sequence-categorisation stanza
@@ -233,7 +232,7 @@ def main(target_directory, yaml_config, debug):
 
     # The workflow run YAML - lives in the toplevel dir not /results
     filename = yaml_file.format(**conf)
-    path = os.path.join(target_directory, filename)
+    path = Path(target_directory, filename)
     if not os.path.exists(path):
         log.error(YAML_ERROR)
         sys.exit()
@@ -243,7 +242,7 @@ def main(target_directory, yaml_config, debug):
     # The fixed file paths
     for filepath in filepaths:
         log.debug(f"File path: {filepath}")
-        path = os.path.join(target_directory, "results", filepath)
+        path = Path(target_directory, "results", filepath)
         if not os.path.exists(path):
             if "missing_files" in conf:
                 if os.path.split(filepath)[1] in conf["missing_files"]:
@@ -266,23 +265,21 @@ def main(target_directory, yaml_config, debug):
 
     log.info("Data look good...")
 
-    # Let's deal with the JSON metadata file
-    # Grab the template from Github
-    # https://stackoverflow.com/questions/38491722/reading-a-github-file-using-python-returns-html-tags
-    url = "https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/main/ro-crate-metadata.json-template"
-    req = requests.get(url)
-    if req.status_code == requests.codes.ok:
-        template = req.json()
+    metadata_json_template = "ro-crate-metadata.json-template"
+    if os.path.exists(metadata_json_template):
+        with open(metadata_json_template, "r") as f:
+            template = json.load(f)
     else:
-        log.error("Unable to download the metadata.json file from Github")
-        log.error(f"Check {url}")
-        log.error("Bailing...")
-        sys.exit()
-
-    # Metadata template on disk
-    # metadata_json_template = "ro-crate-metadata.json-template"
-    # with open(metadata_json_template, "r") as f:
-    #   template = json.load(f)
+        # Grab the template from Github
+        url = "https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/main/ro-crate-metadata.json-template"
+        req = requests.get(url)
+        if req.status_code == requests.codes.ok:
+            template = req.json()
+        else:
+            log.error("Unable to download the metadata.json file from Github")
+            log.error(f"Check {url}")
+            log.error("Bailing...")
+            sys.exit()
 
     log.info("Writing ro-crate-metadata.json...")
     # Deal with the ./ dataset stanza separately
