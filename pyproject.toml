@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "metagoflow-data-products-ro-crate-example"
+version = "0.1.0"
+description = ""
+authors = ["Cymon J. Cox <cymon.cox@googlemail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.9"
+black = "^24.10.0"
+pre-commit = "^4.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
