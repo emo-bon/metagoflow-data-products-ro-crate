@@ -1,5 +1,5 @@
 # MetaGOflow-Data-Products-RO-Crate
-This RO-Crate contains the results and metadata for the analysis of 1 raw sequence data sample (i.e. 1 sequence result (shotgun sequencing reaction) from 1 DNA sample from 1 sampling event at 1 site) using the MetaGOflow workflow, and it’s associated metadata. These will be primary data input to the FE VRE.
+This RO-Crate contains the MetaGOflow workflow results and metadata for the analysis of one EMO BON sampling event (i.e. 1 sequence result (shotgun sequencing reaction) from 1 DNA sample from 1 sampling event at 1 site).
 
 This ro-crate is specifically for the [FAIR-EASE Biodiversity Use Case VRE data products](https://fairease.eu/use-cases/biodiversity-observation) - it does not include all of the MetaGOflow output.
 
@@ -15,7 +15,7 @@ where:
 - *yaml_configuration* is a YAML file of metadata specific to this ro-crate. [Template](https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/main/ro-crate-config.yaml)
 - -d Provide debugging output (Default: False)
 
-NB. this script will automatically concatenate InterProScan files if they are chunked. It will also include all the sequence-categorisation/*.gz bins by dynamically writing the ro-crate-metadata.json file.
+NB. this script will automatically concatenate InterProScan files if they are chunked. It will also include all the sequence-categorisation/*.gz bins by dynamically writing the ro-crate-metadata.json file. (Note: 16/10/2024 newer versions of MGF concatenate chunked IPS files during exectution.)
 
 
 
