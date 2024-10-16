@@ -53,8 +53,7 @@ Cymon J. Cox, Feb '23
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
 # "run_wf.sh" script:
 yaml_file = "{run_parameter}.yml"
-# InterProScan file(s) have to be dealt with separately until the wf is fixed
-interproscan_file = "{prefix}.merged_CDS.I5.tsv.gz"
+
 yaml_parameters = [
     "datePublished",
     "prefix",
@@ -75,6 +74,7 @@ mandatory_files = [
     "functional-annotation/stats/pfam.stats",
     "taxonomy-summary/LSU/krona.html",
     "taxonomy-summary/SSU/krona.html",
+    "functional-annotation/{prefix}.merged_CDS.I5.tsv.gz",
     "functional-annotation/{prefix}.merged.hmm.tsv.gz",
     "functional-annotation/{prefix}.merged.summary.go",
     "functional-annotation/{prefix}.merged.summary.go_slim",
@@ -136,48 +136,6 @@ def writeHTMLpreview(tmpdirname):
             sys.exit()
         else:
             log.info("Written HTML preview file")
-
-
-def joinInterProScanOutputFiles(target_directory, conf):
-    """IPS outputs one, or many, files (sigh)
-
-    {prefix}.merged_CDS.I5.tsv.gz
-    or
-    DBB.merged_CDS.I5_00{1-9}.tsv.gz
-
-    An issue has been raised to fix the workflow, but for the
-    time being we are going to cat them here
-    """
-    log.info("Cat'ing the IPS chunk files... (this could take some time...)")
-    s = "{prefix}.merged_CDS.I5*tsv.gz".format(**conf)
-    path = os.path.join(target_directory, "results", "functional-annotation", s)
-    r = glob.glob(path)
-    if len(r) < 2:
-        log.error("Unable to locate 2 or more InterProScan files")
-        log.error("They should be of the form: {prefix}.merged_CDS.I5_00{1-9}.tsv.gz")
-        log.error("Bailing...")
-        sys.exit()
-    # cat the chunks together
-    outfile = os.path.join(
-        target_directory,
-        "results",
-        "functional-annotation",
-        "{prefix}.merged_CDS.I5.tsv.gz".format(**conf),
-    )
-    cmd = "cat %s > %s" % (" ".join(r), outfile)
-    child = subprocess.Popen(
-        str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-    )
-    stdoutdata, stderrdata = child.communicate()
-    return_code = child.returncode
-    if return_code != 0:
-        log.error("Error whilst trying to concatenate IPS files")
-        log.debug("Stderr: %s " % stderrdata)
-        log.debug("Files = %s" % r)
-        log.debug("Command: %s" % cmd)
-        log.debug("Return code: %s" % return_code)
-        log.error("Bailing...")
-        sys.exit()
 
 
 def sequence_categorisation_stanzas(target_directory, template):
@@ -305,16 +263,6 @@ def main(target_directory, yaml_config, debug):
             )
             log.error("Bailing...")
             sys.exit()
-
-    ### if the IPS files are split, join them
-    ipsf = os.path.join(
-        "functional-annotation", "{prefix}.merged_CDS.I5.tsv.gz".format(**conf)
-    )
-    ipsf_path = os.path.join(target_directory, "results", ipsf)
-    if not os.path.exists(ipsf_path):
-        ### deal with split DBB.merged_CDS.I5_001.tsv.gz files
-        joinInterProScanOutputFiles(target_directory, conf)
-    filepaths.append(ipsf)
 
     log.info("Data look good...")
 
