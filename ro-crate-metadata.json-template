@@ -12,23 +12,26 @@
         "name" : "MetaGoFlow Results for ENA Run Accession Number {ena_accession_raw_data}",                       
         "description" : "RO-Crate for the MetaGOflow analysis EMO BON ENA Accession {ena_accession_raw_data} data ",
         "datePublished": "{datePublished}",                                              
-        "license": {"@id": "https://creativecommons.org/licenses/by/4.0/legalcode"},                      
-        "publisher": {"@id": "https://ror.org/0038zss60"},                          
-        "hasPart": [
-                        {"@id": "{ena_accession_raw_data}"},  
-                        {"@id": "{metagoflow_version}"},  
-                        {"@id": "{run_parameter}.yml"},
-                        {"@id": "fastp.html"},
-                        {"@id": "final.contigs.fa"},
-                        {"@id": "functional_annotation/"},
-                        {"@id": "sequence-categorisation/"},
-                        {"@id": "taxonomic-summary/"},
-                        {"@id": "RNA-counts"}
-
-                    ] 
+        "licence": {"@id": "https://creativecommons.org/licenses/by/4.0/legalcode"},                      
+        "publisher": {"@id": "#EMBRC", "name": "European Marine Biological Resource Centre"},
+        "wasAssociatedWith": "{associated_with_stanzas}",
+        "creator": "{creator_stanzas}",
+        "title": "data_release_001",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "keywords": [
+            "https://dwc.tdwg.org/terms/#materialsample",
+            "https://schema.org/Dataset",
+            "MBON",
+            "https://vocabularyserver.com/asfa/index.php?tema=2185&/Biodiversity",
+            "https://vocabularyserver.com/asfa/index.php?tema=2091&/benthic-communities",
+            "https://vocabularyserver.com/asfa/index.php?tema=3505&/Long-term-changes",
+            "https://vocabularyserver.com/asfa/index.php?tema=2146&/biology",
+            "https://vocabularyserver.com/asfa/index.php?tema=1150&/marine-environment",
+            "https://vocabularyserver.com/asfa/index.php?tema=2365&/genetics"
+        ]
     },
     {
-        "@id": "https://ror.org/0038zss60",
+        "@id": ":EMBRC",
         "@type": "Organization",
         "name": "European Marine Biological Resource Centre",
         "url": "https://ror.org/0038zss60",
@@ -47,7 +50,19 @@
         "@type": "CreativeWork",
         "identifier": "https://creativecommons.org/licenses/by/4.0/legalcode",
         "name": "Creative Commons (CC-BY 4.0)"
-    }, 
+    },
+    "hasPart": [
+        {"@id": "{ena_accession_raw_data}"},  
+        {"@id": "{metagoflow_version}"},  
+        {"@id": "{run_parameter}.yml"},
+        {"@id": "fastp.html"},
+        {"@id": "final.contigs.fa"},
+        {"@id": "functional_annotation/"},
+        {"@id": "sequence-categorisation/"},
+        {"@id": "taxonomic-summary/"},
+        {"@id": "RNA-counts"}
+
+    ] , 
     {
         "@id": "{ena_accession_raw_data}", 
         "@type": "File",
@@ -58,9 +73,9 @@
     {
         "@id": "{metagoflow_version}", 
         "@type": "File",
-        "name": "MetaGOflow Workflow Version RO-Crate",
+        "name": "MetaGOflow Workflow Version README",
         "description": "Metadata for the version of the MetaGOflow workflow used to generate the data",
-        "encodingFormat": "application/zip"
+        "encodingFormat": "text/plain"
     },
     {
         "@id": "{run_parameter}.yml",
