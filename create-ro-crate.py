@@ -23,7 +23,7 @@ $ create-ro-crate.py <target_directory> <yaml_configuration>
 
 where:
     target_directory is the toplevel output directory of MetaGOflow
-        Note that the name of the directory cannot have a "." in it!
+        Note that the name of the directory cannot have a period "." in it!
     yaml_configuration is a YAML file of metadata specific to this ro-crate
         a template is here:
         https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/main/ro-crate-config.yaml
@@ -53,9 +53,9 @@ Cymon J. Cox, Feb '23
 
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
 # "run_wf.sh" script:
-yaml_file = "{run_parameter}.yml"
+workflow_yaml_file = "{run_parameter}.yml"
 
-yaml_parameters = [
+config_yaml_parameters = [
     "datePublished",
     "prefix",
     "run_parameter",
@@ -164,24 +164,7 @@ def sequence_categorisation_stanzas(target_directory, template):
     return template, seq_cat_files
 
 
-def main(target_directory, yaml_config, debug):
-    # Logging
-    if debug:
-        log_level = log.DEBUG
-    else:
-        log_level = log.INFO
-    log.basicConfig(format="\t%(levelname)s: %(message)s", level=log_level)
-
-    # Check the data directory name
-    data_dir = os.path.split(target_directory)[1]
-    if "." in data_dir:
-        log.error(
-            f"The target data directory ({data_dir}) cannot have a '.' period in it!"
-        )
-        log.error("Change it to '-' and try again")
-        log.error("Bailing...")
-        sys.exit()
-
+def read_yaml(yaml_config):
     # Read the YAML configuration
     if not os.path.exists(yaml_config):
         log.error(f"YAML configuration file does not exist at {yaml_config}")
@@ -190,7 +173,7 @@ def main(target_directory, yaml_config, debug):
     with open(yaml_config, "r") as f:
         conf = yaml.safe_load(f)
     # Check yaml parameters are formated correctly, but not necessarily sane
-    for param in yaml_parameters:
+    for param in config_yaml_parameters:
         log.debug("Config paramater: %s" % conf[param])
         if param == "datePublished":
             if conf[param] == "None":
@@ -227,11 +210,15 @@ def main(target_directory, yaml_config, debug):
                 log.error(f"Parameter '{param}' in YAML file must be a string.")
                 log.error("Bailing...")
                 sys.exit()
+    log.info("YAML configuration looks good...")
+    return conf
 
-    # Check all files are present
+
+def check_and_format_data_file_paths(target_directory, conf):
+    """Check that all mandatory files are present in the target directory"""
 
     # The workflow run YAML - lives in the toplevel dir not /results
-    filename = yaml_file.format(**conf)
+    filename = workflow_yaml_file.format(**conf)
     path = Path(target_directory, filename)
     if not os.path.exists(path):
         log.error(YAML_ERROR)
@@ -264,7 +251,10 @@ def main(target_directory, yaml_config, debug):
             sys.exit()
 
     log.info("Data look good...")
+    return filepaths
 
+
+def write_metadata_json(target_directory, conf, filepaths):
     metadata_json_template = "ro-crate-metadata.json-template"
     if os.path.exists(metadata_json_template):
         with open(metadata_json_template, "r") as f:
@@ -311,51 +301,86 @@ def main(target_directory, yaml_config, debug):
         if "hasPart" in section:
             for entry in section["hasPart"]:
                 entry["@id"] = entry["@id"].format(**conf)
-    # Write the json metadata file:
-    metadata_json_formatted = json.dumps(template, indent=4)
 
-    # Debug to disk
-    # with open("testing-ro-crate-metadata.json", "w") as outfile:
-    #    outfile.write(metadata_json_formatted)
-    # sys.exit()
-    log.debug("%s" % metadata_json_formatted)
+    log.info("Metadata JSON formatted")
+    return json.dumps(template, indent=4)
 
-    # OK, all's good, let's build the RO-Crate
-    log.info("Copying data files...")
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        # Deal with the YAML file
-        yf = yaml_file.format(**conf)
-        source = os.path.join(target_directory, yf)
-        shutil.copy(source, os.path.join(tmpdirname, yf))
 
-        # Build the ro-crate dir structure
-        output_dirs = [
-            "functional-annotation/stats",
-            "sequence-categorisation",
-            "taxonomy-summary/LSU",
-            "taxonomy-summary/SSU",
-        ]
-        for d in output_dirs:
-            os.makedirs(os.path.join(tmpdirname, d))
-        # Loop over results files and sequence categorisation files
-        for fp in filepaths:
-            source = os.path.join(target_directory, "results", fp)
-            log.debug("source = %s" % source)
-            log.debug("dest = %s" % os.path.join(tmpdirname, fp))
-            shutil.copy(source, os.path.join(tmpdirname, fp))
+def main(target_directory, yaml_config, with_payload, debug):
+    # Logging
+    if debug:
+        log_level = log.DEBUG
+    else:
+        log_level = log.INFO
+    log.basicConfig(format="\t%(levelname)s: %(message)s", level=log_level)
 
-        # Write the json metadata file:
-        with open(os.path.join(tmpdirname, "ro-crate-metadata.json"), "w") as outfile:
+    # Check the data directory name
+    data_dir = os.path.split(target_directory)[1]
+    if "." in data_dir:
+        log.error(
+            f"The target data directory ({data_dir}) cannot have a '.' period in it!"
+        )
+        log.error("Change it to '-' and try again")
+        log.error("Bailing...")
+        sys.exit()
+
+    # Read the YAML configuration
+    log.info("Reading YAML configuration...")
+    conf = read_yaml(yaml_config)
+
+    # Check all files are present
+    log.info("Checking data files...")
+    filepaths = check_and_format_data_file_paths(target_directory, conf, with_payload)
+
+    # Write the ro-crate-metadata.json file
+    log.info("Writing metadata.json...")
+    metadata_json_formatted = write_metadata_json(target_directory, conf, filepaths)
+
+    if not with_payload:
+        # Debug to disk
+        with open("ro-crate-metadata.json", "w") as outfile:
             outfile.write(metadata_json_formatted)
+        log.debug("Written %s" % metadata_json_formatted)
+    else:
+        # OK, all's good, let's build the RO-Crate
+        log.info("Copying data files...")
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            # Deal with the YAML file
+            yf = workflow_yaml_file.format(**conf)
+            source = os.path.join(target_directory, yf)
+            shutil.copy(source, os.path.join(tmpdirname, yf))
 
-        # Write the HTML preview file
-        writeHTMLpreview(tmpdirname)
+            # Build the ro-crate dir structure
+            output_dirs = [
+                "functional-annotation/stats",
+                "sequence-categorisation",
+                "taxonomy-summary/LSU",
+                "taxonomy-summary/SSU",
+            ]
+            for d in output_dirs:
+                os.makedirs(os.path.join(tmpdirname, d))
+            # Loop over results files and sequence categorisation files
+            for fp in filepaths:
+                source = os.path.join(target_directory, "results", fp)
+                log.debug("source = %s" % source)
+                log.debug("dest = %s" % os.path.join(tmpdirname, fp))
+                shutil.copy(source, os.path.join(tmpdirname, fp))
 
-        # Zip it up:
-        log.info("Zipping data to ro-crate... (this could take some time...)")
-        ro_crate_name = "%s-ro-crate" % os.path.split(target_directory)[1]
-        shutil.make_archive(ro_crate_name, "zip", tmpdirname)
-        log.info("done")
+            # Write the json metadata file:
+            with open(
+                os.path.join(tmpdirname, "ro-crate-metadata.json"), "w"
+            ) as outfile:
+                outfile.write(metadata_json_formatted)
+
+            # Write the HTML preview file
+            writeHTMLpreview(tmpdirname)
+
+            # Zip it up:
+            log.info("Zipping data to ro-crate... (this could take some time...)")
+            ro_crate_name = "%s-ro-crate" % os.path.split(target_directory)[1]
+            shutil.make_archive(ro_crate_name, "zip", tmpdirname)
+            log.info("Done")
+    log.info("Build completed without error")
 
 
 if __name__ == "__main__":
@@ -365,11 +390,17 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "target_directory",
-        help="Name of target directory containing MetaGOflow" + "output",
+        help="Name of target directory containing MetaGOflow output",
     )
     parser.add_argument(
         "yaml_config", help="Name of YAML config file for building RO-Crate"
     )
+    parser.add_argument(
+        "with_payload",
+        help="Build the RO-Crate with the payload (data files)",
+        default=False,
+        action="store_true",
+    )
     parser.add_argument("-d", "--debug", action="store_true", help="DEBUG logging")
     args = parser.parse_args()
-    main(args.target_directory, args.yaml_config, args.debug)
+    main(args.target_directory, args.yaml_config, args.with_payload, args.debug)
