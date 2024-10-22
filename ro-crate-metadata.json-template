@@ -28,6 +28,18 @@
             "https://vocabularyserver.com/asfa/index.php?tema=2146&/biology",
             "https://vocabularyserver.com/asfa/index.php?tema=1150&/marine-environment",
             "https://vocabularyserver.com/asfa/index.php?tema=2365&/genetics"
+        ],
+        "hasPart":[
+            {"@id": "{ena_accession_raw_data}"},  
+            {"@id": "{metagoflow_version}"},  
+            {"@id": "{run_parameter}.yml"},
+            {"@id": "fastp.html"},
+            {"@id": "final.contigs.fa"},
+            {"@id": "functional_annotation/"},
+            {"@id": "sequence-categorisation/"},
+            {"@id": "taxonomic-summary/"},
+            {"@id": "RNA-counts"}
+    
         ]
     },
     {
@@ -51,18 +63,6 @@
         "identifier": "https://creativecommons.org/licenses/by/4.0/legalcode",
         "name": "Creative Commons (CC-BY 4.0)"
     },
-    "hasPart": [
-        {"@id": "{ena_accession_raw_data}"},  
-        {"@id": "{metagoflow_version}"},  
-        {"@id": "{run_parameter}.yml"},
-        {"@id": "fastp.html"},
-        {"@id": "final.contigs.fa"},
-        {"@id": "functional_annotation/"},
-        {"@id": "sequence-categorisation/"},
-        {"@id": "taxonomic-summary/"},
-        {"@id": "RNA-counts"}
-
-    ] , 
     {
         "@id": "{ena_accession_raw_data}", 
         "@type": "File",
