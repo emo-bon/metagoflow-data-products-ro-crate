@@ -2,9 +2,10 @@
 #Must conform to ISO 8601
 "datePublished": "None"
 
-#This is the prefix used for the functional annotation files e.g. DBB.merged.*
+#This is the prefix used for the functional annotation files e.g. "DBB"
+#for files labeled DBH.merged_CDS.faa
 #It is automaticaly taken from the sequence data files
-"prefix": ""
+#"prefix": ""
 
 #Run name: this is the value of "-n" to the "run_wf.sh" script
 "run_parameter": ""

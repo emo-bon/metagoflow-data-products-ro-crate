@@ -85,7 +85,7 @@ TEMPLATE_URL = (
 WORKFLOW_YAML_FILENAME = "{run_parameter}.yml"
 CONFIG_YAML_PARAMETERS = [
     "datePublished",
-    "prefix",
+    #    "prefix",
     "run_parameter",
     "ena_accession_raw_data",
     "metagoflow_version",
@@ -151,7 +151,7 @@ Configure the "run_parameter" with "-n" parameter value in the config.yml file:
 """
 
 
-def get_ref_code(run_id):
+def get_ref_code_and_prefix(run_id):
     """Get the reference code for a given run_id.
     run_id is the last part of the reads_name in the run information file.
     e.g. 'DBH_AAAAOSDA_1_HWLTKDRXY.UDI235' and is the name used to label the target_directory.
@@ -161,7 +161,9 @@ def get_ref_code(run_id):
         df = pd.read_csv(batch)
         for row in df[["reads_name", "ref_code"]].values.tolist():
             if row[0].split("_")[-1] == run_id:
-                return row[1]
+                ref_code = row[1]
+                prefix = row[0].split("_")[0]
+                return ref_code, prefix
     return None
 
 
@@ -372,14 +374,6 @@ def write_metadata_json(target_directory, conf, filepaths):
             log.error("Bailing...")
             sys.exit()
 
-    # Get the emo bon ref_code
-    ref_code = get_ref_code(target_directory)
-    if not ref_code:
-        log.error("Could not find the ref_code for this run")
-        sys.exit()
-    else:
-        conf["ref_code"] = ref_code
-
     log.info("Writing ro-crate-metadata.json...")
     # Deal with the ./ dataset stanza separately
     # "ref_code"'s
@@ -456,6 +450,15 @@ def main(target_directory, yaml_config, with_payload, debug):
     # Read the YAML configuration
     log.info("Reading YAML configuration...")
     conf = read_yaml(yaml_config)
+
+    # Get the emo bon ref_code
+    ref_code, prefix = get_ref_code_and_prefix(target_directory)
+    if not ref_code:
+        log.error("Could not find the ref_code for this run")
+        sys.exit()
+    else:
+        conf["ref_code"] = ref_code
+        conf["prefix"] = prefix
 
     # Check all files are present
     log.info("Checking data files...")
