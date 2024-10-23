@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import os
+import math
 import argparse
 import textwrap
 import sys
@@ -79,6 +80,15 @@ TEMPLATE_URL = (
     "https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate"
     "/main/ro-crate-metadata.json-template"
 )
+# The MGF _Run_Track Google Sheets
+FILTERS_MGF_PATH = (
+    "https://docs.google.com/spreadsheets/d/"
+    "1j9tRRsRCcyViDMTB1X7lx8POY1P5bV7UijxKKSebZAM/gviz/tq?tqx=out:csv&sheet=FILTERS"
+)
+SEDIMENTS_MGF_PATH = (
+    "https://docs.google.com/spreadsheets/d/"
+    "1j9tRRsRCcyViDMTB1X7lx8POY1P5bV7UijxKKSebZAM/gviz/tq?tqx=out:csv&sheet=SEDIMENTS"
+)
 
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
 # "run_wf.sh" script:
@@ -130,11 +140,40 @@ PERSON_TEMPLATE = """
     "affiliation": {affiliation}
 """
 
+CYMON_STANZA = """
+    "@id": "#Cymon J. Cox",
+    "@type": "Person",
+    "name": "Cymon J. Cox",
+    "identifier": "0000-0002-4927-979X",
+    "affiliation": {"@id": "https://edmo.seadatanet.org/report/2516"}
+"""
+
+STELIOS_STANZA = """
+    "@id": "#Stelios Ninidakis",
+    "@type": "Person",
+    "name": "Stelios Ninidakis",
+    "identifier": "0000-0003-3898-9451",
+    "affiliation": {"@id": "https://edmo.seadatanet.org/report/141"}
+"""
+
 STATION_TEMPLATE = """
     "@id": "{affiliation}",
     "@type": "Organization",
     "name": "{observatory_name}"
 """
+
+CCMAR_STATION = """
+    "@id": "https://edmo.seadatanet.org/report/2516",
+    "@type": "Organization",
+    "name": "Centre of Marine Sciences (CCMAR)"
+"""
+
+HCMR_STATION = """
+    "@id": "https://edmo.seadatanet.org/report/141",
+    "@type": "Organization",
+    "name": "Institute of Marine Biology Biotechnology and Aquaculture (IMBBC) Hellenic Centre for Marine Research (HCMR)"
+"""
+
 
 YAML_ERROR = """
 Cannot find the run YAML file. Bailing...
@@ -156,14 +195,18 @@ def get_ref_code_and_prefix(run_id):
     run_id is the last part of the reads_name in the run information file.
     e.g. 'DBH_AAAAOSDA_1_HWLTKDRXY.UDI235' and is the name used to label the target_directory.
     """
-
     for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]:
         df = pd.read_csv(batch)
         for row in df[["reads_name", "ref_code"]].values.tolist():
-            if row[0].split("_")[-1] == run_id:
-                ref_code = row[1]
-                prefix = row[0].split("_")[0]
-                return ref_code, prefix
+            if isinstance(row[0], str):
+                # print(row)
+                if row[0].split("_")[-1] == run_id:
+                    ref_code = row[1]
+                    prefix = row[0].split("_")[0]
+                    return ref_code, prefix
+            elif math.isnan(row[0]):
+                # Not all samples with an EMO BON code were sent to sequencing
+                continue
     return None
 
 
@@ -203,7 +246,9 @@ def sequence_categorisation_stanzas(target_directory, template):
 
     Return updated template, and list of sequence category filenames
     """
-    search = Path(target_directory, "results", "sequence-categorisation", "*.gz")
+    search = os.path.join(
+        target_directory, "results", "sequence-categorisation", "*.gz"
+    )
     seq_cat_paths = glob.glob(search)
     seq_cat_files = [os.path.split(f)[1] for f in seq_cat_paths]
     # Sequence-categorisation stanza
@@ -272,43 +317,46 @@ def read_yaml(yaml_config):
     return conf
 
 
-def check_and_format_data_file_paths(target_directory, conf):
+def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
     """Check that all mandatory files are present in the target directory"""
 
-    # The workflow run YAML - lives in the toplevel dir not /results
-    filename = WORKFLOW_YAML_FILENAME.format(**conf)
-    path = Path(target_directory, filename)
-    if not os.path.exists(path):
-        log.error(YAML_ERROR)
-        sys.exit()
-
-    # format the filepaths:
+    workflow_yaml_path = WORKFLOW_YAML_FILENAME.format(**conf)
     filepaths = [f.format(**conf) for f in MANDATORY_FILES]
-    # The fixed file paths
-    for filepath in filepaths:
-        log.debug(f"File path: {filepath}")
-        path = Path(target_directory, "results", filepath)
+
+    if check_exists:
+        path = Path(target_directory, workflow_yaml_path)
+        log.debug("Looking for worflow YAML file at: %s" % path)
         if not os.path.exists(path):
-            if "missing_files" in conf:
-                if os.path.split(filepath)[1] in conf["missing_files"]:
-                    # This file is known to be missing, ignoring
-                    log.info(
-                        "Ignoring specified missing file: %s"
-                        % os.path.split(filepath)[1]
-                    )
-                    filepaths.remove(filepath)
-                    continue
-            log.error(
-                "Could not find the mandatory file '%s' at the following path: %s"
-                % (filepath, path)
-            )
-            log.error(
-                "Consider adding it to the 'missing_files' list in the YAML configuration."
-            )
-            log.error("Bailing...")
+            log.error("Cannot find workflow YAML file at %s" % path)
             sys.exit()
+        # The fixed file paths
+        for filepath in filepaths:
+            log.debug(f"File path: {filepath}")
+            path = Path(target_directory, "results", filepath)
+            if not os.path.exists(path):
+                if "missing_files" in conf:
+                    if os.path.split(filepath)[1] in conf["missing_files"]:
+                        # This file is known to be missing, ignoring
+                        log.info(
+                            "Ignoring specified missing file: %s"
+                            % os.path.split(filepath)[1]
+                        )
+                        filepaths.remove(filepath)
+                        continue
+                log.error(
+                    "Could not find the mandatory file '%s' at the following path: %s"
+                    % (filepath, path)
+                )
+                log.error(
+                    "Consider adding it to the 'missing_files' list in the YAML configuration."
+                )
+                log.error("Bailing...")
+                sys.exit()
+            else:
+                log.debug("Found %s" % path)
 
     log.info("Data look good...")
+    filepaths.append(workflow_yaml_path)
     return filepaths
 
 
@@ -320,15 +368,21 @@ def get_persons_and_inst_stanzas(ref_code):
     """
 
     conf = {}
-    # Read the relevant rows in sample and observatory sheets
+    # Read the relevant row in sample sheet
     df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH)
     row_samp = df_samp.loc[df_samp["ref_code"] == ref_code].to_dict()
-    df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
-    obs_id = list(row_samp["obs_id"].values())[0]
+    # Get the env_package either water_column or soft_sediments
     env_package = list(row_samp["env_package"].values())[0]
+    # Get the observatory ID
+    obs_id = list(row_samp["obs_id"].values())[0]
+
+    # Get the observatory data
+    df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
+    # Get the observatory data using the obs_id and env_package variables
     row_obs = df_obs.loc[
         (df_obs["obs_id"] == obs_id) & (df_obs["env_package"] == env_package)
     ].to_dict()
+
     # Sampling person stanza
     conf["name"] = list(row_samp["sampl_person"].values())[0]
     conf["sampl_person_orcid"] = list(row_samp["sampl_person_orcid"].values())[0]
@@ -355,7 +409,31 @@ def get_persons_and_inst_stanzas(ref_code):
         np = '", "@id": "#{name}"'.format(**conf)
         associated_with_person = associated_with_person.replace('"}', np + "}")
 
-    return associated_with_person, person_stanzas, station_stanzas
+    # Add MGF analysis creator_person
+    mgf_path = FILTERS_MGF_PATH if env_package == "water_column" else SEDIMENTS_MGF_PATH
+    data = pd.read_csv(mgf_path).to_dict(orient="records")
+    for row in data:
+        if row["ref_code"] == ref_code:
+            log.debug("Row in %s: %s" % (mgf_path, row))
+            if row["who"] == "CCMAR":
+                creator_person = '{"@id": "#Cymon J. Cox"}'
+                # See if the sampling event ID was CCMAR
+                person_stanzas = person_stanzas + CYMON_STANZA
+                # If the sampling event was not CCMAR, add the CCMAR station
+                if obs_id != "RFormosa":
+                    station_stanzas = station_stanzas + CCMAR_STATION
+            elif row["who"] == "HCMR":
+                creator_person = '{"@id": "#Stelios Ninidakis"}'
+                person_stanzas = person_stanzas + STELIOS_STANZA
+                # If the sampling event was not HCMR, add the HCMR station
+                if obs_id != "HCMR-1":
+                    station_stanzas = station_stanzas + HCMR_STATION
+            else:
+                log.error("Unrecognised creater of MGF data: %s" % row["who"])
+                sys.exit()
+            break
+
+    return associated_with_person, creator_person, person_stanzas, station_stanzas
 
 
 def write_metadata_json(target_directory, conf, filepaths):
@@ -373,6 +451,20 @@ def write_metadata_json(target_directory, conf, filepaths):
             log.error(f"Check {TEMPLATE_URL}")
             log.error("Bailing...")
             sys.exit()
+
+    # Build the persons and institution stanzas
+    associated_with_person, person_stanzas, creator_person, station_stanzas = (
+        get_persons_and_inst_stanzas(conf["ref_code"])
+    )
+    conf.update(
+        {
+            "associated_with_person": associated_with_person,
+            "creator_person": creator_person,
+            "person_stanzas": person_stanzas,
+            "station_stanzas": station_stanzas,
+        }
+    )
+    log.debug("Conf dict: %s" % conf)
 
     log.info("Writing ro-crate-metadata.json...")
     # Deal with the ./ dataset stanza separately
@@ -392,17 +484,6 @@ def write_metadata_json(target_directory, conf, filepaths):
             "%Y-%m-%d"
         )
 
-    # Build the persons and institution stanzas
-    associated_with_person, person_stanzas, station_stanzas = (
-        get_persons_and_inst_stanzas(conf["ref_code"])
-    )
-    conf.update(
-        {
-            "associated_with_person": associated_with_person,
-            "person_stanzas": person_stanzas,
-            "station_stanzas": station_stanzas,
-        }
-    )
     # wasAsscoicatedWith - the sampling event persons and institution
     template["@graph"][1]["wasAssociatedWith"] = template["@graph"][1][
         "wasAssociatedWith"
@@ -438,21 +519,21 @@ def main(target_directory, yaml_config, with_payload, debug):
     log.basicConfig(format="\t%(levelname)s: %(message)s", level=log_level)
 
     # Check the data directory name
-    data_dir = os.path.split(target_directory)[1]
-    if "." in data_dir:
-        log.error(
-            f"The target data directory ({data_dir}) cannot have a '.' period in it!"
-        )
-        log.error("Change it to '-' and try again")
-        log.error("Bailing...")
-        sys.exit()
+    run_id = os.path.split(target_directory)[1]
+    # if "." in data_dir:
+    #    log.error(
+    #        f"The target data directory ({data_dir}) cannot have a '.' period in it!"
+    #    )
+    #    log.error("Change it to '-' and try again")
+    #    log.error("Bailing...")
+    #    sys.exit()
 
     # Read the YAML configuration
     log.info("Reading YAML configuration...")
     conf = read_yaml(yaml_config)
 
     # Get the emo bon ref_code
-    ref_code, prefix = get_ref_code_and_prefix(target_directory)
+    ref_code, prefix = get_ref_code_and_prefix(run_id)
     if not ref_code:
         log.error("Could not find the ref_code for this run")
         sys.exit()
@@ -462,7 +543,9 @@ def main(target_directory, yaml_config, with_payload, debug):
 
     # Check all files are present
     log.info("Checking data files...")
-    filepaths = check_and_format_data_file_paths(target_directory, conf)
+    filepaths = check_and_format_data_file_paths(
+        target_directory, conf, check_exists=False
+    )  # BANG!
 
     # Write the ro-crate-metadata.json file
     log.info("Writing metadata.json...")
