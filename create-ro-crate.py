@@ -15,6 +15,8 @@ import subprocess
 import logging as log
 from pathlib import Path
 
+import pandas as pd
+
 desc = """
 Build a MetaGOflow Data Products ro-crate from a YAML configuration.
 
@@ -23,6 +25,7 @@ $ create-ro-crate.py <target_directory> <yaml_configuration>
 
 where:
     target_directory is the toplevel output directory of MetaGOflow
+        This must be the MGF run_id, e.g. HWLTKDRXY-UDI210
         Note that the name of the directory cannot have a period "." in it!
     yaml_configuration is a YAML file of metadata specific to this ro-crate
         a template is here:
@@ -50,12 +53,31 @@ the "-d" parameter:
 
 Cymon J. Cox, Feb '23
 """
+#########################################################################################
+# These are the paths to the external data files that are used to build the RO-Crate
+# run-information files for each batch - these return the ref_code for a given MGF run_id
+BATCH1_RUN_INFO_PATH = (
+    "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
+    "batch-001/run-information-batch-001.csv"
+)
+BATCH2_RUN_INFO_PATH = (
+    "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
+    "batch-002/run-information-batch-002.csv"
+)
+# The combined sampling event logsheets for batch 1 and 2
+COMBINED_LOGSHEETS_PATH = (
+    "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
+    "refs/heads/main/validated-data/Batch1and2_combined_logsheets_2024-09-19.csv"
+)
+OBSERVATORY_LOGSHEETS_PATH = (
+    "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
+    "refs/heads/main/validated-data/Observatory_combined_logsheets_validated.csv"
+)
 
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
 # "run_wf.sh" script:
-workflow_yaml_file = "{run_parameter}.yml"
-
-config_yaml_parameters = [
+WORKFLOW_YAML_FILENAME = "{run_parameter}.yml"
+CONFIG_YAML_PARAMETERS = [
     "datePublished",
     "prefix",
     "run_parameter",
@@ -64,7 +86,7 @@ config_yaml_parameters = [
     "missing_files",
 ]
 
-mandatory_files = [
+MANDATORY_FILES = [
     "fastp.html",
     "final.contigs.fa",
     "RNA-counts",
@@ -94,6 +116,20 @@ mandatory_files = [
     "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt",
 ]
 
+PERSON_TEMPLATE = """
+    "@id": "#{name}",
+    "@type": "Person",
+    "name": "{name}",
+    "identifier": "{sampl_person_orcid}",
+    "affiliation": {affiliation}
+"""
+
+STATION_TEMPLATE = """
+    "@id": "{affiliation}",
+    "@type": "Organization",
+    "name": "{observatory_name}"
+"""
+
 YAML_ERROR = """
 Cannot find the run YAML file. Bailing...
 
@@ -107,6 +143,20 @@ named "green.yml in the "HWLTKDRXY.UDI210" directory:
 Configure the "run_parameter" with "-n" parameter value in the config.yml file:
 "run_parameter": "green"
 """
+
+
+def get_ref_code(run_id):
+    """Get the reference code for a given run_id.
+    run_id is the last part of the reads_name in the run information file.
+    e.g. 'DBH_AAAAOSDA_1_HWLTKDRXY.UDI235' and is the name used to label the target_directory.
+    """
+
+    for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]:
+        df = pd.read_csv(batch)
+        for row in df[["reads_name", "ref_code"]].values.tolist():
+            if row[0].split("_")[-1] == run_id:
+                return row[1]
+    return None
 
 
 def writeHTMLpreview(tmpdirname):
@@ -173,7 +223,7 @@ def read_yaml(yaml_config):
     with open(yaml_config, "r") as f:
         conf = yaml.safe_load(f)
     # Check yaml parameters are formated correctly, but not necessarily sane
-    for param in config_yaml_parameters:
+    for param in CONFIG_YAML_PARAMETERS:
         log.debug("Config paramater: %s" % conf[param])
         if param == "datePublished":
             if conf[param] == "None":
@@ -218,14 +268,14 @@ def check_and_format_data_file_paths(target_directory, conf):
     """Check that all mandatory files are present in the target directory"""
 
     # The workflow run YAML - lives in the toplevel dir not /results
-    filename = workflow_yaml_file.format(**conf)
+    filename = WORKFLOW_YAML_FILENAME.format(**conf)
     path = Path(target_directory, filename)
     if not os.path.exists(path):
         log.error(YAML_ERROR)
         sys.exit()
 
     # format the filepaths:
-    filepaths = [f.format(**conf) for f in mandatory_files]
+    filepaths = [f.format(**conf) for f in MANDATORY_FILES]
     # The fixed file paths
     for filepath in filepaths:
         log.debug(f"File path: {filepath}")
@@ -254,6 +304,52 @@ def check_and_format_data_file_paths(target_directory, conf):
     return filepaths
 
 
+def get_persons_and_inst_stanzas(ref_code):
+    """Get the sampling person and institution for a given ref_code.
+
+    This is pretty fragile code...
+    TODO: refactor this to be more robust and write some unit tests
+    """
+
+    conf = {}
+    # Read the relevant rows in sample and observatory sheets
+    df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH)
+    row_samp = df_samp.loc[df_samp["ref_code"] == ref_code].to_dict()
+    df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
+    obs_id = list(row_samp["obs_id"].values())[0]
+    env_package = list(row_samp["env_package"].values())[0]
+    row_obs = df_obs.loc[
+        (df_obs["obs_id"] == obs_id) & (df_obs["env_package"] == env_package)
+    ].to_dict()
+    # Sampling person stanza
+    conf["name"] = list(row_samp["sampl_person"].values())[0]
+    conf["sampl_person_orcid"] = list(row_samp["sampl_person_orcid"].values())[0]
+    # Sampling person affiliation
+    organization_edmoid = list(row_obs["organization_edmoid"].values())[0]
+    aff = f"https://edmo.seadatanet.org/report/{organization_edmoid}"
+    conf["affiliation"] = '{"@id": "%s"}' % aff
+    conf["observatory_name"] = list(row_obs["organization"].values())[0]
+    person_stanzas = "{\t%s}," % PERSON_TEMPLATE.format(**conf)
+    station_stanzas = "{\t%s}," % STATION_TEMPLATE.format(**conf)
+
+    # Format the wasAssociatedWith field
+    awp = '"@id": "#{name}"'.format(**conf)
+    associated_with_person = "{%s}" % awp
+
+    # Deal with potentially a list of other_persons
+    others = list(row_samp["other_person"].values())
+    # We assume the other person is at the same station
+    for i, value in enumerate(others):
+        conf["name"] = value
+        conf["sampl_person_orcid"] = list(row_samp["other_person_orcid"].values())[i]
+        new_person = "\n{\t%s}," % PERSON_TEMPLATE.format(**conf)
+        person_stanzas = person_stanzas + new_person
+        np = '", "@id": "#{name}"'.format(**conf)
+        associated_with_person = associated_with_person.replace('"}', np + "}")
+
+    return associated_with_person, person_stanzas, station_stanzas
+
+
 def write_metadata_json(target_directory, conf, filepaths):
     metadata_json_template = "ro-crate-metadata.json-template"
     if os.path.exists(metadata_json_template):
@@ -271,13 +367,22 @@ def write_metadata_json(target_directory, conf, filepaths):
             log.error("Bailing...")
             sys.exit()
 
+    # Get the emo bon ref_code
+    ref_code = get_ref_code(target_directory)
+    if not ref_code:
+        log.error("Could not find the ref_code for this run")
+        sys.exit()
+    else:
+        conf["ref_code"] = ref_code
+
     log.info("Writing ro-crate-metadata.json...")
     # Deal with the ./ dataset stanza separately
-    # "accession_number"
+    # "ref_code"'s
     template["@graph"][1]["name"] = template["@graph"][1]["name"].format(**conf)
     template["@graph"][1]["description"] = template["@graph"][1]["description"].format(
         **conf
     )
+    template["@graph"][1]["title"] = template["@graph"][1]["title"].format(**conf)
     # "datePublished"
     if "datePublished" in conf:
         template["@graph"][1]["datePublished"] = template["@graph"][1][
@@ -287,6 +392,25 @@ def write_metadata_json(target_directory, conf, filepaths):
         template["@graph"][1]["datePublished"] = datetime.datetime.now().strftime(
             "%Y-%m-%d"
         )
+
+    # Build the persons and institution stanzas
+    associated_with_person, person_stanzas, station_stanzas = (
+        get_persons_and_inst_stanzas(conf["ref_code"])
+    )
+    conf.update(
+        {
+            "associated_with_person": associated_with_person,
+            "person_stanzas": person_stanzas,
+            "station_stanzas": station_stanzas,
+        }
+    )
+    # wasAsscoicatedWith - the sampling event persons and institution
+    template["@graph"][1]["wasAssociatedWith"] = template["@graph"][1][
+        "wasAssociatedWith"
+    ].format(**conf)
+
+    # creator - the person who ran the workflow and their institution
+    template["@graph"][1]["creator"] = template["@graph"][1]["creator"].format(**conf)
 
     # deal with sequence_categorisation separately
     template, seq_cat_files = sequence_categorisation_stanzas(
@@ -330,7 +454,7 @@ def main(target_directory, yaml_config, with_payload, debug):
 
     # Check all files are present
     log.info("Checking data files...")
-    filepaths = check_and_format_data_file_paths(target_directory, conf, with_payload)
+    filepaths = check_and_format_data_file_paths(target_directory, conf)
 
     # Write the ro-crate-metadata.json file
     log.info("Writing metadata.json...")
@@ -346,7 +470,7 @@ def main(target_directory, yaml_config, with_payload, debug):
         log.info("Copying data files...")
         with tempfile.TemporaryDirectory() as tmpdirname:
             # Deal with the YAML file
-            yf = workflow_yaml_file.format(**conf)
+            yf = WORKFLOW_YAML_FILENAME.format(**conf)
             source = os.path.join(target_directory, yf)
             shutil.copy(source, os.path.join(tmpdirname, yf))
 
