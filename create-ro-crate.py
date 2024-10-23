@@ -53,6 +53,7 @@ the "-d" parameter:
 
 Cymon J. Cox, Feb '23
 """
+
 #########################################################################################
 # These are the paths to the external data files that are used to build the RO-Crate
 # run-information files for each batch - these return the ref_code for a given MGF run_id
@@ -72,6 +73,11 @@ COMBINED_LOGSHEETS_PATH = (
 OBSERVATORY_LOGSHEETS_PATH = (
     "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
     "refs/heads/main/validated-data/Observatory_combined_logsheets_validated.csv"
+)
+# The ro-crate metadata template from Github
+TEMPLATE_URL = (
+    "https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate"
+    "/main/ro-crate-metadata.json-template"
 )
 
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
@@ -357,13 +363,12 @@ def write_metadata_json(target_directory, conf, filepaths):
             template = json.load(f)
     else:
         # Grab the template from Github
-        url = "https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/main/ro-crate-metadata.json-template"
-        req = requests.get(url)
+        req = requests.get(TEMPLATE_URL)
         if req.status_code == requests.codes.ok:
             template = req.json()
         else:
             log.error("Unable to download the metadata.json file from Github")
-            log.error(f"Check {url}")
+            log.error(f"Check {TEMPLATE_URL}")
             log.error("Bailing...")
             sys.exit()
 

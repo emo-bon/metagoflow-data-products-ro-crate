@@ -1,1 +1,0 @@
-## Various code from Andrzej - needs documentation
