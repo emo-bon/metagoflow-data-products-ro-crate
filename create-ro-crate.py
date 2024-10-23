@@ -395,19 +395,19 @@ def get_persons_and_inst_stanzas(ref_code):
     station_stanzas = "{\t%s}," % STATION_TEMPLATE.format(**conf)
 
     # Format the wasAssociatedWith field
-    awp = '"@id": "#{name}"'.format(**conf)
-    associated_with_person = "{%s}" % awp
+    associated_with_person = '@id": "#{name}'.format(**conf)
+    # associated_with_person = "{%s}" % awp
 
     # Deal with potentially a list of other_persons
-    others = list(row_samp["other_person"].values())
+    # others = list(row_samp["other_person"].values())
     # We assume the other person is at the same station
-    for i, value in enumerate(others):
-        conf["name"] = value
-        conf["sampl_person_orcid"] = list(row_samp["other_person_orcid"].values())[i]
-        new_person = "\n{\t%s}," % PERSON_TEMPLATE.format(**conf)
-        person_stanzas = person_stanzas + new_person
-        np = '", "@id": "#{name}"'.format(**conf)
-        associated_with_person = associated_with_person.replace('"}', np + "}")
+    # for i, value in enumerate(others):
+    #    conf["name"] = value
+    #    conf["sampl_person_orcid"] = list(row_samp["other_person_orcid"].values())[i]
+    #    new_person = "\n{\t%s}," % PERSON_TEMPLATE.format(**conf)
+    #    person_stanzas = person_stanzas + new_person
+    #    np = '", "@id": "#{name}"'.format(**conf)
+    #    associated_with_person = associated_with_person.replace('"}', np + "}")
 
     # Add MGF analysis creator_person
     mgf_path = FILTERS_MGF_PATH if env_package == "water_column" else SEDIMENTS_MGF_PATH
@@ -416,14 +416,14 @@ def get_persons_and_inst_stanzas(ref_code):
         if row["ref_code"] == ref_code:
             log.debug("Row in %s: %s" % (mgf_path, row))
             if row["who"] == "CCMAR":
-                creator_person = '{"@id": "#Cymon J. Cox"}'
+                creator_person = '@id": "#Cymon J. Cox'
                 # See if the sampling event ID was CCMAR
                 person_stanzas = person_stanzas + CYMON_STANZA
                 # If the sampling event was not CCMAR, add the CCMAR station
                 if obs_id != "RFormosa":
                     station_stanzas = station_stanzas + CCMAR_STATION
             elif row["who"] == "HCMR":
-                creator_person = '{"@id": "#Stelios Ninidakis"}'
+                creator_person = '@id": "#Stelios Ninidakis'
                 person_stanzas = person_stanzas + STELIOS_STANZA
                 # If the sampling event was not HCMR, add the HCMR station
                 if obs_id != "HCMR-1":
@@ -551,6 +551,7 @@ def main(target_directory, yaml_config, with_payload, debug):
     log.info("Writing metadata.json...")
     metadata_json_formatted = write_metadata_json(target_directory, conf, filepaths)
 
+    log.debug("with_payload = %s" % with_payload)
     if not with_payload:
         # Debug to disk
         with open("ro-crate-metadata.json", "w") as outfile:
@@ -611,7 +612,8 @@ if __name__ == "__main__":
         "yaml_config", help="Name of YAML config file for building RO-Crate"
     )
     parser.add_argument(
-        "with_payload",
+        "-w",
+        "--with_payload",
         help="Build the RO-Crate with the payload (data files)",
         default=False,
         action="store_true",

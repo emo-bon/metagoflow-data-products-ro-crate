@@ -14,8 +14,8 @@
         "datePublished": "{datePublished}",                                              
         "licence": {"@id": "https://creativecommons.org/licenses/by/4.0/legalcode"},                      
         "publisher": {"@id": "#EMBRC", "name": "European Marine Biological Resource Centre"},
-        "wasAssociatedWith": {{associated_with_person}},
-        "creator": {creator_person},
+        "wasAssociatedWith": {"{associated_with_person}"},
+        "creator": {"{creator_person}"},
         "title": "EMO BON Data_release_001: MetaGOflow analysis of EMO BON Sampling Event {ref_code}",
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "keywords": [
@@ -42,6 +42,8 @@
     
         ]
     },
+    {{person_stanzas}},
+    {{station_stanzas}},
     {
         "@id": "#EMBRC",
         "@type": "Organization",
