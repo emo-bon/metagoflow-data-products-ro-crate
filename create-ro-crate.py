@@ -480,14 +480,19 @@ def write_metadata_json(target_directory, conf, filepaths):
         )
     template["@graph"].append(creator_person_station_stanza)
 
-    # deal with sequence_categorisation separately
+    # Add sequence_categorisation stanza separately as they can vary in number and identity
     template, seq_cat_files = sequence_categorisation_stanzas(
         target_directory, template
     )
+
+    # WHY?
     # add seq cat files to the filepaths
-    for scf in seq_cat_files:
-        filepaths.append(os.path.join("sequence-categorisation", scf))
-    ### deal with the rest
+    # for scf in seq_cat_files:
+    #    filepaths.append(os.path.join("sequence-categorisation", scf))
+
+    ### what are we doing with the filepaths?
+
+    # deal with the rest
     for section in template["@graph"]:
         section["@id"] = section["@id"].format(**conf)
         if "hasPart" in section:
@@ -538,16 +543,14 @@ def main(target_directory, yaml_config, with_payload, debug):
     # Write the ro-crate-metadata.json file
     log.info("Writing metadata.json...")
     metadata_json_formatted = write_metadata_json(target_directory, conf, filepaths)
+    with open("ro-crate-metadata.json", "w") as outfile:
+        outfile.write(metadata_json_formatted)
+    log.debug("Written %s" % metadata_json_formatted)
 
     log.debug("with_payload = %s" % with_payload)
-    if not with_payload:
-        # Debug to disk
-        with open("ro-crate-metadata.json", "w") as outfile:
-            outfile.write(metadata_json_formatted)
-        log.debug("Written %s" % metadata_json_formatted)
-    else:
+    if with_payload:
         # OK, all's good, let's build the RO-Crate
-        log.info("Copying data files...")
+        log.info("Creating payload: copying data files...")
         with tempfile.TemporaryDirectory() as tmpdirname:
             # Deal with the YAML file
             yf = WORKFLOW_YAML_FILENAME.format(**conf)
