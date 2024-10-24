@@ -132,49 +132,6 @@ MANDATORY_FILES = [
     "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt",
 ]
 
-PERSON_TEMPLATE = """
-    "@id": "#{name}",
-    "@type": "Person",
-    "name": "{name}",
-    "identifier": "{sampl_person_orcid}",
-    "affiliation": {affiliation}
-"""
-
-CYMON_STANZA = """
-    "@id": "#Cymon J. Cox",
-    "@type": "Person",
-    "name": "Cymon J. Cox",
-    "identifier": "0000-0002-4927-979X",
-    "affiliation": {"@id": "https://edmo.seadatanet.org/report/2516"}
-"""
-
-STELIOS_STANZA = """
-    "@id": "#Stelios Ninidakis",
-    "@type": "Person",
-    "name": "Stelios Ninidakis",
-    "identifier": "0000-0003-3898-9451",
-    "affiliation": {"@id": "https://edmo.seadatanet.org/report/141"}
-"""
-
-STATION_TEMPLATE = """
-    "@id": "{affiliation}",
-    "@type": "Organization",
-    "name": "{observatory_name}"
-"""
-
-CCMAR_STATION = """
-    "@id": "https://edmo.seadatanet.org/report/2516",
-    "@type": "Organization",
-    "name": "Centre of Marine Sciences (CCMAR)"
-"""
-
-HCMR_STATION = """
-    "@id": "https://edmo.seadatanet.org/report/141",
-    "@type": "Organization",
-    "name": "Institute of Marine Biology Biotechnology and Aquaculture (IMBBC) Hellenic Centre for Marine Research (HCMR)"
-"""
-
-
 YAML_ERROR = """
 Cannot find the run YAML file. Bailing...
 
@@ -360,17 +317,11 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
     return filepaths
 
 
-def get_persons_and_inst_stanzas(ref_code):
-    """Get the sampling person and institution for a given ref_code.
-
-    This is pretty fragile code...
-    TODO: refactor this to be more robust and write some unit tests
-    """
-
-    conf = {}
+def get_persons_and_institution_data(conf):
+    """Get the sampling person and institution for a given ref_code."""
     # Read the relevant row in sample sheet
     df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH)
-    row_samp = df_samp.loc[df_samp["ref_code"] == ref_code].to_dict()
+    row_samp = df_samp.loc[df_samp["ref_code"] == conf["ref_code"]].to_dict()
     # Get the env_package either water_column or soft_sediments
     env_package = list(row_samp["env_package"].values())[0]
     # Get the observatory ID
@@ -383,66 +334,59 @@ def get_persons_and_inst_stanzas(ref_code):
         (df_obs["obs_id"] == obs_id) & (df_obs["env_package"] == env_package)
     ].to_dict()
 
-    # Sampling person stanza
-    conf["name"] = list(row_samp["sampl_person"].values())[0]
-    conf["sampl_person_orcid"] = list(row_samp["sampl_person_orcid"].values())[0]
+    # Sampling person name and ORCID
+    conf["sampling_person_name"] = list(row_samp["sampl_person"].values())[0]
+    conf["sampling_person_identifier"] = list(row_samp["sampl_person_orcid"].values())[
+        0
+    ]
     # Sampling person affiliation
-    organization_edmoid = list(row_obs["organization_edmoid"].values())[0]
-    aff = f"https://edmo.seadatanet.org/report/{organization_edmoid}"
-    conf["affiliation"] = '{"@id": "%s"}' % aff
-    conf["observatory_name"] = list(row_obs["organization"].values())[0]
-    person_stanzas = "{\t%s}," % PERSON_TEMPLATE.format(**conf)
-    station_stanzas = "{\t%s}," % STATION_TEMPLATE.format(**conf)
-
-    # Format the wasAssociatedWith field
-    associated_with_person = '@id": "#{name}'.format(**conf)
-    # associated_with_person = "{%s}" % awp
-
-    # Deal with potentially a list of other_persons
-    # others = list(row_samp["other_person"].values())
-    # We assume the other person is at the same station
-    # for i, value in enumerate(others):
-    #    conf["name"] = value
-    #    conf["sampl_person_orcid"] = list(row_samp["other_person_orcid"].values())[i]
-    #    new_person = "\n{\t%s}," % PERSON_TEMPLATE.format(**conf)
-    #    person_stanzas = person_stanzas + new_person
-    #    np = '", "@id": "#{name}"'.format(**conf)
-    #    associated_with_person = associated_with_person.replace('"}', np + "}")
+    conf["sampling_person_station_edmoid"] = list(
+        row_obs["organization_edmoid"].values()
+    )[0]
+    conf["sampling_person_station_name"] = list(row_obs["organization"].values())[0]
+    conf["samling_person_station_country"] = list(row_obs["geo_loc_name"].values())[0]
 
     # Add MGF analysis creator_person
     mgf_path = FILTERS_MGF_PATH if env_package == "water_column" else SEDIMENTS_MGF_PATH
     data = pd.read_csv(mgf_path).to_dict(orient="records")
     for row in data:
-        if row["ref_code"] == ref_code:
+        if row["ref_code"] == conf["ref_code"]:
             log.debug("Row in %s: %s" % (mgf_path, row))
             if row["who"] == "CCMAR":
-                creator_person = '@id": "#Cymon J. Cox'
-                # See if the sampling event ID was CCMAR
-                person_stanzas = person_stanzas + CYMON_STANZA
-                # If the sampling event was not CCMAR, add the CCMAR station
-                if obs_id != "RFormosa":
-                    station_stanzas = station_stanzas + CCMAR_STATION
+                conf["creator_person_name"] = "Cymon J. Cox"
+                conf["creator_person_identifier"] = "0000-0002-4927-979X"
+                conf["creator_person_station_edmoid"] = "2516"
+                conf["creator_person_station_name"] = (
+                    "Centre of Marine Sciences (CCMAR)"
+                )
+                conf["creator_person_station_country"] = "Portugal"
             elif row["who"] == "HCMR":
-                creator_person = '@id": "#Stelios Ninidakis'
-                person_stanzas = person_stanzas + STELIOS_STANZA
-                # If the sampling event was not HCMR, add the HCMR station
-                if obs_id != "HCMR-1":
-                    station_stanzas = station_stanzas + HCMR_STATION
+                conf["creator_person"] = "Stelios Ninidakis"
+                conf["creator_person_identifier"] = "0000-0003-3898-9451"
+                conf["creator_person_station_edmoid"] = "141"
+                conf["creator_person_station_name"] = (
+                    "Institute of Marine Biology "
+                    "Biotechnology and Aquaculture (IMBBC) Hellenic Centre "
+                    "for Marine Research (HCMR)"
+                )
+                conf["creator_person_station_country"] = "Greece"
             else:
                 log.error("Unrecognised creater of MGF data: %s" % row["who"])
                 sys.exit()
             break
 
-    return associated_with_person, creator_person, person_stanzas, station_stanzas
+    return conf
 
 
 def write_metadata_json(target_directory, conf, filepaths):
     metadata_json_template = "ro-crate-metadata.json-template"
     if os.path.exists(metadata_json_template):
+        log.debug("Using local metadata.json template")
         with open(metadata_json_template, "r") as f:
             template = json.load(f)
     else:
         # Grab the template from Github
+        log.debug("Downloading metadata.json template from Github")
         req = requests.get(TEMPLATE_URL)
         if req.status_code == requests.codes.ok:
             template = req.json()
@@ -452,29 +396,24 @@ def write_metadata_json(target_directory, conf, filepaths):
             log.error("Bailing...")
             sys.exit()
 
+    print("Template: %s" % template)
+    sys.exit()
+
     # Build the persons and institution stanzas
-    associated_with_person, person_stanzas, creator_person, station_stanzas = (
-        get_persons_and_inst_stanzas(conf["ref_code"])
-    )
-    conf.update(
-        {
-            "associated_with_person": associated_with_person,
-            "creator_person": creator_person,
-            "person_stanzas": person_stanzas,
-            "station_stanzas": station_stanzas,
-        }
-    )
+    conf = get_persons_and_institution_data(conf)
     log.debug("Conf dict: %s" % conf)
 
     log.info("Writing ro-crate-metadata.json...")
-    # Deal with the ./ dataset stanza separately
-    # "ref_code"'s
+
+    # Add strings first
+    # Add "ref_code"'s to "name", "title", and "description" fields
     template["@graph"][1]["name"] = template["@graph"][1]["name"].format(**conf)
     template["@graph"][1]["description"] = template["@graph"][1]["description"].format(
         **conf
     )
     template["@graph"][1]["title"] = template["@graph"][1]["title"].format(**conf)
-    # "datePublished"
+
+    # Add date to "datePublished"
     if "datePublished" in conf:
         template["@graph"][1]["datePublished"] = template["@graph"][1][
             "datePublished"
@@ -484,13 +423,62 @@ def write_metadata_json(target_directory, conf, filepaths):
             "%Y-%m-%d"
         )
 
+    # Now add structural elements
     # wasAsscoicatedWith - the sampling event persons and institution
+    # "wasAssociatedWith": {}
     template["@graph"][1]["wasAssociatedWith"] = template["@graph"][1][
         "wasAssociatedWith"
-    ].format(**conf)
+    ] = dict([("@id", f"#{conf['sampling_person_name']}")])
 
-    # creator - the person who ran the workflow and their institution
-    template["@graph"][1]["creator"] = template["@graph"][1]["creator"].format(**conf)
+    # creator  - the MGF data creator and institution
+    # "creator": {}
+    template["@graph"][1]["creator"] = template["@graph"][1]["creator"] = dict(
+        [("@id", f"#{conf['creator_person_name']}")]
+    )
+
+    # Add the sampling persons and institution stanzas
+    for person in ["sampling_person", "creator_person"]:
+        person_stanza = dict(
+            [
+                ("@id", f"#{conf[f'{person}_name']}"),
+                ("@type", "Person"),
+                ("name", f"{conf[f'{person}_name']}"),
+                ("identifier", f"{conf[f'{person}_identifier']}"),
+                (
+                    "affiliation",
+                    f"https://edmo.seadatanet.org/report/{conf[f'{person}_station_edmoid']}",
+                ),
+            ]
+        )
+        template["@graph"].append(person_stanza)
+
+    # Add the sampling persons and institution stanzas
+    sampling_person_station_stanza = dict(
+        [
+            (
+                "@id",
+                f"https://edmo.seadatanet.org/report/{conf['sampling_person_station_edmoid']}",
+            ),
+            ("@type", "Organization"),
+            ("name", f"{conf['sampling_person_station_name']}"),
+            ("country", f"{conf['samling_person_station_country']}"),
+        ]
+    )
+    template["@graph"].append(sampling_person_station_stanza)
+    # Add creator institution if different from sampling institution
+    if not conf["sampling_person_station_name"] == conf["creator_person_station_name"]:
+        creator_person_station_stanza = dict(
+            [
+                (
+                    "@id",
+                    f"https://edmo.seadatanet.org/report/{conf['creator_person_station_edmoid']}",
+                ),
+                ("@type", "Organization"),
+                ("name", f"{conf['sampling_person_station_name']}"),
+                ("country", f"{conf['samling_person_station_country']}"),
+            ]
+        )
+    template["@graph"].append(creator_person_station_stanza)
 
     # deal with sequence_categorisation separately
     template, seq_cat_files = sequence_categorisation_stanzas(
