@@ -66,6 +66,15 @@ BATCH2_RUN_INFO_PATH = (
     "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
     "batch-002/run-information-batch-002.csv"
 )
+# ENA ACCESSSION INFO for each batch
+BATCH1_ENA_ACCESSION_INFO_PATH = (
+    "https://raw.githubusercontent.com/emo-bon/sequencing-data/refs/heads/main/"
+    "shipment/batch-001/ena-accession-numbers-batch-001.csv"
+)
+BATCH2_ENA_ACCESSION_INFO_PATH = (
+    "https://raw.githubusercontent.com/emo-bon/sequencing-data/refs/heads/main/"
+    "shipment/batch-002/ena-accession-numbers-batch-002.csv"
+)
 # The combined sampling event logsheets for batch 1 and 2
 COMBINED_LOGSHEETS_PATH = (
     "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
@@ -147,24 +156,26 @@ Configure the "run_parameter" with "-n" parameter value in the config.yml file:
 """
 
 
-def get_ref_code_and_prefix(run_id):
+def get_ref_code_and_prefix(conf):
     """Get the reference code for a given run_id.
     run_id is the last part of the reads_name in the run information file.
     e.g. 'DBH_AAAAOSDA_1_HWLTKDRXY.UDI235' and is the name used to label the target_directory.
     """
-    for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]:
+    for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]):
         df = pd.read_csv(batch)
         for row in df[["reads_name", "ref_code"]].values.tolist():
             if isinstance(row[0], str):
                 # print(row)
-                if row[0].split("_")[-1] == run_id:
-                    ref_code = row[1]
-                    prefix = row[0].split("_")[0]
-                    return ref_code, prefix
+                if row[0].split("_")[-1] == conf["run_id"]:
+                    conf["ref_code"] = row[1]
+                    conf["prefix"] = row[0].split("_")[0]
+                    conf["batch_number"] = i + 1
+                    return conf
             elif math.isnan(row[0]):
                 # Not all samples with an EMO BON code were sent to sequencing
                 continue
-    return None
+    log.error("Cannot find the ref_code for run_id %s" % conf["run_id"])
+    sys.exit()
 
 
 def writeHTMLpreview(tmpdirname):
@@ -373,13 +384,36 @@ def get_persons_and_institution_data(conf):
             else:
                 log.error("Unrecognised creater of MGF data: %s" % row["who"])
                 sys.exit()
+            log.debug("MetaGOflow version: %s" % row["version"])
+            conf["metagoflow_version_id"] = row["version"]
             break
 
     return conf
 
 
+def get_ena_accession_data(conf):
+    """Get the ENA accession data for a given ref_code."""
+    # Read the relevant row in sample sheet
+    if conf["batch_number"] == 1:
+        df_ena = pd.read_csv(BATCH1_ENA_ACCESSION_INFO_PATH)
+    elif conf["batch_number"] == 2:
+        df_ena = pd.read_csv(BATCH2_ENA_ACCESSION_INFO_PATH)
+    else:
+        log.error("Batch number not recognised")
+        sys.exit()
+    row_ena = df_ena.loc[df_ena["ref_code"] == conf["ref_code"]].to_dict()
+    # Get the ENA accession data
+    conf["ena_accession_number"] = list(
+        row_ena["ena_accession_number_sample"].values()
+    )[0]
+    conf["ena_accession_number_url"] = (
+        f"https://www.ebi.ac.uk/ena/browser/view/{conf['ena_accession_number']}"
+    )
+    return conf
+
+
 def write_metadata_json(target_directory, conf, filepaths):
-    metadata_json_template = "ro-crate-metadata.json-template"
+    metadata_json_template = "../ro-crate-metadata.json-template"
     if os.path.exists(metadata_json_template):
         log.debug("Using local metadata.json template")
         with open(metadata_json_template, "r") as f:
@@ -396,11 +430,11 @@ def write_metadata_json(target_directory, conf, filepaths):
             log.error("Bailing...")
             sys.exit()
 
-    print("Template: %s" % template)
-    sys.exit()
+    print(json.dumps(template, indent=2))
 
     # Build the persons and institution stanzas
     conf = get_persons_and_institution_data(conf)
+    conf = get_ena_accession_data(conf)
     log.debug("Conf dict: %s" % conf)
 
     log.info("Writing ro-crate-metadata.json...")
@@ -422,6 +456,11 @@ def write_metadata_json(target_directory, conf, filepaths):
         template["@graph"][1]["datePublished"] = datetime.datetime.now().strftime(
             "%Y-%m-%d"
         )
+
+    # Add metadGOflow version id
+    for section in template["@graph"]:
+        if section["@id"] == "{metagoflow_version}":
+            section["softwareVersion"] = section["softwareVersion"].format(**conf)
 
     # Now add structural elements
     # wasAsscoicatedWith - the sampling event persons and institution
@@ -450,7 +489,7 @@ def write_metadata_json(target_directory, conf, filepaths):
                 ),
             ]
         )
-        template["@graph"].append(person_stanza)
+        template["@graph"].insert(5, person_stanza)
 
     # Add the sampling persons and institution stanzas
     sampling_person_station_stanza = dict(
@@ -464,7 +503,7 @@ def write_metadata_json(target_directory, conf, filepaths):
             ("country", f"{conf['samling_person_station_country']}"),
         ]
     )
-    template["@graph"].append(sampling_person_station_stanza)
+    template["@graph"].insert(6, sampling_person_station_stanza)
     # Add creator institution if different from sampling institution
     if not conf["sampling_person_station_name"] == conf["creator_person_station_name"]:
         creator_person_station_stanza = dict(
@@ -478,7 +517,7 @@ def write_metadata_json(target_directory, conf, filepaths):
                 ("country", f"{conf['samling_person_station_country']}"),
             ]
         )
-    template["@graph"].append(creator_person_station_stanza)
+        template["@graph"].insert(8, creator_person_station_stanza)
 
     # Add sequence_categorisation stanza separately as they can vary in number and identity
     template, seq_cat_files = sequence_categorisation_stanzas(
@@ -492,7 +531,7 @@ def write_metadata_json(target_directory, conf, filepaths):
 
     ### what are we doing with the filepaths?
 
-    # deal with the rest
+    # Format the {prefix} in the filepaths and other @id fields
     for section in template["@graph"]:
         section["@id"] = section["@id"].format(**conf)
         if "hasPart" in section:
@@ -524,15 +563,10 @@ def main(target_directory, yaml_config, with_payload, debug):
     # Read the YAML configuration
     log.info("Reading YAML configuration...")
     conf = read_yaml(yaml_config)
+    conf["run_id"] = run_id
 
-    # Get the emo bon ref_code
-    ref_code, prefix = get_ref_code_and_prefix(run_id)
-    if not ref_code:
-        log.error("Could not find the ref_code for this run")
-        sys.exit()
-    else:
-        conf["ref_code"] = ref_code
-        conf["prefix"] = prefix
+    # Get the emo bon ref_code, batch number, and prefix
+    conf = get_ref_code_and_prefix(conf)
 
     # Check all files are present
     log.info("Checking data files...")

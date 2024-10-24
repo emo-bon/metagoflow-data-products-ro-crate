@@ -30,7 +30,7 @@
             "https://vocabularyserver.com/asfa/index.php?tema=2365&/genetics"
         ],
         "hasPart":[
-            {"@id": "{ena_accession_raw_data}"},  
+            {"@id": "{ena_accession_number_url}"},  
             {"@id": "{metagoflow_version}"},  
             {"@id": "{run_parameter}.yml"},
             {"@id": "fastp.html"},
@@ -64,10 +64,11 @@
         "name": "Creative Commons (CC-BY 4.0)"
     },
     {
-        "@id": "{ena_accession_raw_data}", 
-        "@type": "File",
-        "name": "ENA accession for run raw sequence data",
-        "description": "FAKE: Raw sequence data and laboratory sequence generation metadata",
+        "@id": "{ena_accession_number_url}", 
+        "@type": "Dataset",
+        "name": "{ena_accession_number}",
+        "description": "ENA Accession Number of raw sequence data and associated metadata",
+        "downloadUrl": "{ena_accession_number_url}",
         "encodingFormat": "text/xml"
     },
     {
@@ -75,6 +76,7 @@
         "@type": "File",
         "name": "MetaGOflow Workflow Version README",
         "description": "Metadata for the version of the MetaGOflow workflow used to generate the data",
+        "softwareVersion": "{metagoflow_version_id}",
         "encodingFormat": "text/plain"
     },
     {
