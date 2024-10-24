@@ -77,6 +77,7 @@
         "name": "MetaGOflow Workflow Version README",
         "description": "Metadata for the version of the MetaGOflow workflow used to generate the data",
         "softwareVersion": "{metagoflow_version_id}",
+        "downloadUrl": "{metagoflow_version}",
         "encodingFormat": "text/plain"
     },
     {
@@ -84,6 +85,7 @@
         "@type": "File",                 
         "name": "MetaGOflow YAML configuration file",
         "description": "YAML configuration file for execution of MetaGOflow workflow.",
+        "downloadUrl": "",
         "encodingFormat": "text/yaml"
     },
     {
@@ -91,6 +93,7 @@
         "@type": "File",                 
         "name": "FASTP analysis of raw sequence data",
         "description": "Quality control and preprocessing of FASTQ files",
+        "downloadUrl": "",
         "encodingFormat": "text/html"
     },
     {
@@ -98,6 +101,7 @@
         "@type": "File",                 
         "name": "FASTA formatted contig sequences",
         "description": "These are the assembled contig sequences from the merged reads in FASTA format",
+        "downloadUrl": "",
         "encodingFormat": "text/plain"
     },
     {
@@ -132,72 +136,84 @@
                     "@id": "go.stats",
                     "@type": "File",
                     "name": "Geno Ontology summary statistics",
+                    "downloadUrl": "",
                     "encodingFormat": "text/plain"
                 },
                 {
                     "@id": "interproscan.stats",
                     "@type": "File",
                     "name": "InterProScan summary statistics",
+                    "downloadUrl": "",
                     "encodingFormat": "text/plain"
                 },
                 {
                     "@id": "ko.stats",
                     "@type": "File",
                     "name": "Kegg Ontology summary statistics",
+                    "downloadUrl": "",
                     "encodingFormat": "text/plain"
                 },
                 {
                     "@id": "orf.stats",
                     "@type": "File",
                     "name": "ORF summary statistics",
+                    "downloadUrl": "",
                     "encodingFormat": "text/plain"
                 },
                 {
                     "@id": "pfam.stats",
                     "@type": "File",
                     "name": "Pfam summary statistcs",
+                    "downloadUrl": "",
                     "encodingFormat": "text/plain"
                 },
             {
                 "@id": "{prefix}.merged_CDS.I5.tsv.gz",
                 "@type": "File",
                 "name": "Merged contigs CDS I5 summary",
+                "downloadUrl": "",
                 "encodingFormat": "application/zip"
             },
             {
                 "@id": "{prefix}.merged.hmm.tsv.gz",
                 "@type": "File",
                 "name": "Merged contigs HMM summary",
+                "downloadUrl": "",
                 "encodingFormat": "application/zip"
             },
             {
                 "@id": "{prefix}.merged.summary.go",
                 "@type": "File",
                 "name": "Merged contigs GO summary",
+                "downloadUrl": "",
                 "encodingFormat": "text/plain"
             },
             {
                 "@id": "{prefix}.merged.summary.go_slim",
                 "@type": "File",
                 "name": "Merged contigs InterProScan slim",
+                "downloadUrl": "",
                 "encodingFormat": "text/plain"
             },
             {
                 "@id": "{prefix}.merged.summary.ips",
                 "@type": "File",
                 "name": "Merged contigs InterProScan",
+                "downloadUrl": "",
                 "encodingFormat": "text/plain"
             },
             {
                 "@id": "{prefix}.merged.summary.ko",
                 "@type": "File",
                 "name": "Merged contigs KO summary",
+                "downloadUrl": "",
                 "encodingFormat": "text/plain"
             },
             {
                 "@id": "{prefix}.merged.summary.pfam",
                 "@type": "File",
                 "name": "Merged contigs PFAM summary",
+                "downloadUrl": "",
                 "encodingFormat": "text/plain"
             },
     {
@@ -221,6 +237,7 @@
                 "@id": "RNA-counts",
                 "@type": "File",
                 "name": "Numbers of RNA's counted",
+                "downloadUrl": "",
                 "encodingFormat": "text/plain"
             },
             {
@@ -240,36 +257,42 @@
                     "@id": "krona.html",
                     "@type": "File",
                     "name": "Krona summary of LSU taxonomic inventory",
+                    "downloadUrl": "",
                     "encodingFormat": "application/html"
                 },
                 {
                     "@id": "{prefix}.merged_LSU.fasta.mseq.gz",
                     "@type": "File",
                     "name": "LSU sequences used for indentification",
+                    "downloadUrl": "",
                     "encodingFormat": "application/zip"
                 },
                 {
                     "@id": "{prefix}.merged_LSU.fasta.mseq_hdf5.biom",
                     "@type": "File",
                     "name": "BIOM formatted hdf5 taxon counts for LSU sequences",
+                    "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
                     "@id": "{prefix}.merged_LSU.fasta.mseq_json.biom",
                     "@type": "File",
                     "name": "BIOM formatted taxon counts for LSU sequences",
+                    "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
                     "@id": "{prefix}.merged_LSU.fasta.mseq.tsv",
                     "@type": "File",
                     "name": "Tab-separated formatted taxon counts for LSU sequences",
+                    "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
                     "@id": "{prefix}.merged_LSU.fasta.mseq.txt",
                     "@type": "File",
                     "name": "Text-based taxon counts for LSU sequences",
+                    "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
             {
@@ -289,36 +312,42 @@
                     "@id": "krona.html",
                     "@type": "File",
                     "name": "Krona summary of SSU taxonomic inventory",
+                    "downloadUrl": "",
                     "encodingFormat": "text/html"
                 },
                 {
                     "@id": "{prefix}.merged_SSU.fasta.mseq.gz",
                     "@type": "File",
                     "name": "LSU sequences used for indentification",
+                    "downloadUrl": "",
                     "encodingFormat": "application/zip"
                 },
                 {
                     "@id": "{prefix}.merged_SSU.fasta.mseq_hdf5.biom",
                     "@type": "File",
                     "name": "BIOM formatted hdf5 taxon counts for SSU sequences",
+                    "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
                     "@id": "{prefix}.merged_SSU.fasta.mseq_json.biom",
                     "@type": "File",
                     "name": "BIOM formatted taxon counts for SSU sequences",
+                    "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
                     "@id": "{prefix}.merged_SSU.fasta.mseq.tsv",
                     "@type": "File",
                     "name": "Tab-separated formatted taxon counts for SSU sequences",
+                    "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
                     "@id": "{prefix}.merged_SSU.fasta.mseq.txt",
                     "@type": "File",
                     "name": "Text-based formatted taxon counts for SSU sequences",
+                    "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 }
 ]

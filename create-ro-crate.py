@@ -99,14 +99,15 @@ SEDIMENTS_MGF_PATH = (
     "1j9tRRsRCcyViDMTB1X7lx8POY1P5bV7UijxKKSebZAM/gviz/tq?tqx=out:csv&sheet=SEDIMENTS"
 )
 
+# S3 store path
+S3_STORE_URL = "http://s3.mesocentre.uca.fr/mgf-data-products"
+
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
 # "run_wf.sh" script:
 WORKFLOW_YAML_FILENAME = "{run_parameter}.yml"
 CONFIG_YAML_PARAMETERS = [
     "datePublished",
-    #    "prefix",
     "run_parameter",
-    "ena_accession_raw_data",
     "metagoflow_version",
     "missing_files",
 ]
@@ -228,8 +229,17 @@ def sequence_categorisation_stanzas(target_directory, template):
 
     seq_cat_files.reverse()
     for fn in seq_cat_files:
+        link = os.path.join(
+            S3_STORE_URL,
+            target_directory + "%2F" + "sequence-categorisation" + "%2F" + fn,
+        )
         d = dict(
-            [("@id", fn), ("@type", "File"), ("encodingFormat", "application/zip")]
+            [
+                ("@id", fn),
+                ("@type", "File"),
+                ("downloadUrl", link),
+                ("encodingFormat", "application/zip"),
+            ]
         )
         template["@graph"].insert(sq_index + 1, d)
     return template, seq_cat_files
@@ -239,7 +249,6 @@ def read_yaml(yaml_config):
     # Read the YAML configuration
     if not os.path.exists(yaml_config):
         log.error(f"YAML configuration file does not exist at {yaml_config}")
-        log.error("Bailing...")
         sys.exit()
     with open(yaml_config, "r") as f:
         conf = yaml.safe_load(f)
@@ -318,7 +327,7 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
                 log.error(
                     "Consider adding it to the 'missing_files' list in the YAML configuration."
                 )
-                log.error("Bailing...")
+                log.error("Cannot continue...")
                 sys.exit()
             else:
                 log.debug("Found %s" % path)
@@ -387,6 +396,11 @@ def get_persons_and_institution_data(conf):
             log.debug("MetaGOflow version: %s" % row["version"])
             conf["metagoflow_version_id"] = row["version"]
             break
+    else:
+        log.error(
+            "Cannot find the creator of MGF data for ref_code %s" % conf["ref_code"]
+        )
+        sys.exit()
 
     return conf
 
@@ -399,7 +413,7 @@ def get_ena_accession_data(conf):
     elif conf["batch_number"] == 2:
         df_ena = pd.read_csv(BATCH2_ENA_ACCESSION_INFO_PATH)
     else:
-        log.error("Batch number not recognised")
+        log.error(f"Batch number not recognised {conf['batch_number']}")
         sys.exit()
     row_ena = df_ena.loc[df_ena["ref_code"] == conf["ref_code"]].to_dict()
     # Get the ENA accession data
@@ -430,7 +444,7 @@ def write_metadata_json(target_directory, conf, filepaths):
             log.error("Bailing...")
             sys.exit()
 
-    print(json.dumps(template, indent=2))
+    # print(json.dumps(template, indent=2))
 
     # Build the persons and institution stanzas
     conf = get_persons_and_institution_data(conf)
@@ -524,19 +538,81 @@ def write_metadata_json(target_directory, conf, filepaths):
         target_directory, template
     )
 
-    # WHY?
-    # add seq cat files to the filepaths
-    # for scf in seq_cat_files:
-    #    filepaths.append(os.path.join("sequence-categorisation", scf))
-
-    ### what are we doing with the filepaths?
-
     # Format the {prefix} in the filepaths and other @id fields
-    for section in template["@graph"]:
-        section["@id"] = section["@id"].format(**conf)
-        if "hasPart" in section:
-            for entry in section["hasPart"]:
+    for stanza in template["@graph"]:
+        stanza["@id"] = stanza["@id"].format(**conf)
+        if "hasPart" in stanza:
+            for entry in stanza["hasPart"]:
                 entry["@id"] = entry["@id"].format(**conf)
+
+    # Add the download URLs to mandatory files
+    for filepath in filepaths:
+        bits = Path(filepath).parts
+        if len(bits) == 1:
+            # "fastp.html",
+            # "final.contigs.fa",
+            # "RNA-counts",
+            # "{run_parameter}.yml"
+            filename = bits[0].format(**conf)
+            for stanza in template["@graph"]:
+                if stanza["@id"] == filename:
+                    link = os.path.join(S3_STORE_URL, conf["run_id"] + "%2F" + filename)
+                    stanza["downloadUrl"] = f"{link}"
+        elif len(bits) == 2:
+            # "functional-annotation/{prefix}.merged_CDS.I5.tsv.gz",
+            # "functional-annotation/{prefix}.merged.hmm.tsv.gz",
+            # "functional-annotation/{prefix}.merged.summary.go",
+            # "functional-annotation/{prefix}.merged.summary.go_slim",
+            # "functional-annotation/{prefix}.merged.summary.ips",
+            # "functional-annotation/{prefix}.merged.summary.ko",
+            # "functional-annotation/{prefix}.merged.summary.pfam",
+            filename = bits[1].format(**conf)
+            for stanza in template["@graph"]:
+                if stanza["@id"] == filename:
+                    link = os.path.join(
+                        S3_STORE_URL,
+                        conf["run_id"] + "%2F" + bits[0] + "%2F" + filename,
+                    )
+                    stanza["downloadUrl"] = f"{link}"
+        elif len(bits) == 3:
+            # "functional-annotation/stats/go.stats",
+            # "functional-annotation/stats/interproscan.stats",
+            # "functional-annotation/stats/ko.stats",
+            # "functional-annotation/stats/orf.stats",
+            # "functional-annotation/stats/pfam.stats",
+            # "taxonomy-summary/LSU/krona.html",
+            # "taxonomy-summary/SSU/krona.html",
+            # "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz",
+            # "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_hdf5.biom",
+            # "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom",
+            # "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv",
+            # "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt",
+            # "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.gz",
+            # "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_hdf5.biom",
+            # "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom",
+            # "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv",
+            # "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt",
+            filename = bits[-1].format(**conf)
+            for stanza in template["@graph"]:
+                if stanza["@id"] == filename:
+                    link = os.path.join(
+                        S3_STORE_URL,
+                        conf["run_id"]
+                        + "%2F"
+                        + bits[0]
+                        + "%2F"
+                        + bits[1]
+                        + "%2F"
+                        + filename,
+                    )
+                    stanza["downloadUrl"] = f"{link}"
+        else:
+            log.error(f"Cannot find stanza for {filename}")
+            sys.exit()
+
+        log.debug(f"bits = {bits}")
+        log.debug(f"filename = {filename}")
+        log.debug(f"link = {link}")
 
     log.info("Metadata JSON formatted")
     return json.dumps(template, indent=4)
@@ -571,15 +647,15 @@ def main(target_directory, yaml_config, with_payload, debug):
     # Check all files are present
     log.info("Checking data files...")
     filepaths = check_and_format_data_file_paths(
-        target_directory, conf, check_exists=False
-    )  # BANG!
+        target_directory, conf, check_exists=True
+    )
 
     # Write the ro-crate-metadata.json file
     log.info("Writing metadata.json...")
     metadata_json_formatted = write_metadata_json(target_directory, conf, filepaths)
     with open("ro-crate-metadata.json", "w") as outfile:
         outfile.write(metadata_json_formatted)
-    log.debug("Written %s" % metadata_json_formatted)
+    # print("Written %s" % metadata_json_formatted)
 
     log.debug("with_payload = %s" % with_payload)
     if with_payload:
