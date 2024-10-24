@@ -2,17 +2,8 @@
 #Must conform to ISO 8601
 "datePublished": "None"
 
-#This is the prefix used for the functional annotation files e.g. "DBB"
-#for files labeled DBH.merged_CDS.faa
-#It is automaticaly taken from the sequence data files
-#"prefix": ""
-
 #Run name: this is the value of "-n" to the "run_wf.sh" script
 "run_parameter": ""
-
-#This is the URL to the run raw data; not the sequence data themselves but the
-#ENA accession page where the raw data are linked
-#"ena_accession_number_sample_url": ""
 
 #This is the URL to the MetaGOflow Version RO-Crate - the ro-crate containing
 #the metadata describing the version of MetaGOflow used to generate these data
