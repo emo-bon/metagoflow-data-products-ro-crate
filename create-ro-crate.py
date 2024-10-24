@@ -364,7 +364,7 @@ def get_persons_and_institution_data(conf):
         row_obs["organization_edmoid"].values()
     )[0]
     conf["sampling_person_station_name"] = list(row_obs["organization"].values())[0]
-    conf["samling_person_station_country"] = list(row_obs["geo_loc_name"].values())[0]
+    conf["sampling_person_station_country"] = list(row_obs["geo_loc_name"].values())[0]
 
     # Add MGF analysis creator_person
     mgf_path = FILTERS_MGF_PATH if env_package == "water_column" else SEDIMENTS_MGF_PATH
@@ -514,7 +514,7 @@ def write_metadata_json(target_directory, conf, filepaths):
                 ("@id", f"{conf[f'{person}_name']}"),
                 ("@type", "Person"),
                 ("name", f"{conf[f'{person}_name']}"),
-                ("identifier", f"{conf[f'{person}_identifier']}"),
+                ("identifier", f"https://orcid.org/{conf[f'{person}_identifier']}"),
                 (
                     "affiliation",
                     f"https://edmo.seadatanet.org/report/{conf[f'{person}_station_edmoid']}",
@@ -532,7 +532,7 @@ def write_metadata_json(target_directory, conf, filepaths):
             ),
             ("@type", "Organization"),
             ("name", f"{conf['sampling_person_station_name']}"),
-            ("country", f"{conf['samling_person_station_country']}"),
+            ("country", f"{conf['sampling_person_station_country']}"),
         ]
     )
     template["@graph"].insert(6, sampling_person_station_stanza)
@@ -546,7 +546,7 @@ def write_metadata_json(target_directory, conf, filepaths):
                 ),
                 ("@type", "Organization"),
                 ("name", f"{conf['sampling_person_station_name']}"),
-                ("country", f"{conf['samling_person_station_country']}"),
+                ("country", f"{conf['sampling_person_station_country']}"),
             ]
         )
         template["@graph"].insert(8, creator_person_station_stanza)
