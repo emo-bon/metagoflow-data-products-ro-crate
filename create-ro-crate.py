@@ -179,7 +179,7 @@ def get_ref_code_and_prefix(conf):
     sys.exit()
 
 
-def writeHTMLpreview(tmpdirname):
+def writeHTMLpreview():
     """Write the HTML preview file using rochtml-
     https://www.npmjs.com/package/ro-crate-html
     """
@@ -191,7 +191,7 @@ def writeHTMLpreview(tmpdirname):
     else:
         cmd = "%s %s" % (
             rochtml_path,
-            Path(tmpdirname, "ro-crate-metadata.json"),
+            Path("ro-crate-metadata.json"),
         )
         child = subprocess.Popen(
             str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
@@ -474,26 +474,44 @@ def write_metadata_json(target_directory, conf, filepaths):
     # Add metadGOflow version id
     for section in template["@graph"]:
         if section["@id"] == "{metagoflow_version}":
+            section["@id"] = section["@id"].format(**conf)
             section["softwareVersion"] = section["softwareVersion"].format(**conf)
+            section["downloadUrl"] = section["downloadUrl"].format(**conf)
+            break
+    else:
+        log.error("Cannot find the MetaGOflow version stanza")
+        sys.exit()
+
+    # Add ena_accession_number to the "identifier" field
+    for stanza in template["@graph"]:
+        # Not yet formatted
+        if stanza["@id"] == "{ena_accession_number_url}":
+            stanza["@id"] = stanza["@id"].format(**conf)
+            stanza["name"] = stanza["name"].format(**conf)
+            stanza["downloadUrl"] = stanza["downloadUrl"].format(**conf)
+            break
+    else:
+        log.error("Cannot find the ENA accession number stanza")
+        sys.exit()
 
     # Now add structural elements
     # wasAsscoicatedWith - the sampling event persons and institution
     # "wasAssociatedWith": {}
     template["@graph"][1]["wasAssociatedWith"] = template["@graph"][1][
         "wasAssociatedWith"
-    ] = dict([("@id", f"#{conf['sampling_person_name']}")])
+    ] = dict([("@id", f"{conf['sampling_person_name']}")])
 
     # creator  - the MGF data creator and institution
     # "creator": {}
     template["@graph"][1]["creator"] = template["@graph"][1]["creator"] = dict(
-        [("@id", f"#{conf['creator_person_name']}")]
+        [("@id", f"{conf['creator_person_name']}")]
     )
 
     # Add the sampling persons and institution stanzas
     for person in ["sampling_person", "creator_person"]:
         person_stanza = dict(
             [
-                ("@id", f"#{conf[f'{person}_name']}"),
+                ("@id", f"{conf[f'{person}_name']}"),
                 ("@type", "Person"),
                 ("name", f"{conf[f'{person}_name']}"),
                 ("identifier", f"{conf[f'{person}_identifier']}"),
@@ -655,6 +673,7 @@ def main(target_directory, yaml_config, with_payload, debug):
     metadata_json_formatted = write_metadata_json(target_directory, conf, filepaths)
     with open("ro-crate-metadata.json", "w") as outfile:
         outfile.write(metadata_json_formatted)
+    writeHTMLpreview()
     # print("Written %s" % metadata_json_formatted)
 
     log.debug("with_payload = %s" % with_payload)
