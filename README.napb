@@ -1,0 +1,5 @@
+
+list all the available
+s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr ls s3://mgf-data-products/
+List inside each one, for ex:
+s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr ls s3://mgf-data-products/HCFCYDSX5.UDI129/results/
