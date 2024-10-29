@@ -26,8 +26,7 @@ $ create-ro-crate.py <target_directory> <yaml_configuration>
 
 where:
     target_directory is the toplevel output directory of MetaGOflow
-        This must be the MGF run_id, e.g. HWLTKDRXY-UDI210
-        Note that the name of the directory cannot have a period "." in it!
+        This must be the MGF run_id, e.g. HWLTKDRXY.UDI210
     yaml_configuration is a YAML file of metadata specific to this ro-crate
         a template is here:
         https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/main/ro-crate-config.yaml
@@ -52,7 +51,6 @@ the "-d" parameter:
 
     3 directories, 1 file
 
-Cymon J. Cox, Feb '23
 """
 
 #########################################################################################
@@ -179,7 +177,7 @@ def get_ref_code_and_prefix(conf):
     sys.exit()
 
 
-def writeHTMLpreview():
+def writeHTMLpreview(roc_path):
     """Write the HTML preview file using rochtml-
     https://www.npmjs.com/package/ro-crate-html
     """
@@ -189,10 +187,7 @@ def writeHTMLpreview():
             "HTML preview file cannot be written due to missing executable (rochtml)"
         )
     else:
-        cmd = "%s %s" % (
-            rochtml_path,
-            Path("ro-crate-metadata.json"),
-        )
+        cmd = "%s %s" % (rochtml_path, roc_path)
         child = subprocess.Popen(
             str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
@@ -295,7 +290,11 @@ def read_yaml(yaml_config):
 
 
 def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
-    """Check that all mandatory files are present in the target directory"""
+    """Check that all mandatory files are present in the target directory
+
+    TODO: Add sequence catalogisation files to the filepaths list else they
+    will not be included in the payload
+    """
 
     workflow_yaml_path = WORKFLOW_YAML_FILENAME.format(**conf)
     filepaths = [f.format(**conf) for f in MANDATORY_FILES]
@@ -310,6 +309,16 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
         for filepath in filepaths:
             log.debug(f"File path: {filepath}")
             path = Path(target_directory, "results", filepath)
+            if (
+                filepath
+                == f"functional-annotation/{conf['prefix']}.merged_CDS.I5.tsv.gz"
+                and not path.exists()
+            ):
+                # Originally MGF did not concatenate the I5 files so this is needed for some of V1.0 and development runs
+                log.error(
+                    "Functional annotation I5 files are in chunks, cannot proceed"
+                )
+                sys.exit()
             if not os.path.exists(path):
                 if "missing_files" in conf:
                     if os.path.split(filepath)[1] in conf["missing_files"]:
@@ -646,13 +655,6 @@ def main(target_directory, yaml_config, with_payload, debug):
 
     # Check the data directory name
     run_id = os.path.split(target_directory)[1]
-    # if "." in data_dir:
-    #    log.error(
-    #        f"The target data directory ({data_dir}) cannot have a '.' period in it!"
-    #    )
-    #    log.error("Change it to '-' and try again")
-    #    log.error("Bailing...")
-    #    sys.exit()
 
     # Read the YAML configuration
     log.info("Reading YAML configuration...")
@@ -668,16 +670,25 @@ def main(target_directory, yaml_config, with_payload, debug):
         target_directory, conf, check_exists=True
     )
 
-    # Write the ro-crate-metadata.json file
+    # Write the ro-crate-metadata.json file to the ro-crate root directory
     log.info("Writing metadata.json...")
     metadata_json_formatted = write_metadata_json(target_directory, conf, filepaths)
-    with open("ro-crate-metadata.json", "w") as outfile:
+    dirname = Path("ro-crates-examples", conf["ref_code"] + "-ro-crate")
+    if not Path(dirname).is_dir():
+        os.makedirs(dirname)
+    roc_path = Path(dirname, "ro-crate-metadata.json")
+    with open(roc_path, "w") as outfile:
         outfile.write(metadata_json_formatted)
-    writeHTMLpreview()
-    # print("Written %s" % metadata_json_formatted)
+    writeHTMLpreview(roc_path)
+    if Path("ro-crate-preview.html").is_file():
+        shutil.copy("ro-crate-preview.html", Path(dirname, "ro-crate-preview.html"))
+    else:
+        log.error("Cannot find ro-crate-preview.html")
+        sys.exit()
 
     log.debug("with_payload = %s" % with_payload)
     if with_payload:
+        """Currently broken"""
         # OK, all's good, let's build the RO-Crate
         log.info("Creating payload: copying data files...")
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -740,4 +751,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("-d", "--debug", action="store_true", help="DEBUG logging")
     args = parser.parse_args()
+    if args.with_payload:
+        log.info(
+            "Payload inclusion is currently broken and may be removed in the future"
+        )
+        log.info("Exiting...")
+        sys.exit()
     main(args.target_directory, args.yaml_config, args.with_payload, args.debug)
