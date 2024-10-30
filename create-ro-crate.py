@@ -508,12 +508,20 @@ def write_metadata_json(target_directory, conf, filepaths):
     # "wasAssociatedWith": {}
     template["@graph"][1]["wasAssociatedWith"] = template["@graph"][1][
         "wasAssociatedWith"
-    ] = dict([("@id", f"{conf['sampling_person_name']}")])
+    ] = dict(
+        [
+            ("@id", f"{conf['sampling_person_name']}"),
+            ("name", f"{conf['sampling_person_name']}"),
+        ]
+    )
 
     # creator  - the MGF data creator and institution
     # "creator": {}
     template["@graph"][1]["creator"] = template["@graph"][1]["creator"] = dict(
-        [("@id", f"{conf['creator_person_name']}")]
+        [
+            ("@id", f"{conf['creator_person_name']}"),
+            ("name", f"{conf['creator_person_name']}"),
+        ]
     )
 
     # Add the sampling persons and institution stanzas
@@ -523,10 +531,11 @@ def write_metadata_json(target_directory, conf, filepaths):
                 ("@id", f"{conf[f'{person}_name']}"),
                 ("@type", "Person"),
                 ("name", f"{conf[f'{person}_name']}"),
+                ("memberOf", f"{conf[f'{person}_station_name']}"),
                 ("identifier", f"https://orcid.org/{conf[f'{person}_identifier']}"),
                 (
                     "affiliation",
-                    f"https://edmo.seadatanet.org/report/{conf[f'{person}_station_edmoid']}",
+                    f"https://edmo.seadatanet.org/report/{conf['creator_person_station_edmoid']}",
                 ),
             ]
         )
@@ -535,27 +544,29 @@ def write_metadata_json(target_directory, conf, filepaths):
     # Add the sampling persons and institution stanzas
     sampling_person_station_stanza = dict(
         [
-            (
-                "@id",
-                f"https://edmo.seadatanet.org/report/{conf['sampling_person_station_edmoid']}",
-            ),
+            ("@id", f"{conf['sampling_person_station_name']}"),
             ("@type", "Organization"),
             ("name", f"{conf['sampling_person_station_name']}"),
             ("country", f"{conf['sampling_person_station_country']}"),
+            (
+                "identifier",
+                f"https://edmo.seadatanet.org/report/{conf['sampling_person_station_edmoid']}",
+            ),
         ]
     )
     template["@graph"].insert(6, sampling_person_station_stanza)
-    # Add creator institution if different from sampling institution
+    ## Add creator institution if different from sampling institution
     if not conf["sampling_person_station_name"] == conf["creator_person_station_name"]:
         creator_person_station_stanza = dict(
             [
-                (
-                    "@id",
-                    f"https://edmo.seadatanet.org/report/{conf['creator_person_station_edmoid']}",
-                ),
+                ("@id", f"{conf['creator_person_station_name']}"),
                 ("@type", "Organization"),
                 ("name", f"{conf['creator_person_station_name']}"),
                 ("country", f"{conf['creator_person_station_country']}"),
+                (
+                    "identifier",
+                    f"https://edmo.seadatanet.org/report/{conf['creator_person_station_edmoid']}",
+                ),
             ]
         )
         template["@graph"].insert(8, creator_person_station_stanza)
