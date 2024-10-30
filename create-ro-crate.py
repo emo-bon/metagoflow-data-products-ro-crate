@@ -554,8 +554,8 @@ def write_metadata_json(target_directory, conf, filepaths):
                     f"https://edmo.seadatanet.org/report/{conf['creator_person_station_edmoid']}",
                 ),
                 ("@type", "Organization"),
-                ("name", f"{conf['sampling_person_station_name']}"),
-                ("country", f"{conf['sampling_person_station_country']}"),
+                ("name", f"{conf['creator_person_station_name']}"),
+                ("country", f"{conf['creator_person_station_country']}"),
             ]
         )
         template["@graph"].insert(8, creator_person_station_stanza)
@@ -680,11 +680,11 @@ def main(target_directory, yaml_config, with_payload, debug):
     with open(roc_path, "w") as outfile:
         outfile.write(metadata_json_formatted)
     writeHTMLpreview(roc_path)
-    if Path("ro-crate-preview.html").is_file():
-        shutil.copy("ro-crate-preview.html", Path(dirname, "ro-crate-preview.html"))
-    else:
-        log.error("Cannot find ro-crate-preview.html")
-        sys.exit()
+    # if Path("ro-crate-preview.html").is_file():
+    #    shutil.copy("ro-crate-preview.html", Path(dirname, "ro-crate-preview.html"))
+    # else:
+    #    log.error("Cannot find ro-crate-preview.html")
+    #    sys.exit()
 
     log.debug("with_payload = %s" % with_payload)
     if with_payload:

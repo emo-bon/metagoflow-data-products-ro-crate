@@ -9,6 +9,6 @@
 .ruff_cache
 metaGOflow-data-products-RO-crate-example.code-workspace
 
-working
+./working/*
 README.napb
 
