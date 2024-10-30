@@ -37,8 +37,8 @@
             {"@id": "functional_annotation/"},
             {"@id": "sequence-categorisation/"},
             {"@id": "taxonomic-summary/"},
-            {"@id": "RNA-counts"}
-    
+            {"@id": "RNA-counts"},
+            {"@id": "config"}
         ]
     },
     {
@@ -102,6 +102,14 @@
         "description": "These are the assembled contig sequences from the merged reads in FASTA format",
         "downloadUrl": "",
         "encodingFormat": "text/plain"
+    },
+    {
+        "@id": "config.yml",
+        "@type": "File",                 
+        "name": "MetaGOflow configuration in YAML",
+        "description": "MetaGOflow YAML configuation file",
+        "downloadUrl": "",
+        "encodingFormat": "text/yaml"
     },
     {
         "@id": "functional_annotation/",
