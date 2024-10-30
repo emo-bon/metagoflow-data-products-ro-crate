@@ -38,7 +38,7 @@
             {"@id": "sequence-categorisation/"},
             {"@id": "taxonomic-summary/"},
             {"@id": "RNA-counts"},
-            {"@id": "config"}
+            {"@id": "config.yml"}
         ]
     },
     {
