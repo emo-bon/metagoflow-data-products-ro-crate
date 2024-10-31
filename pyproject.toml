@@ -16,6 +16,7 @@ pre-commit = "^4.0.1"
 ipykernel = "^6.29.5"
 requests = "^2.32.3"
 pandas = "^2.2.3"
+dvc = {extras = ["s3"], version = "^3.56.0"}
 
 [build-system]
 requires = ["poetry-core"]
