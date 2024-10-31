@@ -114,6 +114,7 @@ MANDATORY_FILES = [
     "fastp.html",
     "final.contigs.fa",
     "RNA-counts",
+    "config.yml",
     "functional-annotation/stats/go.stats",
     "functional-annotation/stats/interproscan.stats",
     "functional-annotation/stats/ko.stats",
@@ -169,6 +170,7 @@ def get_ref_code_and_prefix(conf):
                     conf["ref_code"] = row[1]
                     conf["prefix"] = row[0].split("_")[0]
                     conf["batch_number"] = i + 1
+                    log.info(f"EMO BON ref_code: {conf['ref_code']}")
                     return conf
             elif math.isnan(row[0]):
                 # Not all samples with an EMO BON code were sent to sequencing
@@ -210,10 +212,15 @@ def sequence_categorisation_stanzas(target_directory, template):
 
     Return updated template, and list of sequence category filenames
     """
+
     search = os.path.join(
         target_directory, "results", "sequence-categorisation", "*.gz"
     )
     seq_cat_paths = glob.glob(search)
+    # Add the sequence categorisation files to the list of mandatory files
+    # So that they can be used to build the upload script later
+    global MANDATORY_FILES
+    MANDATORY_FILES.extend([sq.split("/results/")[1] for sq in seq_cat_paths])
     seq_cat_files = [os.path.split(f)[1] for f in seq_cat_paths]
     # Sequence-categorisation stanza
     for i, stanza in enumerate(template["@graph"]):
@@ -298,17 +305,21 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
 
     workflow_yaml_path = WORKFLOW_YAML_FILENAME.format(**conf)
     filepaths = [f.format(**conf) for f in MANDATORY_FILES]
-
     if check_exists:
         path = Path(target_directory, workflow_yaml_path)
         log.debug("Looking for worflow YAML file at: %s" % path)
         if not os.path.exists(path):
             log.error("Cannot find workflow YAML file at %s" % path)
             sys.exit()
+        else:
+            MANDATORY_FILES.append(workflow_yaml_path)
         # The fixed file paths
         for filepath in filepaths:
             log.debug(f"File path: {filepath}")
-            path = Path(target_directory, "results", filepath)
+            if filepath == "config.yml":
+                path = Path(target_directory, filepath)
+            else:
+                path = Path(target_directory, "results", filepath)
             if (
                 filepath
                 == f"functional-annotation/{conf['prefix']}.merged_CDS.I5.tsv.gz"
@@ -591,6 +602,7 @@ def write_metadata_json(target_directory, conf, filepaths):
             # "final.contigs.fa",
             # "RNA-counts",
             # "{run_parameter}.yml"
+            # "config.yml",
             filename = bits[0].format(**conf)
             for stanza in template["@graph"]:
                 if stanza["@id"] == filename:
@@ -656,6 +668,31 @@ def write_metadata_json(target_directory, conf, filepaths):
     return json.dumps(template, indent=4)
 
 
+def write_DVC_S3_Github_upload_script(target_directory, conf):
+    """Write the DVC S3 and Github upload script"""
+    log.debug(f"MANDATORY_FILES = {MANDATORY_FILES}")
+    with open(f"{conf['ref_code']}_upload.sh", "w") as f:
+        f.write("#!/bin/bash\n")
+        f.write("set -e\n")
+        f.write("set -x\n")
+        f.write("\n")
+        f.write(f"mv {target_directory.split('/')[-1]} {conf['ref_code']}\n")
+        f.write("\n")
+        for fp in MANDATORY_FILES:
+            if fp in ["config.yml", "run.yml"]:
+                nfp = Path(conf["ref_code"], fp)
+            else:
+                nfp = Path(conf["ref_code"], "results", fp.format(**conf))
+            f.write(f"dvc add {nfp}\n")
+            f.write(f"git add {nfp}.dvc\n")
+        f.write("\n")
+        f.write("dvc push\n")
+        f.write(f"git commit -m 'Added {conf['ref_code']} files'\n")
+        f.write("git push\n")
+        f.write("\n")
+    log.info("Written DVC S3 and Github upload script")
+
+
 def main(target_directory, yaml_config, with_payload, debug):
     # Logging
     if debug:
@@ -696,6 +733,10 @@ def main(target_directory, yaml_config, with_payload, debug):
     # else:
     #    log.error("Cannot find ro-crate-preview.html")
     #    sys.exit()
+
+    # Write the S3 and Github upload script
+    log.debug("Writing S3 and Github upload script...")
+    write_DVC_S3_Github_upload_script(target_directory, conf)
 
     log.debug("with_payload = %s" % with_payload)
     if with_payload:

@@ -16,7 +16,7 @@
             "@type": "Dataset",
             "name": "MetaGoFlow Results for EMO BON Sampling Event EMOBON00224",
             "description": "RO-Crate for the data products from the MetaGOflow analysis of EMO BON Sampling Event EMOBON00224",
-            "datePublished": "2024-10-30",
+            "datePublished": "2024-10-31",
             "licence": {
                 "@id": "https://creativecommons.org/licenses/by/4.0/legalcode"
             },
@@ -33,7 +33,6 @@
                 "name": "Cymon J. Cox"
             },
             "title": "EMO BON Data_release_001: MetaGOflow analysis of EMO BON Sampling Event EMOBON00224",
-            "license": "https://creativecommons.org/licenses/by/4.0/",
             "keywords": [
                 "https://dwc.tdwg.org/terms/#materialsample",
                 "https://schema.org/Dataset",
@@ -72,6 +71,9 @@
                 },
                 {
                     "@id": "RNA-counts"
+                },
+                {
+                    "@id": "config.yml"
                 }
             ]
         },
@@ -161,6 +163,14 @@
             "description": "These are the assembled contig sequences from the merged reads in FASTA format",
             "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffinal.contigs.fa",
             "encodingFormat": "text/plain"
+        },
+        {
+            "@id": "config.yml",
+            "@type": "File",
+            "name": "MetaGOflow configuration in YAML",
+            "description": "MetaGOflow YAML configuation file",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Fconfig.yml",
+            "encodingFormat": "text/yaml"
         },
         {
             "@id": "functional_annotation/",
@@ -359,97 +369,97 @@
         {
             "@id": "Bacteria_small_SRP.RF00169.fasta.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FBacteria_small_SRP.RF00169.fasta.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FBacteria_small_SRP.RF00169.fasta.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "tRNA.RF00005.fasta.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FtRNA.RF00005.fasta.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FtRNA.RF00005.fasta.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "Metazoa_SRP.RF00017.fasta.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FMetazoa_SRP.RF00017.fasta.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FMetazoa_SRP.RF00017.fasta.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "RNaseP_nuc.RF00009.fasta.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FRNaseP_nuc.RF00009.fasta.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FRNaseP_nuc.RF00009.fasta.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "LSU_rRNA_eukarya.RF02543.fa.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FLSU_rRNA_eukarya.RF02543.fa.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FLSU_rRNA_eukarya.RF02543.fa.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "tRNA-Sec.RF01852.fasta.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FtRNA-Sec.RF01852.fasta.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FtRNA-Sec.RF01852.fasta.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "LSU_rRNA_bacteria.RF02541.fa.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FLSU_rRNA_bacteria.RF02541.fa.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FLSU_rRNA_bacteria.RF02541.fa.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "SSU_rRNA_archaea.RF01959.fa.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FSSU_rRNA_archaea.RF01959.fa.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FSSU_rRNA_archaea.RF01959.fa.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "5_8S.fa.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2F5_8S.fa.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2F5_8S.fa.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "Bacteria_large_SRP.RF01854.fasta.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FBacteria_large_SRP.RF01854.fasta.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FBacteria_large_SRP.RF01854.fasta.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "SSU_rRNA_eukarya.RF01960.fa.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FSSU_rRNA_eukarya.RF01960.fa.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FSSU_rRNA_eukarya.RF01960.fa.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "RNaseP_bact_a.RF00010.fasta.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FRNaseP_bact_a.RF00010.fasta.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FRNaseP_bact_a.RF00010.fasta.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "SSU_rRNA_bacteria.RF00177.fa.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FSSU_rRNA_bacteria.RF00177.fa.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FSSU_rRNA_bacteria.RF00177.fa.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "alpha_tmRNA.RF01849.fasta.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2Falpha_tmRNA.RF01849.fasta.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2Falpha_tmRNA.RF01849.fasta.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "LSU_rRNA_archaea.RF02540.fa.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FLSU_rRNA_archaea.RF02540.fa.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FLSU_rRNA_archaea.RF02540.fa.gz",
             "encodingFormat": "application/zip"
         },
         {
             "@id": "tmRNA.RF00023.fasta.gz",
             "@type": "File",
-            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/./working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FtmRNA.RF00023.fasta.gz",
+            "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FtmRNA.RF00023.fasta.gz",
             "encodingFormat": "application/zip"
         },
         {
