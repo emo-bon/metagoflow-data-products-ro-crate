@@ -12,7 +12,7 @@
         "name" : "MetaGoFlow Results for EMO BON Sampling Event {ref_code}",                       
         "description" : "RO-Crate for the data products from the MetaGOflow analysis of EMO BON Sampling Event {ref_code}",
         "datePublished": "{datePublished}",                                              
-        "licence": {"@id": "https://creativecommons.org/licenses/by/4.0/legalcode"},                      
+        "licence": {"@id": "https://creativecommons.org/licenses/by/4.0"},                      
         "publisher": {"@id": "EMBRC", "name": "European Marine Biological Resource Centre"},
         "wasAssociatedWith": {},
         "creator": {},
