@@ -1,13 +1,13 @@
 #! /usr/bin/env python3
 
-from pathlib import Path
-import sys
-import os
-import logging as log
 import argparse
-import textwrap
-import subprocess
+import logging as log
+import os
+import pathlib as Path
 import shutil
+import subprocess
+import sys
+import textwrap
 
 desc = """
 Create Ghost Archives for MetaGOflow Data Products
