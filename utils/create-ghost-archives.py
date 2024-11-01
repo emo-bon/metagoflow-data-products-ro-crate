@@ -16,6 +16,7 @@ tarball of the MetaGOflow run archive where the archive
 consists of all the files but without any file content
 """
 
+
 def main(target_directory, debug):
     """Create Ghost Archives for MetaGOflow Data Products
 
@@ -23,7 +24,7 @@ def main(target_directory, debug):
     tarball of the MetaGOflow run archive where the archive
     consists of all the files but without any file content
     """
-    
+
     # Logging
     if debug:
         log_level = log.DEBUG
@@ -37,22 +38,22 @@ def main(target_directory, debug):
         log.error(f"Cannot find the target directory {target_directory}")
         sys.exit()
     log.debug(f"Found target directory {target_directory}")
-    
+
     # CD to target directory
     log.info(f"Changing directory to {target_directory}")
     home_dir = Path.cwd()
     os.chdir(target_directory)
-    
+
     # Get list of tarball files
-    tarball_files = Path.cwd().glob(f"*.tar.bz2")
+    tarball_files = Path.cwd().glob("*.tar.bz2")
     log.debug(f"Found {len(tarball_files)} tarball files")
     if len(tarball_files) == 0:
         log.error(f"Cannot find any tarball files in {target_directory}")
         sys.exit()
-    
+
     # Un bzip the tarballs
     for tarball_file in tarball_files:
-                
+
         run_id = Path(tarball_file.rsplit(".", 2)[0])
         log.debug(f"run_id = {run_id}")
         if run_id.exists():
@@ -81,8 +82,9 @@ def main(target_directory, debug):
     # CD back to home directory
     log.info(f"Changing directory to {home_dir}")
     os.chdir(home_dir)
-    
+
     log.info("Done")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
