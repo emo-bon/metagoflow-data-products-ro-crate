@@ -59,14 +59,13 @@ def main(target_directory, debug):
 
     # Un bzip the tarballs
     for tarball_file in tarball_files:
-
         run_id = Path(str(tarball_file).rsplit(".", 2)[0])
         log.debug(f"run_id = {run_id}")
-        
+
         if run_id.exists():
             log.debug("Found open archive")
         else:
-            log.info(f"Unbzip2ing and untaring {tarball_file}")
+            log.info(f"Opening archive {tarball_file}...")
             subprocess.call(["tar", "-xjf", f"{tarball_file}"])
             # Archive without top level directory
             if not run_id.exists():
@@ -109,7 +108,7 @@ def main(target_directory, debug):
     # CD back to home directory
     log.info(f"Changing directory to {home_dir}")
     os.chdir(home_dir)
-    
+
     log.info("Done")
 
 
