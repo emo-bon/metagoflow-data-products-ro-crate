@@ -62,6 +62,7 @@ def main(target_directory, debug):
 
         run_id = Path(str(tarball_file).rsplit(".", 2)[0])
         log.debug(f"run_id = {run_id}")
+        
         if run_id.exists():
             log.debug("Found open archive")
         else:
@@ -71,12 +72,19 @@ def main(target_directory, debug):
             if not run_id.exists():
                 log.debug(f"Checking for broken archive at {run_id}")
                 yml_files = Path.cwd().glob("*.yml")
+                log.debug(f"Found {yml_files} yml files")
+                if not len(yml_files) == 2:
+                    log.error(f"Found {len(yml_files)} yml files")
+                    sys.exit()
                 if Path("results").exists():
                     log.debug("Found broken archive")
                     Path(run_id).mkdir()
                     Path("results").rename(Path(run_id, "results"))
                     for yf in yml_files:
                         yf.rename(Path(run_id, yf.name))
+                else:
+                    log.error(f"Archive looks completely broken at {tarball_file}")
+                    sys.exit()
 
         # Recursive glob the open archive
         archive_files = run_id.rglob("*")
