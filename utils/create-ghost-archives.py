@@ -7,6 +7,7 @@ import logging as log
 import argparse
 import textwrap
 import subprocess
+import shutil
 
 desc = """
 Create Ghost Archives for MetaGOflow Data Products
@@ -45,8 +46,13 @@ def main(target_directory, debug):
     os.chdir(target_directory)
 
     # Get list of tarball files
-    tarball_files = Path.cwd().glob("*.tar.bz2")
+    tarball_files = list(Path.cwd().glob("*.tar.bz2"))
+
     log.debug(f"Found {len(tarball_files)} tarball files")
+    for tarball in tarball_files:
+        log.debug(f"Tarball: {tarball}")
+        log.debug(f"Tarball name: {tarball.name}")
+    tarball_files = [f.name for f in tarball_files]
     if len(tarball_files) == 0:
         log.error(f"Cannot find any tarball files in {target_directory}")
         sys.exit()
@@ -54,15 +60,25 @@ def main(target_directory, debug):
     # Un bzip the tarballs
     for tarball_file in tarball_files:
 
-        run_id = Path(tarball_file.rsplit(".", 2)[0])
+        run_id = Path(str(tarball_file).rsplit(".", 2)[0])
         log.debug(f"run_id = {run_id}")
         if run_id.exists():
             log.debug("Found open archive")
         else:
             log.info(f"Unbzip2ing and untaring {tarball_file}")
-            subprocess.call(["tar", "-xjvf", f"{tarball_file}"])
+            subprocess.call(["tar", "-xjf", f"{tarball_file}"])
+            # Archive without top level directory
+            if not run_id.exists():
+                log.debug(f"Checking for broken archive at {run_id}")
+                yml_files = Path.cwd().glob("*.yml")
+                if Path("results").exists():
+                    log.debug("Found broken archive")
+                    Path(run_id).mkdir()
+                    Path("results").rename(Path(run_id, "results"))
+                    for yf in yml_files:
+                        yf.rename(Path(run_id, yf.name))
 
-        # Recursive glob the archive
+        # Recursive glob the open archive
         archive_files = run_id.rglob("*")
 
         # Make ghost archive structure
@@ -79,10 +95,13 @@ def main(target_directory, debug):
             nfp.touch()
         log.info(f"Created ghost archive for {run_id}")
 
+        # Remove the open archive
+        shutil.rmtree(run_id)
+
     # CD back to home directory
     log.info(f"Changing directory to {home_dir}")
     os.chdir(home_dir)
-
+    
     log.info("Done")
 
 
