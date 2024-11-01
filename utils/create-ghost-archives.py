@@ -19,18 +19,7 @@ consists of all the files but without any file content
 
 
 def main(target_directory, debug):
-    """Create Ghost Archives for MetaGOflow Data Products
-
-    This script creates a 'ghost' archive of a bzipped
-    tarball of the MetaGOflow run archive where the archive
-    consists of all the files but without any file content
-    """
-
-    # Logging
-    if debug:
-        log_level = log.DEBUG
-    else:
-        log_level = log.INFO
+    log_level = log.DEBUG if debug else log.INFO
     log.basicConfig(format="\t%(levelname)s: %(message)s", level=log_level)
 
     # Check the target_directory name
@@ -59,6 +48,8 @@ def main(target_directory, debug):
 
     # Un bzip the tarballs
     for tarball_file in tarball_files:
+        broken = False
+
         run_id = Path(str(tarball_file).rsplit(".", 2)[0])
         log.debug(f"run_id = {run_id}")
 
@@ -69,8 +60,9 @@ def main(target_directory, debug):
             subprocess.call(["tar", "-xjf", f"{tarball_file}"])
             # Archive without top level directory
             if not run_id.exists():
+                broken = True
                 log.debug(f"Checking for broken archive at {run_id}")
-                yml_files = Path.cwd().glob("*.yml")
+                yml_files = list(Path.cwd().glob("*.yml"))
                 log.debug(f"Found {yml_files} yml files")
                 if not len(yml_files) == 2:
                     log.error(f"Found {len(yml_files)} yml files")
@@ -103,7 +95,8 @@ def main(target_directory, debug):
         log.info(f"Created ghost archive for {run_id}")
 
         # Remove the open archive
-        shutil.rmtree(run_id)
+        if not broken:
+            shutil.rmtree(run_id)
 
     # CD back to home directory
     log.info(f"Changing directory to {home_dir}")
