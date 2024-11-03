@@ -8,6 +8,7 @@ import argparse
 import textwrap
 import subprocess
 import shutil
+import psutil
 
 desc = """
 Create Ghost Archives for MetaGOflow Data Products
@@ -53,7 +54,7 @@ def main(
         Path("ghost-archives").mkdir(exist_ok=True)
         Path("fixed-archives").mkdir(exist_ok=True)
 
-    # Un bzip the tarballs
+    # Loop through the tarball files
     for tarball_file in tarball_files:
         archive_without_top_level = False
 
@@ -75,9 +76,34 @@ def main(
             # For untaring archives
             Path("temp").mkdir(exist_ok=False)
             os.chdir("temp")
-            log.info(f"Opening archive {tarball_file} in ./temp...")
-            subprocess.call(["tar", "-xjf", f"../{tarball_file}"])
 
+            # Find best bzip2 programme
+            if shutil.which("lbzip2"):
+                # Get nunmber of threads/cpu cores
+                threads = psutil.cpu_count() - 2
+                log.info(f"Using lbzip2 with {threads} threads")
+                bzip2_program = f"lbzip2 -n {threads}"
+            elif shutil.which("bzip2"):
+                log.info("Using bzip2")
+                bzip2_program = "bzip2"
+            else:
+                log.error("Cannot find lbzip2 or bzip2")
+                log.error("Exiting...")
+                sys.exit()
+
+            log.info(f"Opening archive {tarball_file} with {bzip2_program}")
+            # tar --use-compress-program lbunzip2 -xvf ../HMNJKDSX3.UDI200.tar.bz2
+            subprocess.call(
+                [
+                    "tar",
+                    "--use-compress-program",
+                    {bzip2_program},
+                    "-xf",
+                    f"../{tarball_file}",
+                ]
+            )
+
+            # Check archive
             if run_id.exists():
                 os.chdir("..")
                 # Move archive up to target directory
@@ -124,7 +150,14 @@ def main(
             # Double neg: fix it
             log.info(f"Fixing archive without top level directory {run_id}")
             subprocess.call(
-                ["tar", "-cjf", f"fixed-archives/{run_id}.tar.bz2", f"{run_id}"]
+                [
+                    "tar",
+                    "--use-compress-program",
+                    bzip2_program,
+                    "-cf",
+                    f"fixed-archives/{run_id}.tar.bz2",
+                    f"{run_id}",
+                ]
             )
         if remove_open_archives:
             shutil.rmtree(run_id)
