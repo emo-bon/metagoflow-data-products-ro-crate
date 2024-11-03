@@ -73,8 +73,16 @@ def main(
             # and we want to ensure those files go into the ghost
             # archive even if they never go to S3
 
-            # For untaring archives
-            Path("temp").mkdir(exist_ok=False)
+            # Create temp dir in which to untar archives
+            try:
+                Path("temp").mkdir(exist_ok=False)
+            except FileExistsError as e:
+                log.error(
+                    f"A directory called 'temp' in the target directory already exists: {e}"
+                )
+                log.error("Exiting...")
+                sys.exit()
+
             os.chdir("temp")
 
             # Find best bzip2 programme
@@ -93,11 +101,11 @@ def main(
 
             log.info(f"Opening archive {tarball_file} with {bzip2_program}")
             # tar --use-compress-program lbunzip2 -xvf ../HMNJKDSX3.UDI200.tar.bz2
-            subprocess.call(
+            subprocess.check_call(
                 [
                     "tar",
                     "--use-compress-program",
-                    {bzip2_program},
+                    f"{bzip2_program}",
                     "-xf",
                     f"../{tarball_file}",
                 ]
@@ -126,7 +134,7 @@ def main(
                     os.chdir("..")
                     shutil.rmtree("temp")
                     log.debug("Renaming broken archive")
-                    tarball_file.rename(f"{tarball_file}-broken")
+                    Path(tarball_file).rename(f"{tarball_file}-broken")
                     continue
 
         # Recursive glob the open archive
@@ -153,7 +161,7 @@ def main(
                 [
                     "tar",
                     "--use-compress-program",
-                    bzip2_program,
+                    f"{bzip2_program}",
                     "-cf",
                     f"fixed-archives/{run_id}.tar.bz2",
                     f"{run_id}",
