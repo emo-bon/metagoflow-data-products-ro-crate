@@ -72,9 +72,9 @@
     },
     {
         "@id": "{metagoflow_version}", 
-        "@type": "File",
-        "name": "MetaGOflow Workflow Version README",
-        "description": "Metadata for the version of the MetaGOflow workflow used to generate the data",
+        "@type": "SoftwareApplication",
+        "name": "MetaGOflow",
+        "description": "The MetaGOflow workflow software used to generate the metagenomic data",
         "softwareVersion": "{metagoflow_version_id}",
         "downloadUrl": "{metagoflow_version}",
         "encodingFormat": "text/plain"
