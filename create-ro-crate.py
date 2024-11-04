@@ -874,6 +874,12 @@ def remove_data_files_from_ro_crate(ro_crate_name):
 
 
 def main(target_directory, yaml_config, with_dvc, debug):
+    """
+    TODO: reconfigure so the the open archive is not deleted during the process
+    TODO: change the ro-crate name to sampl_mat_id
+    TODO: deal with I5 chunks in functional-annotation
+    TODO: fix the links in the metadata.json need to use EMOBON ref_code not target_directory
+    """
     # Logging
     if debug:
         log_level = log.DEBUG
