@@ -9,7 +9,6 @@ import yaml
 import json
 import datetime
 import requests
-import tempfile
 import shutil
 import glob
 import subprocess
@@ -547,7 +546,7 @@ def write_metadata_json(target_directory, conf, filepaths):
                 ("identifier", f"https://orcid.org/{conf[f'{person}_identifier']}"),
                 (
                     "affiliation",
-                    f"https://edmo.seadatanet.org/report/{conf['creator_person_station_edmoid']}",
+                    f"https://edmo.seadatanet.org/report/{conf[f'{person}_station_edmoid']}",
                 ),
             ]
         )
@@ -669,8 +668,12 @@ def write_metadata_json(target_directory, conf, filepaths):
     return json.dumps(template, indent=4)
 
 
-def write_DVC_S3_Github_upload_script(conf):
-    """Write the DVC S3 and Github upload script"""
+def write_dvc_upload_script(conf):
+    """Write the DVC S3 and Github upload script
+    
+    s5cmd --profile eosc-fairease1 \
+        --endpoint-url https://s3.mesocentre.uca.fr ls s3://mgf-data-products/
+    """
     log.debug(f"MANDATORY_FILES = {MANDATORY_FILES}")
     upload_script_path = Path(RO_CRATE_REPO_PATH, f"{conf['ref_code']}_upload.sh")
     with open(upload_script_path, "w") as f:
@@ -692,6 +695,8 @@ def write_DVC_S3_Github_upload_script(conf):
             f.write(f"dvc add {np}\n")
 
         f.write("\n")
+        f.write("dvc push\n")
+        f.write("\n")
 
         # Remove the files
         for fp in MANDATORY_FILES:
@@ -710,18 +715,24 @@ def write_DVC_S3_Github_upload_script(conf):
     return upload_script_path
 
 
-def initialise_dvc_repo(ro_crate_path):
-    """Initialise the DVC repository
+def initialise_dvc_repo():
+    """Initialise the DVC repository in RO_CRATE_REPO_PATH
 
     dvc remote add -d myremote s3://mgf-data-products
     dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr
-    dvc remote modify myremote profile "eosc-fairease1" # run this if you make use of a profile in your s3 config
+    dvc remote modify myremote profile "eosc-fairease1"
+
+    The issue here is that ./RO_CRATE_REPO_PATH is not a git repository
+    so cannot initialise DVC with git.
+
+    A solution might be to have the repo as a submodule of a git repo
+    https://git-scm.com/book/en/v2/Git-Tools-Submodules
 
     """
     cwd_dir = Path.cwd()
-    os.chdir(ro_crate_path)
+    os.chdir(RO_CRATE_REPO_PATH)
     cmds = [
-        "dvc init --no-scm ",  # should we be using --subdir here?
+        "dvc init --no-scm ",  # should we be using --subdir git submodule here?
         "dvc remote add -d myremote s3://mgf-data-products",
         "dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr",
         "dvc remote modify myremote profile 'eosc-fairease1'",
@@ -741,9 +752,8 @@ def initialise_dvc_repo(ro_crate_path):
     os.chdir(cwd_dir)
 
 
-def run_upload_script(upload_script_path):
-    """Run the upload script"""
-    log.info("Running the upload script...")
+def run_dvc_upload_script(upload_script_path):
+    """Run the DVC upload script"""
     # Path(ro_crate_path, f"{conf['ref_code']}_upload.sh")
     # First move to the ro-crate directory
     cwd_dir = Path.cwd()
@@ -762,13 +772,23 @@ def run_upload_script(upload_script_path):
         log.error("Return code: %s" % return_code)
         log.error("Exiting...")
         sys.exit()
-    log.info("Upload script completed without error")
     os.chdir(cwd_dir)
 
 
-def move_files_out_of_results(ro_crate_path):
-    src_path = ro_crate_path.joinpath("results")
-    for fp in src_path.glob("*"):  # grabs all files and dirs (not recursive: good!)
+def move_files_out_of_results(new_archive_path):
+    """Remove chunk lists from functional-annotation so that dirs can be copied
+    as is to the RO-Crate
+    """
+    src_path = new_archive_path / "results"
+    # Check for chunk lists in functional-annotation
+    chunks_path = src_path / "functional-annotation" / "*.chunks"
+    for cl in list(chunks_path.glob("*")):
+        log.debug(f"Removing chunk list: {cl}")
+        cl.unlink()
+
+    # grabs all files and dirs in results
+    # not recursive: good! we can move the dirs as is
+    for fp in src_path.glob("*"):
         if fp.is_dir() or fp.name in MANDATORY_FILES:
             trg_path = src_path.parent  # gets the parent of the folder
             log.debug(f"Moving {fp} to {trg_path.joinpath(fp.name)}")
@@ -783,16 +803,77 @@ def move_files_out_of_results(ro_crate_path):
             # DBH.merged_CDS.ffn
             # DBH.merged.motus.tsv
             # DBH.merged.unfiltered_fasta
-    # Deal with RNA-counts
-    old_path = ro_crate_path.joinpath("RNA-counts")
-    new_path = ro_crate_path.joinpath("taxonomy-summary", "RNA-counts")
+    # Move RNA-counts into the taxonomy-summary directory
+    old_path = new_archive_path.joinpath("RNA-counts")
+    new_path = new_archive_path.joinpath("taxonomy-summary", "RNA-counts")
     log.debug(f"Moving {old_path} to {new_path}")
     old_path.rename(new_path)
+
     # Remove the results folder
     shutil.rmtree(src_path)  # incl. files not destined for the RO-Crate
 
 
-def main(target_directory, yaml_config, with_payload, debug):
+def sync_to_s3(conf):
+    """
+    s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync ./EMOBON00141 s3://mgf-data-products
+    """
+    # We need to be in the RO_CRATE_REPO_PATH to run the s5cmd command
+    # ie the dir above the ro-crate directory
+    cwd = Path.cwd()
+    os.chdir(RO_CRATE_REPO_PATH)
+
+    # Move the ro-crate-metadata.json and ro-crate-preview.html to the parent directory
+    # so that they are not included in the sync
+    ro_crate_metatadata_path = Path(conf["ref_code"], "ro-crate-metadata.json")
+    temp_ro_crate_metadata_path = Path.cwd() / "ro-crate-metadata.json"
+    ro_crate_metatadata_path.rename(temp_ro_crate_metadata_path)
+
+    ro_crate_preview_path = Path(conf["ref_code"], "ro-crate-preview.html")
+    temp_ro_crate_preview_path = Path.cwd() / "ro-crate-preview.html"
+    ro_crate_preview_path.rename(temp_ro_crate_preview_path)
+
+    cmd = f"s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync {conf['ref_code']} s3://mgf-data-products"
+    child = subprocess.Popen(
+        str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+    )
+    stdoutdata, stderrdata = child.communicate()
+    return_code = child.returncode
+    if return_code != 0:
+        log.error("Error whilst trying to sync to S3")
+        log.error("Stderr: %s " % stderrdata)
+        log.error("Command: %s" % cmd)
+        log.error("Return code: %s" % return_code)
+        log.error("Exiting...")
+        sys.exit()
+    log.info("Synced to S3")
+
+    # Move the ro-crate-metadata.json and ro-crate-preview.html back to the ro-crate directory
+    temp_ro_crate_metadata_path.rename(ro_crate_metatadata_path)
+    temp_ro_crate_preview_path.rename(ro_crate_preview_path)
+    os.chdir(cwd)
+
+
+def remove_data_files_from_ro_crate(ro_crate_name):
+    """Remove the data files from the ro-crate directory"""
+    data_dirs = [
+        "functional-annotation",
+        "sequence-categorisation",
+        "taxonomy-summary",
+    ]
+    for dd in data_dirs:
+        shutil.rmtree(ro_crate_name / dd)
+    data_files = [
+        "config.yml",
+        "fastp.html",
+        "final.contigs.fa",
+        "run.yml",
+    ]
+    for df in data_files:
+        Path(ro_crate_name, df).unlink()
+    log.info("Removed data files from ro-crate directory")
+
+
+def main(target_directory, yaml_config, with_dvc, debug):
     # Logging
     if debug:
         log_level = log.DEBUG
@@ -820,6 +901,9 @@ def main(target_directory, yaml_config, with_payload, debug):
 
     # Get the emo bon ref_code, batch number, and prefix
     conf = get_ref_code_and_prefix(conf)
+    # TODO change ro-crate name to sampl_mat_i
+    # e.g. EMOBON_RFormosa_Wa_21-ro-crate
+    # conf["sampl_mat_id"] = "EMOBON_RFormosa_Wa_21"
 
     # Check all files are present
     log.info("Checking data files...")
@@ -840,82 +924,57 @@ def main(target_directory, yaml_config, with_payload, debug):
     writeHTMLpreview(metadata_path)
 
     log.debug("Renaming and moving target directory...")
-    ro_crate_path = Path(RO_CRATE_REPO_PATH, conf["ref_code"] + "-ro-crate")
+    new_archive_path = Path(RO_CRATE_REPO_PATH, conf["ref_code"])
     try:
-        Path(target_directory).rename(ro_crate_path)
+        Path(target_directory).rename(new_archive_path)
     except OSError as e:
         if "Invalid cross-device link" in str(e):
             # Must use shutil.move to move the directory if across devices
-            shutil.move(target_directory, ro_crate_path)
+            shutil.move(target_directory, new_archive_path)
         else:
             log.error(
-                f"Error renaming and moving {target_directory} to {ro_crate_path}"
+                f"Error renaming and moving {target_directory} to {new_archive_path}"
             )
             log.error(f"Error: {e}")
             sys.exit()
-    log.info(f"Renamed and moved {target_directory} to {ro_crate_path}")
+    log.info(f"Renamed and moved {target_directory} to {new_archive_path}")
 
-    # Move all files out of the results directory
+    # Move all files out of the results directory into top level
+    # and remove the results directory and files not in the RO-Crate
     log.debug("Moving all files out of the results directory...")
-    move_files_out_of_results(ro_crate_path)
+    move_files_out_of_results(new_archive_path)
 
-    # Init the DVC repository
-    # log.info("Initialising DVC repository...")
-    # initialise_dvc_repo(ro_crate_path)
-    # log.info("DVC repository initialised")
-    # Write the S3 and Github upload script
-    log.debug("Writing S3 and Github upload script...")
-    upload_script_path = write_DVC_S3_Github_upload_script(conf)
-    log.info(f"Written upload script to {upload_script_path}")
-    run_upload_script(upload_script_path)
-    log.info("Upload script completed without error")
+    if with_dvc:
+        """
+        This is just a bad bad idea, so not doing it
 
-    sys.exit()
-    # git add .dvc/config
-    # git commit -m "update dvc config"
-
-    log.debug("with_payload = %s" % with_payload)
-    if with_payload:
-        """Currently broken"""
-        # OK, all's good, let's build the RO-Crate
-        log.info("Creating payload: copying data files...")
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            # Deal with the YAML file
-            yf = WORKFLOW_YAML_FILENAME.format(**conf)
-            source = os.path.join(target_directory, yf)
-            shutil.copy(source, os.path.join(tmpdirname, yf))
-
-            # Build the ro-crate dir structure
-            output_dirs = [
-                "functional-annotation/stats",
-                "sequence-categorisation",
-                "taxonomy-summary/LSU",
-                "taxonomy-summary/SSU",
-            ]
-            for d in output_dirs:
-                os.makedirs(os.path.join(tmpdirname, d))
-            # Loop over results files and sequence categorisation files
-            for fp in filepaths:
-                source = os.path.join(target_directory, "results", fp)
-                log.debug("source = %s" % source)
-                log.debug("dest = %s" % os.path.join(tmpdirname, fp))
-                shutil.copy(source, os.path.join(tmpdirname, fp))
-
-            # Write the json metadata file:
-            with open(
-                os.path.join(tmpdirname, "ro-crate-metadata.json"), "w"
-            ) as outfile:
-                outfile.write(metadata_json_formatted)
-
-            # Write the HTML preview file
-            writeHTMLpreview(tmpdirname)
-
-            # Zip it up:
-            log.info("Zipping data to ro-crate... (this could take some time...)")
-            ro_crate_name = "%s-ro-crate" % os.path.split(target_directory)[1]
-            shutil.make_archive(ro_crate_name, "zip", tmpdirname)
-            log.info("Done")
-    log.info("Build completed without error")
+        Yes, it works but there is no usable download URL for the files
+        You have to install DVC and clone the repo to get the files
+        """
+        # Init the DVC repository
+        if not Path(RO_CRATE_REPO_PATH, ".dvc").exists():
+            log.info(f"Initialising DVC repository in {RO_CRATE_REPO_PATH}")
+            initialise_dvc_repo()
+            log.info("DVC repository initialised")
+        # Write the S3 and Github upload script
+        log.debug("Writing S3 and Github upload script...")
+        upload_script_path = write_dvc_upload_script(conf)
+        log.info(f"Written upload script to {upload_script_path}")
+        log.info("Running upload script...")
+        run_dvc_upload_script(upload_script_path)
+        log.info(" DVC upload script completed without error")
+        log.info("Done without error")
+        sys.exit()
+    else:
+        # Sync the RO-Crate to S3
+        log.info("Syncing RO-Crate directly to S3...")
+        sync_to_s3(conf)
+        # Rename new ro-crate
+        ro_crate_name = Path(RO_CRATE_REPO_PATH, conf["ref_code"] + "-ro-crate")
+        Path(RO_CRATE_REPO_PATH, conf["ref_code"]).rename(ro_crate_name)
+        log.info("Renamed ro-crate directory")
+        remove_data_files_from_ro_crate(ro_crate_name)
+        log.info("Done without error")
 
 
 if __name__ == "__main__":
@@ -931,18 +990,21 @@ if __name__ == "__main__":
         "yaml_config", help="Name of YAML config file for building RO-Crate"
     )
     parser.add_argument(
-        "-w",
-        "--with_payload",
-        help="Build the RO-Crate with the payload (data files)",
+        "-u",
+        "--with-dvc",
+        help="Upload using DVC (not recommended)",
         default=False,
         action="store_true",
     )
     parser.add_argument("-d", "--debug", action="store_true", help="DEBUG logging")
     args = parser.parse_args()
-    if args.with_payload:
+    if args.with_dvc:
         log.info(
-            "Payload inclusion is currently broken and may be removed in the future"
+            "Use DVC (not recommended) and not allowing you!"
+            "You're going to have to edit the code to make this work"
+            "This is here just for legacy reasons"
+            "But yes, it does work, as such..."
         )
         log.info("Exiting...")
         sys.exit()
-    main(args.target_directory, args.yaml_config, args.with_payload, args.debug)
+    main(args.target_directory, args.yaml_config, args.with_dvc, args.debug)
