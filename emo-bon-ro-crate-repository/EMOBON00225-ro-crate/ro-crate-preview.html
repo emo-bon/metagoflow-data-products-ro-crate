@@ -23,11 +23,11 @@
     {
       "@id": "./",
       "@type": "Dataset",
-      "name": "MetaGoFlow Results for EMO BON Sampling Event EMOBON00224",
-      "description": "RO-Crate for the data products from the MetaGOflow analysis of EMO BON Sampling Event EMOBON00224",
-      "datePublished": "2024-10-31",
+      "name": "MetaGoFlow Results for EMO BON Sampling Event EMOBON00225",
+      "description": "RO-Crate for the data products from the MetaGOflow analysis of EMO BON Sampling Event EMOBON00225",
+      "datePublished": "2024-11-05",
       "licence": {
-        "@id": "https://creativecommons.org/licenses/by/4.0/legalcode"
+        "@id": "https://creativecommons.org/licenses/by/4.0"
       },
       "publisher": {
         "@id": "EMBRC"
@@ -38,7 +38,7 @@
       "creator": {
         "@id": "Cymon J. Cox"
       },
-      "title": "EMO BON Data_release_001: MetaGOflow analysis of EMO BON Sampling Event EMOBON00224",
+      "title": "EMO BON Data_release_001: MetaGOflow analysis of EMO BON Sampling Event EMOBON00225",
       "keywords": [
         "https://dwc.tdwg.org/terms/#materialsample",
         "https://schema.org/Dataset",
@@ -52,7 +52,7 @@
       ],
       "hasPart": [
         {
-          "@id": "https://www.ebi.ac.uk/ena/browser/view/ERS20535379"
+          "@id": "https://www.ebi.ac.uk/ena/browser/view/ERS20535380"
         },
         {
           "@id": "https://github.com/emo-bon/MetaGOflow/issues/53"
@@ -84,12 +84,6 @@
       ]
     },
     {
-      "@id": "https://creativecommons.org/licenses/by/4.0/legalcode",
-      "@type": "CreativeWork",
-      "identifier": "https://creativecommons.org/licenses/by/4.0/legalcode",
-      "name": "Creative Commons (CC-BY 4.0)"
-    },
-    {
       "@id": "EMBRC",
       "@type": "Organization",
       "name": "European Marine Biological Resource Centre",
@@ -115,18 +109,18 @@
       "affiliation": "https://edmo.seadatanet.org/report/2516"
     },
     {
-      "@id": "https://www.ebi.ac.uk/ena/browser/view/ERS20535379",
+      "@id": "https://www.ebi.ac.uk/ena/browser/view/ERS20535380",
       "@type": "Dataset",
-      "name": "ERS20535379",
+      "name": "EMBL ENA Accession Number ERS20535380",
       "description": "ENA Accession Number of raw sequence data and associated metadata",
-      "downloadUrl": "https://www.ebi.ac.uk/ena/browser/view/ERS20535379",
+      "downloadUrl": "https://www.ebi.ac.uk/ena/browser/view/ERS20535380",
       "encodingFormat": "text/xml"
     },
     {
       "@id": "https://github.com/emo-bon/MetaGOflow/issues/53",
-      "@type": "File",
-      "name": "MetaGOflow Workflow Version README",
-      "description": "Metadata for the version of the MetaGOflow workflow used to generate the data",
+      "@type": "SoftwareApplication",
+      "name": "MetaGOflow Software",
+      "description": "The MetaGOflow workflow software used to generate the metagenomic data",
       "softwareVersion": "develop (3cf3a7d)",
       "downloadUrl": "https://github.com/emo-bon/MetaGOflow/issues/53",
       "encodingFormat": "text/plain"
@@ -136,7 +130,7 @@
       "@type": "File",
       "name": "MetaGOflow YAML configuration file",
       "description": "YAML configuration file for execution of MetaGOflow workflow.",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Frun.yml",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Frun.yml",
       "encodingFormat": "text/yaml"
     },
     {
@@ -144,7 +138,7 @@
       "@type": "File",
       "name": "FASTP analysis of raw sequence data",
       "description": "Quality control and preprocessing of FASTQ files",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffastp.html",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffastp.html",
       "encodingFormat": "text/html"
     },
     {
@@ -152,7 +146,7 @@
       "@type": "File",
       "name": "FASTA formatted contig sequences",
       "description": "These are the assembled contig sequences from the merged reads in FASTA format",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffinal.contigs.fa",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffinal.contigs.fa",
       "encodingFormat": "text/plain"
     },
     {
@@ -197,10 +191,19 @@
           "@id": "Bacteria_small_SRP.RF00169.fasta.gz"
         },
         {
+          "@id": "Archaea_SRP.RF01857.fasta.gz"
+        },
+        {
           "@id": "tRNA.RF00005.fasta.gz"
         },
         {
           "@id": "Metazoa_SRP.RF00017.fasta.gz"
+        },
+        {
+          "@id": "RNaseP_bact_b.RF00011.fasta.gz"
+        },
+        {
+          "@id": "cyano_tmRNA.RF01851.fasta.gz"
         },
         {
           "@id": "RNaseP_nuc.RF00009.fasta.gz"
@@ -264,7 +267,7 @@
       "@id": "RNA-counts",
       "@type": "File",
       "name": "Numbers of RNA's counted",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2FRNA-counts",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2FRNA-counts",
       "encodingFormat": "text/plain"
     },
     {
@@ -272,7 +275,7 @@
       "@type": "File",
       "name": "MetaGOflow configuration in YAML",
       "description": "MetaGOflow YAML configuation file",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Fconfig.yml",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fconfig.yml",
       "encodingFormat": "text/yaml"
     },
     {
@@ -282,6 +285,12 @@
       "email": "help@embrc.org",
       "identifier": "help@embrc.org",
       "url": "https://www.embrc.eu/about-us/contact-us"
+    },
+    {
+      "@id": "https://creativecommons.org/licenses/by/4.0/legalcode",
+      "@type": "CreativeWork",
+      "identifier": "https://creativecommons.org/licenses/by/4.0/legalcode",
+      "name": "Creative Commons (CC-BY 4.0)"
     },
     {
       "@id": "Centre of Marine Sciences (CCMAR)",
@@ -316,180 +325,198 @@
       "@id": "DBH.merged_CDS.I5.tsv.gz",
       "@type": "File",
       "name": "Merged contigs CDS I5 summary",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2FDBH.merged_CDS.I5.tsv.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2FDBH.merged_CDS.I5.tsv.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "DBH.merged.hmm.tsv.gz",
       "@type": "File",
       "name": "Merged contigs HMM summary",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2FDBH.merged.hmm.tsv.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2FDBH.merged.hmm.tsv.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "DBH.merged.summary.go",
       "@type": "File",
       "name": "Merged contigs GO summary",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2FDBH.merged.summary.go",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2FDBH.merged.summary.go",
       "encodingFormat": "text/plain"
     },
     {
       "@id": "DBH.merged.summary.go_slim",
       "@type": "File",
       "name": "Merged contigs InterProScan slim",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2FDBH.merged.summary.go_slim",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2FDBH.merged.summary.go_slim",
       "encodingFormat": "text/plain"
     },
     {
       "@id": "DBH.merged.summary.ips",
       "@type": "File",
       "name": "Merged contigs InterProScan",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2FDBH.merged.summary.ips",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2FDBH.merged.summary.ips",
       "encodingFormat": "text/plain"
     },
     {
       "@id": "DBH.merged.summary.ko",
       "@type": "File",
       "name": "Merged contigs KO summary",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2FDBH.merged.summary.ko",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2FDBH.merged.summary.ko",
       "encodingFormat": "text/plain"
     },
     {
       "@id": "DBH.merged.summary.pfam",
       "@type": "File",
       "name": "Merged contigs PFAM summary",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2FDBH.merged.summary.pfam",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2FDBH.merged.summary.pfam",
       "encodingFormat": "text/plain"
     },
     {
       "@id": "go.stats",
       "@type": "File",
       "name": "Geno Ontology summary statistics",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2Fstats%2Fgo.stats",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2Fstats%2Fgo.stats",
       "encodingFormat": "text/plain"
     },
     {
       "@id": "interproscan.stats",
       "@type": "File",
       "name": "InterProScan summary statistics",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2Fstats%2Finterproscan.stats",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2Fstats%2Finterproscan.stats",
       "encodingFormat": "text/plain"
     },
     {
       "@id": "ko.stats",
       "@type": "File",
       "name": "Kegg Ontology summary statistics",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2Fstats%2Fko.stats",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2Fstats%2Fko.stats",
       "encodingFormat": "text/plain"
     },
     {
       "@id": "orf.stats",
       "@type": "File",
       "name": "ORF summary statistics",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2Fstats%2Forf.stats",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2Fstats%2Forf.stats",
       "encodingFormat": "text/plain"
     },
     {
       "@id": "pfam.stats",
       "@type": "File",
       "name": "Pfam summary statistcs",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffunctional-annotation%2Fstats%2Fpfam.stats",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffunctional-annotation%2Fstats%2Fpfam.stats",
       "encodingFormat": "text/plain"
     },
     {
       "@id": "Bacteria_small_SRP.RF00169.fasta.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FBacteria_small_SRP.RF00169.fasta.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FBacteria_small_SRP.RF00169.fasta.gz",
+      "encodingFormat": "application/zip"
+    },
+    {
+      "@id": "Archaea_SRP.RF01857.fasta.gz",
+      "@type": "File",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FArchaea_SRP.RF01857.fasta.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "tRNA.RF00005.fasta.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FtRNA.RF00005.fasta.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FtRNA.RF00005.fasta.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "Metazoa_SRP.RF00017.fasta.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FMetazoa_SRP.RF00017.fasta.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FMetazoa_SRP.RF00017.fasta.gz",
+      "encodingFormat": "application/zip"
+    },
+    {
+      "@id": "RNaseP_bact_b.RF00011.fasta.gz",
+      "@type": "File",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FRNaseP_bact_b.RF00011.fasta.gz",
+      "encodingFormat": "application/zip"
+    },
+    {
+      "@id": "cyano_tmRNA.RF01851.fasta.gz",
+      "@type": "File",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2Fcyano_tmRNA.RF01851.fasta.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "RNaseP_nuc.RF00009.fasta.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FRNaseP_nuc.RF00009.fasta.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FRNaseP_nuc.RF00009.fasta.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "LSU_rRNA_eukarya.RF02543.fa.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FLSU_rRNA_eukarya.RF02543.fa.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FLSU_rRNA_eukarya.RF02543.fa.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "tRNA-Sec.RF01852.fasta.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FtRNA-Sec.RF01852.fasta.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FtRNA-Sec.RF01852.fasta.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "LSU_rRNA_bacteria.RF02541.fa.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FLSU_rRNA_bacteria.RF02541.fa.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FLSU_rRNA_bacteria.RF02541.fa.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "SSU_rRNA_archaea.RF01959.fa.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FSSU_rRNA_archaea.RF01959.fa.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FSSU_rRNA_archaea.RF01959.fa.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "5_8S.fa.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2F5_8S.fa.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2F5_8S.fa.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "Bacteria_large_SRP.RF01854.fasta.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FBacteria_large_SRP.RF01854.fasta.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FBacteria_large_SRP.RF01854.fasta.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "SSU_rRNA_eukarya.RF01960.fa.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FSSU_rRNA_eukarya.RF01960.fa.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FSSU_rRNA_eukarya.RF01960.fa.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "RNaseP_bact_a.RF00010.fasta.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FRNaseP_bact_a.RF00010.fasta.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FRNaseP_bact_a.RF00010.fasta.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "SSU_rRNA_bacteria.RF00177.fa.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FSSU_rRNA_bacteria.RF00177.fa.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FSSU_rRNA_bacteria.RF00177.fa.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "alpha_tmRNA.RF01849.fasta.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2Falpha_tmRNA.RF01849.fasta.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2Falpha_tmRNA.RF01849.fasta.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "LSU_rRNA_archaea.RF02540.fa.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FLSU_rRNA_archaea.RF02540.fa.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FLSU_rRNA_archaea.RF02540.fa.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "tmRNA.RF00023.fasta.gz",
       "@type": "File",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/working/HCFCYDSX5.UDI129%2Fsequence-categorisation%2FtmRNA.RF00023.fasta.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fsequence-categorisation%2FtmRNA.RF00023.fasta.gz",
       "encodingFormat": "application/zip"
     },
     {
@@ -546,77 +573,77 @@
       "@id": "krona.html",
       "@type": "File",
       "name": "Krona summary of LSU taxonomic inventory",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FSSU%2Fkrona.html",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FSSU%2Fkrona.html",
       "encodingFormat": "application/html"
     },
     {
       "@id": "DBH.merged_LSU.fasta.mseq.gz",
       "@type": "File",
       "name": "LSU sequences used for indentification",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FLSU%2FDBH.merged_LSU.fasta.mseq.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FLSU%2FDBH.merged_LSU.fasta.mseq.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "DBH.merged_LSU.fasta.mseq_hdf5.biom",
       "@type": "File",
       "name": "BIOM formatted hdf5 taxon counts for LSU sequences",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FLSU%2FDBH.merged_LSU.fasta.mseq_hdf5.biom",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FLSU%2FDBH.merged_LSU.fasta.mseq_hdf5.biom",
       "encodingFormat": "application/json-ld"
     },
     {
       "@id": "DBH.merged_LSU.fasta.mseq_json.biom",
       "@type": "File",
       "name": "BIOM formatted taxon counts for LSU sequences",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FLSU%2FDBH.merged_LSU.fasta.mseq_json.biom",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FLSU%2FDBH.merged_LSU.fasta.mseq_json.biom",
       "encodingFormat": "application/json-ld"
     },
     {
       "@id": "DBH.merged_LSU.fasta.mseq.tsv",
       "@type": "File",
       "name": "Tab-separated formatted taxon counts for LSU sequences",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FLSU%2FDBH.merged_LSU.fasta.mseq.tsv",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FLSU%2FDBH.merged_LSU.fasta.mseq.tsv",
       "encodingFormat": "application/json-ld"
     },
     {
       "@id": "DBH.merged_LSU.fasta.mseq.txt",
       "@type": "File",
       "name": "Text-based taxon counts for LSU sequences",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FLSU%2FDBH.merged_LSU.fasta.mseq.txt",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FLSU%2FDBH.merged_LSU.fasta.mseq.txt",
       "encodingFormat": "application/json-ld"
     },
     {
       "@id": "DBH.merged_SSU.fasta.mseq.gz",
       "@type": "File",
       "name": "LSU sequences used for indentification",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FSSU%2FDBH.merged_SSU.fasta.mseq.gz",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FSSU%2FDBH.merged_SSU.fasta.mseq.gz",
       "encodingFormat": "application/zip"
     },
     {
       "@id": "DBH.merged_SSU.fasta.mseq_hdf5.biom",
       "@type": "File",
       "name": "BIOM formatted hdf5 taxon counts for SSU sequences",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FSSU%2FDBH.merged_SSU.fasta.mseq_hdf5.biom",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FSSU%2FDBH.merged_SSU.fasta.mseq_hdf5.biom",
       "encodingFormat": "application/json-ld"
     },
     {
       "@id": "DBH.merged_SSU.fasta.mseq_json.biom",
       "@type": "File",
       "name": "BIOM formatted taxon counts for SSU sequences",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FSSU%2FDBH.merged_SSU.fasta.mseq_json.biom",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FSSU%2FDBH.merged_SSU.fasta.mseq_json.biom",
       "encodingFormat": "application/json-ld"
     },
     {
       "@id": "DBH.merged_SSU.fasta.mseq.tsv",
       "@type": "File",
       "name": "Tab-separated formatted taxon counts for SSU sequences",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FSSU%2FDBH.merged_SSU.fasta.mseq.tsv",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FSSU%2FDBH.merged_SSU.fasta.mseq.tsv",
       "encodingFormat": "application/json-ld"
     },
     {
       "@id": "DBH.merged_SSU.fasta.mseq.txt",
       "@type": "File",
       "name": "Text-based formatted taxon counts for SSU sequences",
-      "downloadUrl": "http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ftaxonomy-summary%2FSSU%2FDBH.merged_SSU.fasta.mseq.txt",
+      "downloadUrl": "https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ftaxonomy-summary%2FSSU%2FDBH.merged_SSU.fasta.mseq.txt",
       "encodingFormat": "application/json-ld"
     }
   ]
@@ -646,17 +673,17 @@ table.table {
   <nav class="navbar">
 
     <ul class="nav navbar-nav" >
-        <li ><a href="#"><span class="glyphicon glyphicon-home dataset_name">&nbsp;MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</span></a></li>
+        <li ><a href="#"><span class="glyphicon glyphicon-home dataset_name">&nbsp;MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</span></a></li>
     </ul>
 
   </nav>
 <div class="container">
 <div class="jumbotron">
 <h4 class="citation"></h4>
-<h3 class="item_name">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</h3>
+<h3 class="item_name">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</h3>
 
 
-<a href="./ro-crate-metadata.json">⬇️🏷️ Download all the metadata for <span class='name'>MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</span> in JSON-LD format</a>
+<a href="./ro-crate-metadata.json">⬇️🏷️ Download all the metadata for <span class='name'>MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</span> in JSON-LD format</a>
 
 
 <div id="check"></div>
@@ -669,7 +696,7 @@ table.table {
 <div id="summary">
 <div class='all-meta'>
             <div>
-                <h3> MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</h3>
+                <h3> MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</h3>
                 
                 
                 
@@ -682,19 +709,19 @@ table.table {
             <td style='text-align:left'><span>./</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">name<span>&nbsp;</span><a href="http://schema.org/name">[?]</a></th>
-            <td style='text-align:left'><span>MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</span></td>
+            <td style='text-align:left'><span>MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">@type</th>
             <td style='text-align:left'><span>Dataset</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">description<span>&nbsp;</span><a href="http://schema.org/description">[?]</a></th>
-            <td style='text-align:left'><span>RO-Crate for the data products from the MetaGOflow analysis of EMO BON Sampling Event EMOBON00224</span></td>
+            <td style='text-align:left'><span>RO-Crate for the data products from the MetaGOflow analysis of EMO BON Sampling Event EMOBON00225</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">datePublished<span>&nbsp;</span><a href="http://schema.org/datePublished">[?]</a></th>
-            <td style='text-align:left'><span>2024-10-31</span></td>
+            <td style='text-align:left'><span>2024-11-05</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">licence</th>
-            <td style='text-align:left'><a href="#https%3A//creativecommons.org/licenses/by/4.0/legalcode">Creative Commons (CC-BY 4.0)</a></td>
+            <td style='text-align:left'><a href="https://creativecommons.org/licenses/by/4.0">https://creativecommons.org/licenses/by/4.0</a></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">publisher<span>&nbsp;</span><a href="http://schema.org/publisher">[?]</a></th>
             <td style='text-align:left'><a href="#EMBRC">European Marine Biological Resource Centre</a></td>
@@ -706,7 +733,7 @@ table.table {
             <td style='text-align:left'><a href="#Cymon%20J.%20Cox">Cymon J. Cox</a></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">title<span>&nbsp;</span><a href="http://schema.org/title">[?]</a></th>
-            <td style='text-align:left'><span>EMO BON Data_release_001: MetaGOflow analysis of EMO BON Sampling Event EMOBON00224</span></td>
+            <td style='text-align:left'><span>EMO BON Data_release_001: MetaGOflow analysis of EMO BON Sampling Event EMOBON00225</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">keywords<span>&nbsp;</span><a href="http://schema.org/keywords">[?]</a></th>
             <td style='text-align:left'><ul>
@@ -731,9 +758,9 @@ table.table {
             </tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
             <td style='text-align:left'><ul>
-                        <li><a href="#https%3A//www.ebi.ac.uk/ena/browser/view/ERS20535379">ERS20535379</a></li>
+                        <li><a href="#https%3A//www.ebi.ac.uk/ena/browser/view/ERS20535380">EMBL ENA Accession Number ERS20535380</a></li>
                         
-                        <li><a href="#https%3A//github.com/emo-bon/MetaGOflow/issues/53">MetaGOflow Workflow Version README</a></li>
+                        <li><a href="#https%3A//github.com/emo-bon/MetaGOflow/issues/53">MetaGOflow Software</a></li>
                         
                         <li><a href="#run.yml">MetaGOflow YAML configuration file</a></li>
                         
@@ -758,36 +785,7 @@ table.table {
             </table>
         </div>
             </div>
-        <hr/><br/><br/>
-            <div>
-                <h3><a href="https://creativecommons.org/licenses/by/4.0/legalcode">Go to: </a> Creative Commons (CC-BY 4.0)</h3>
-                
-                
-                
-                
-        <div id="https://creativecommons.org/licenses/by/4.0/legalcode">
-            
-            <table class="table metadata table-striped" >
-                <tbody><tr>
-            <th style="text-align:left;" class="prop">@id</th>
-            <td style='text-align:left'><a href="https://creativecommons.org/licenses/by/4.0/legalcode">https://creativecommons.org/licenses/by/4.0/legalcode</a></td>
-            </tr><tr>
-            <th style="text-align:left;" class="prop">name<span>&nbsp;</span><a href="http://schema.org/name">[?]</a></th>
-            <td style='text-align:left'><span>Creative Commons (CC-BY 4.0)</span></td>
-            </tr><tr>
-            <th style="text-align:left;" class="prop">@type</th>
-            <td style='text-align:left'><span>CreativeWork</span></td>
-            </tr><tr>
-            <th style="text-align:left;" class="prop">identifier<span>&nbsp;</span><a href="http://schema.org/identifier">[?]</a></th>
-            <td style='text-align:left'><a href="https://creativecommons.org/licenses/by/4.0/legalcode">https://creativecommons.org/licenses/by/4.0/legalcode</a></td>
-            </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
-            <th style="text-align:left;" class="prop">licence</th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
-            </tr></tbody>
-            </table>
-        </div>
-            </div>
-        <hr/><br/><br/>
+        <hr/><br/><br/><hr/><br/><br/>
             <div>
                 <h3> European Marine Biological Resource Centre</h3>
                 
@@ -814,7 +812,7 @@ table.table {
             <td style='text-align:left'><a href="#mailto%3Ahelp@embrc.org">mailto:help@embrc.org</a></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">publisher<span>&nbsp;</span><a href="http://schema.org/publisher">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
@@ -849,7 +847,7 @@ table.table {
             <td style='text-align:left'><a href="https://orcid.org/0000-0001-8164-581X">https://orcid.org/0000-0001-8164-581X</a></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">wasAssociatedWith</th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
@@ -884,27 +882,27 @@ table.table {
             <td style='text-align:left'><a href="https://orcid.org/0000-0002-4927-979X">https://orcid.org/0000-0002-4927-979X</a></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">creator<span>&nbsp;</span><a href="http://schema.org/creator">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
             </div>
         <hr/><br/><br/>
             <div>
-                <h3><a href="https://www.ebi.ac.uk/ena/browser/view/ERS20535379">Go to: </a> ERS20535379</h3>
+                <h3><a href="https://www.ebi.ac.uk/ena/browser/view/ERS20535380">Go to: </a> EMBL ENA Accession Number ERS20535380</h3>
                 
                 
                 
                 
-        <div id="https://www.ebi.ac.uk/ena/browser/view/ERS20535379">
+        <div id="https://www.ebi.ac.uk/ena/browser/view/ERS20535380">
             
             <table class="table metadata table-striped" >
                 <tbody><tr>
             <th style="text-align:left;" class="prop">@id</th>
-            <td style='text-align:left'><a href="https://www.ebi.ac.uk/ena/browser/view/ERS20535379">https://www.ebi.ac.uk/ena/browser/view/ERS20535379</a></td>
+            <td style='text-align:left'><a href="https://www.ebi.ac.uk/ena/browser/view/ERS20535380">https://www.ebi.ac.uk/ena/browser/view/ERS20535380</a></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">name<span>&nbsp;</span><a href="http://schema.org/name">[?]</a></th>
-            <td style='text-align:left'><span>ERS20535379</span></td>
+            <td style='text-align:left'><span>EMBL ENA Accession Number ERS20535380</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">@type</th>
             <td style='text-align:left'><span>Dataset</span></td>
@@ -916,17 +914,17 @@ table.table {
             <td style='text-align:left'><span>text/xml</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">downloadUrl<span>&nbsp;</span><a href="http://schema.org/downloadUrl">[?]</a></th>
-            <td style='text-align:left'><a href="https://www.ebi.ac.uk/ena/browser/view/ERS20535379">https://www.ebi.ac.uk/ena/browser/view/ERS20535379</a></td>
+            <td style='text-align:left'><a href="https://www.ebi.ac.uk/ena/browser/view/ERS20535380">https://www.ebi.ac.uk/ena/browser/view/ERS20535380</a></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
             </div>
         <hr/><br/><br/>
             <div>
-                <h3><a href="https://github.com/emo-bon/MetaGOflow/issues/53">Go to: </a> MetaGOflow Workflow Version README</h3>
+                <h3><a href="https://github.com/emo-bon/MetaGOflow/issues/53">Go to: </a> MetaGOflow Software</h3>
                 
                 
                 
@@ -939,13 +937,13 @@ table.table {
             <td style='text-align:left'><a href="https://github.com/emo-bon/MetaGOflow/issues/53">https://github.com/emo-bon/MetaGOflow/issues/53</a></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">name<span>&nbsp;</span><a href="http://schema.org/name">[?]</a></th>
-            <td style='text-align:left'><span>MetaGOflow Workflow Version README</span></td>
+            <td style='text-align:left'><span>MetaGOflow Software</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">@type</th>
-            <td style='text-align:left'><span>File</span></td>
+            <td style='text-align:left'><span>SoftwareApplication</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">description<span>&nbsp;</span><a href="http://schema.org/description">[?]</a></th>
-            <td style='text-align:left'><span>Metadata for the version of the MetaGOflow workflow used to generate the data</span></td>
+            <td style='text-align:left'><span>The MetaGOflow workflow software used to generate the metagenomic data</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">encodingFormat<span>&nbsp;</span><a href="http://schema.org/encodingFormat">[?]</a></th>
             <td style='text-align:left'><span>text/plain</span></td>
@@ -957,7 +955,7 @@ table.table {
             <td style='text-align:left'><a href="https://github.com/emo-bon/MetaGOflow/issues/53">https://github.com/emo-bon/MetaGOflow/issues/53</a></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
@@ -989,10 +987,10 @@ table.table {
             <td style='text-align:left'><span>text/yaml</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">downloadUrl<span>&nbsp;</span><a href="http://schema.org/downloadUrl">[?]</a></th>
-            <td style='text-align:left'><a href="http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Frun.yml">http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Frun.yml</a></td>
+            <td style='text-align:left'><a href="https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Frun.yml">https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Frun.yml</a></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
@@ -1024,10 +1022,10 @@ table.table {
             <td style='text-align:left'><span>text/html</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">downloadUrl<span>&nbsp;</span><a href="http://schema.org/downloadUrl">[?]</a></th>
-            <td style='text-align:left'><a href="http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffastp.html">http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffastp.html</a></td>
+            <td style='text-align:left'><a href="https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffastp.html">https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffastp.html</a></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
@@ -1059,10 +1057,10 @@ table.table {
             <td style='text-align:left'><span>text/plain</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">downloadUrl<span>&nbsp;</span><a href="http://schema.org/downloadUrl">[?]</a></th>
-            <td style='text-align:left'><a href="http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffinal.contigs.fa">http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Ffinal.contigs.fa</a></td>
+            <td style='text-align:left'><a href="https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffinal.contigs.fa">https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Ffinal.contigs.fa</a></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
@@ -1110,7 +1108,7 @@ table.table {
                         </ul></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
@@ -1142,9 +1140,15 @@ table.table {
             <td style='text-align:left'><ul>
                         <li><a href="#Bacteria_small_SRP.RF00169.fasta.gz">Bacteria_small_SRP.RF00169.fasta.gz</a></li>
                         
+                        <li><a href="#Archaea_SRP.RF01857.fasta.gz">Archaea_SRP.RF01857.fasta.gz</a></li>
+                        
                         <li><a href="#tRNA.RF00005.fasta.gz">tRNA.RF00005.fasta.gz</a></li>
                         
                         <li><a href="#Metazoa_SRP.RF00017.fasta.gz">Metazoa_SRP.RF00017.fasta.gz</a></li>
+                        
+                        <li><a href="#RNaseP_bact_b.RF00011.fasta.gz">RNaseP_bact_b.RF00011.fasta.gz</a></li>
+                        
+                        <li><a href="#cyano_tmRNA.RF01851.fasta.gz">cyano_tmRNA.RF01851.fasta.gz</a></li>
                         
                         <li><a href="#RNaseP_nuc.RF00009.fasta.gz">RNaseP_nuc.RF00009.fasta.gz</a></li>
                         
@@ -1174,7 +1178,7 @@ table.table {
                         </ul></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
@@ -1212,7 +1216,7 @@ table.table {
                         </ul></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
@@ -1241,11 +1245,11 @@ table.table {
             <td style='text-align:left'><span>text/plain</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">downloadUrl<span>&nbsp;</span><a href="http://schema.org/downloadUrl">[?]</a></th>
-            <td style='text-align:left'><a href="http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2FRNA-counts">http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2FRNA-counts</a></td>
+            <td style='text-align:left'><a href="https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2FRNA-counts">https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2FRNA-counts</a></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
             <td style='text-align:left'><ul>
-                        <li><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></li>
+                        <li><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></li>
                         
                         <li><a href="#taxonomic-summary/">Taxonomic summary</a></li>
                         </ul></td>
@@ -1280,10 +1284,10 @@ table.table {
             <td style='text-align:left'><span>text/yaml</span></td>
             </tr><tr>
             <th style="text-align:left;" class="prop">downloadUrl<span>&nbsp;</span><a href="http://schema.org/downloadUrl">[?]</a></th>
-            <td style='text-align:left'><a href="http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Fconfig.yml">http://s3.mesocentre.uca.fr/mgf-data-products/HCFCYDSX5.UDI129%2Fconfig.yml</a></td>
+            <td style='text-align:left'><a href="https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fconfig.yml">https://s3.mesocentre.uca.fr/mgf-data-products/EMOBON00225%2Fconfig.yml</a></td>
             </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
             <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
-            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00224</a></td>
+            <td style='text-align:left'><a href="#./">MetaGoFlow Results for EMO BON Sampling Event EMOBON00225</a></td>
             </tr></tbody>
             </table>
         </div>
