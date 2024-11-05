@@ -236,22 +236,23 @@ def writeHTMLpreview(roc_path):
             log.info("Written HTML preview file")
 
 
-def sequence_categorisation_stanzas(target_directory, template):
+def sequence_categorisation_stanzas(target_directory, template, conf):
     """Glob the sequence_categorisation directory and build a stanza for each
     zipped data file
 
     Return updated template, and list of sequence category filenames
     """
 
-    search = os.path.join(
-        target_directory, "results", "sequence-categorisation", "*.gz"
-    )
-    seq_cat_paths = glob.glob(search)
+    seq_cat_dir_path = Path(target_directory, "results", "sequence-categorisation")
+    seq_cat_paths = list(seq_cat_dir_path.glob("*.gz"))
+    log.debug(f"Sequence categorisation paths: {seq_cat_paths}")
     # Add the sequence categorisation files to the list of mandatory files
     # So that they can be used to build the upload script later
     global MANDATORY_FILES
-    MANDATORY_FILES.extend([sq.split("/results/")[1] for sq in seq_cat_paths])
-    seq_cat_files = [os.path.split(f)[1] for f in seq_cat_paths]
+    MANDATORY_FILES.extend([Path(*sq.parts[4:]) for sq in seq_cat_paths])
+    log.debug(f"MANDATORY_FILES = {MANDATORY_FILES}")
+    seq_cat_files = [f.name for f in seq_cat_paths]
+    log.debug(f"Sequence categorisation files: {seq_cat_files}")
     # Sequence-categorisation stanza
     for i, stanza in enumerate(template["@graph"]):
         if stanza["@id"] == "sequence-categorisation/":
@@ -263,7 +264,7 @@ def sequence_categorisation_stanzas(target_directory, template):
     for fn in seq_cat_files:
         link = os.path.join(
             S3_STORE_URL,
-            target_directory + "%2F" + "sequence-categorisation" + "%2F" + fn,
+            conf["ref_code"] + "%2F" + "sequence-categorisation" + "%2F" + fn,
         )
         d = dict(
             [
@@ -612,7 +613,7 @@ def write_metadata_json(target_directory, conf, filepaths):
 
     # Add sequence_categorisation stanza separately as they can vary in number and identity
     template, seq_cat_files = sequence_categorisation_stanzas(
-        target_directory, template
+        target_directory, template, conf
     )
 
     # Format the {prefix} in the filepaths and other @id fields
