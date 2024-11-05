@@ -73,7 +73,7 @@ def main(
                 for f in ghost_dir.rglob("*"):
                     if f.is_file():
                         with open(f, "w") as fh:
-                            fh.write("ghost")
+                            fh.write("ghost\n")
             continue
 
         if run_id.exists():
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     main(
         args.target_directory,
         args.remove_open_archives,
-        args.do_not_fix_archive,
+        args.fix_archive,
         args.add_payload,
         args.debug,
     )
