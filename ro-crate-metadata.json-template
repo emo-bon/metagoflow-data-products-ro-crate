@@ -65,7 +65,7 @@
     {
         "@id": "{ena_accession_number_url}", 
         "@type": "Dataset",
-        "name": "{ena_accession_number}",
+        "name": "EMBL ENA Accession Number {ena_accession_number}",
         "description": "ENA Accession Number of raw sequence data and associated metadata",
         "downloadUrl": "{ena_accession_number_url}",
         "encodingFormat": "text/xml"
@@ -73,7 +73,7 @@
     {
         "@id": "{metagoflow_version}", 
         "@type": "SoftwareApplication",
-        "name": "MetaGOflow",
+        "name": "MetaGOflow Software",
         "description": "The MetaGOflow workflow software used to generate the metagenomic data",
         "softwareVersion": "{metagoflow_version_id}",
         "downloadUrl": "{metagoflow_version}",
