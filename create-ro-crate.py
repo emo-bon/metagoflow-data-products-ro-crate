@@ -97,7 +97,7 @@ SEDIMENTS_MGF_PATH = (
 )
 
 # S3 store path
-S3_STORE_URL = "http://s3.mesocentre.uca.fr/mgf-data-products"
+S3_STORE_URL = "https://s3.mesocentre.uca.fr/mgf-data-products"
 
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
 # "run_wf.sh" script:
@@ -635,7 +635,9 @@ def write_metadata_json(target_directory, conf, filepaths):
             filename = bits[0].format(**conf)
             for stanza in template["@graph"]:
                 if stanza["@id"] == filename:
-                    link = os.path.join(S3_STORE_URL, conf["run_id"] + "%2F" + filename)
+                    link = os.path.join(
+                        S3_STORE_URL, conf["ref_code"] + "%2F" + filename
+                    )
                     stanza["downloadUrl"] = f"{link}"
         elif len(bits) == 2:
             # "functional-annotation/{prefix}.merged_CDS.I5.tsv.gz",
@@ -650,7 +652,7 @@ def write_metadata_json(target_directory, conf, filepaths):
                 if stanza["@id"] == filename:
                     link = os.path.join(
                         S3_STORE_URL,
-                        conf["run_id"] + "%2F" + bits[0] + "%2F" + filename,
+                        conf["ref_code"] + "%2F" + bits[0] + "%2F" + filename,
                     )
                     stanza["downloadUrl"] = f"{link}"
         elif len(bits) == 3:
@@ -676,7 +678,7 @@ def write_metadata_json(target_directory, conf, filepaths):
                 if stanza["@id"] == filename:
                     link = os.path.join(
                         S3_STORE_URL,
-                        conf["run_id"]
+                        conf["ref_code"]
                         + "%2F"
                         + bits[0]
                         + "%2F"
