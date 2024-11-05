@@ -20,7 +20,11 @@ consists of all the files but without any file content
 
 
 def main(
-    target_directory, remove_open_archives=False, do_not_fix_archive=False, debug=False
+    target_directory,
+    remove_open_archives=False,
+    fix_archive=False,
+    add_payload=False,
+    debug=False,
 ):
     log.basicConfig(
         format="\t%(levelname)s: %(message)s", level=log.DEBUG if debug else log.INFO
@@ -63,6 +67,13 @@ def main(
         ghost_dir = Path("ghost-archives", f"{run_id}")
         if ghost_dir.exists():
             log.info(f"Ghost archive already exists for {run_id}")
+            if add_payload:
+                # Add the word 'ghost' as the content of each file
+                log.info(f"Adding payload to ghost archive {run_id}")
+                for f in ghost_dir.rglob("*"):
+                    if f.is_file():
+                        with open(f, "w") as fh:
+                            fh.write("ghost")
             continue
 
         if run_id.exists():
@@ -154,8 +165,7 @@ def main(
         log.info(f"Created ghost archive for {run_id}")
 
         # Remove the open archive
-        if not do_not_fix_archive and archive_without_top_level:
-            # Double neg: fix it
+        if fix_archive and archive_without_top_level:
             log.info(f"Fixing archive without top level directory {run_id}")
             subprocess.call(
                 [
@@ -194,15 +204,24 @@ if __name__ == "__main__":
         help="Remove the open archives after creating the ghost archives",
     )
     parser.add_argument(
-        "-nf",
-        "--do_not_fix_archive",
+        "-f",
+        "--fix_archive",
         action="store_true",
-        help="Do not fix archives that lack a top level directory",
+        default=False,
+        help="Fix archives that lack a top level directory",
+    )
+    parser.add_argument(
+        "-p",
+        "--add_payload",
+        action="store_true",
+        default=False,
+        help="Add payload to ghost archives",
     )
     args = parser.parse_args()
     main(
         args.target_directory,
         args.remove_open_archives,
         args.do_not_fix_archive,
+        args.add_payload,
         args.debug,
     )
