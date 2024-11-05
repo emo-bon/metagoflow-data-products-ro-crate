@@ -394,8 +394,13 @@ def get_persons_and_institution_data(conf):
     # Read the relevant row in sample sheet
     df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH)
     row_samp = df_samp.loc[df_samp["ref_code"] == conf["ref_code"]].to_dict()
+    log.debug("Row in sample sheet: %s" % row_samp)
     # Get the env_package either water_column or soft_sediments
-    env_package = list(row_samp["env_package"].values())[0]
+    try:
+        env_package = list(row_samp["env_package"].values())[0]
+    except IndexError:
+        log.error("Cannot find the env_package for ref_code %s" % conf["ref_code"])
+        sys.exit()
     # Get the observatory ID
     obs_id = list(row_samp["obs_id"].values())[0]
 
