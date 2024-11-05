@@ -158,6 +158,34 @@ Configure the "run_parameter" with "-n" parameter value in the config.yml file:
 """
 
 
+def concatenate_ips_chunks(path):
+    """Concatenate the I5 files for the MGF functional-annotation"""
+
+    prefix = path.name.split(".")[0]
+    log.debug(f"Prefix: {prefix}")
+
+    # Get the I5 search path
+    dirname = path.parents[0]
+    search = dirname / f"{prefix}.merged_CDS.I5_0*"
+    I5_paths = glob.glob(str(search))  # Glob needs a string not Path object
+
+    outpath = Path(dirname, f"{prefix}.merged_CDS.I5.tsv.gz")
+    log.debug(f"Outpath: {outpath}")
+    # Concatenate the I5 files
+    with open(outpath, "wb") as wfp:
+        for I5_path in I5_paths:
+            with open(I5_path, "rb") as rfp:
+                log.debug(f"Concatenating {I5_path}...")
+                shutil.copyfileobj(rfp, wfp)
+    log.info("I5 chunks concatenated")
+
+    log.info("Removing I5 chunks and chunk list file")
+    chunk_files_list = dirname / f"{prefix}.merged_CDS.I5.tsv.chunks"
+    chunk_files_list.unlink()
+    for chunk in I5_paths:
+        Path(chunk).unlink()
+
+
 def get_ref_code_and_prefix(conf):
     """Get the reference code for a given run_id.
     run_id is the last part of the reads_name in the run information file.
@@ -328,10 +356,10 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
                 and not path.exists()
             ):
                 # Originally MGF did not concatenate the I5 files so this is needed for some of V1.0 and development runs
-                log.error(
-                    "Functional annotation I5 files are in chunks, cannot proceed"
+                log.info(
+                    "Functional annotation I5 files are in chunks... concatenating..."
                 )
-                sys.exit()
+                concatenate_ips_chunks(path)
             if not os.path.exists(path):
                 if "missing_files" in conf:
                     if os.path.split(filepath)[1] in conf["missing_files"]:
@@ -907,9 +935,6 @@ def main(target_directory, yaml_config, with_dvc, debug):
 
     # Get the emo bon ref_code, batch number, and prefix
     conf = get_ref_code_and_prefix(conf)
-    # TODO change ro-crate name to sampl_mat_i
-    # e.g. EMOBON_RFormosa_Wa_21-ro-crate
-    # conf["sampl_mat_id"] = "EMOBON_RFormosa_Wa_21"
 
     # Check all files are present
     log.info("Checking data files...")
