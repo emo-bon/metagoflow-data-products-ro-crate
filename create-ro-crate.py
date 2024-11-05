@@ -363,14 +363,15 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
                 concatenate_ips_chunks(path)
             if not os.path.exists(path):
                 if "missing_files" in conf:
-                    if os.path.split(filepath)[1] in conf["missing_files"]:
-                        # This file is known to be missing, ignoring
-                        log.info(
-                            "Ignoring specified missing file: %s"
-                            % os.path.split(filepath)[1]
-                        )
-                        filepaths.remove(filepath)
-                        continue
+                    for filename in conf["missing_files"]:
+                        if os.path.split(filepath)[1] == filename.format(**conf):
+                            # This file is known to be missing, ignoring
+                            log.info(
+                                "Ignoring specified missing file: %s"
+                                % os.path.split(filepath)[1]
+                            )
+                            filepaths.remove(filepath)
+                    continue
                 log.error(
                     "Could not find the mandatory file '%s' at the following path: %s"
                     % (filepath, path)
@@ -634,11 +635,22 @@ def write_metadata_json(target_directory, conf, filepaths):
             # "config.yml",
             filename = bits[0].format(**conf)
             for stanza in template["@graph"]:
-                if stanza["@id"] == filename:
+                if stanza["@id"] == filename and filename == "RNA_counts":
+                    link = os.path.join(
+                        S3_STORE_URL,
+                        conf["ref_code"]
+                        + "%2F"
+                        + "taxonomy-summary"
+                        + "%2F"
+                        + filename,
+                    )
+                    stanza["downloadUrl"] = f"{link}"
+                elif stanza["@id"] == filename:
                     link = os.path.join(
                         S3_STORE_URL, conf["ref_code"] + "%2F" + filename
                     )
                     stanza["downloadUrl"] = f"{link}"
+
         elif len(bits) == 2:
             # "functional-annotation/{prefix}.merged_CDS.I5.tsv.gz",
             # "functional-annotation/{prefix}.merged.hmm.tsv.gz",
@@ -906,10 +918,7 @@ def remove_data_files_from_ro_crate(ro_crate_name):
 
 def main(target_directory, yaml_config, with_dvc, debug):
     """
-    TODO: reconfigure so the the open archive is not deleted during the process
     TODO: change the ro-crate name to sampl_mat_id
-    TODO: deal with I5 chunks in functional-annotation
-    TODO: fix the links in the metadata.json need to use EMOBON ref_code not target_directory
     """
     # Logging
     if debug:
