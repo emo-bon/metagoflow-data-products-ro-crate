@@ -9,14 +9,14 @@
     {
         "@id": "./", 
         "@type": "Dataset",
-        "name" : "MetaGoFlow Results for EMO BON Sampling Event {ref_code}",                       
-        "description" : "RO-Crate for the data products from the MetaGOflow analysis of EMO BON Sampling Event {ref_code}",
+        "name" : "MetaGoFlow data products {ref_code} for Sampling Event {source_mat_id}",                       
+        "description" : "EMO BON project RO-Crate for the data products from the MetaGOflow analysis of molecular data {ref_code} derived from sampling event {ref_code}",
         "datePublished": "{datePublished}",                                              
         "licence": {"@id": "https://creativecommons.org/licenses/by/4.0"},                      
         "publisher": {"@id": "EMBRC", "name": "European Marine Biological Resource Centre"},
         "wasAssociatedWith": {},
         "creator": {},
-        "title": "EMO BON Data_release_001: MetaGOflow analysis of EMO BON Sampling Event {ref_code}",
+        "title": "MetaGoFlow data products {ref_code} for Sampling Event {source_mat_id}",
         "keywords": [
             "https://dwc.tdwg.org/terms/#materialsample",
             "https://schema.org/Dataset",

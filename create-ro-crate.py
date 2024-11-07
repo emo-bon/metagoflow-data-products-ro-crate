@@ -193,13 +193,14 @@ def get_ref_code_and_prefix(conf):
     """
     for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]):
         df = pd.read_csv(batch)
-        for row in df[["reads_name", "ref_code"]].values.tolist():
+        for row in df[["reads_name", "ref_code", "source_mat_id"]].values.tolist():
             if isinstance(row[0], str):
                 # print(row)
                 if row[0].split("_")[-1] == conf["run_id"]:
                     conf["ref_code"] = row[1]
                     conf["prefix"] = row[0].split("_")[0]
                     conf["batch_number"] = i + 1
+                    conf["source_mat_id"] = row[2]
                     log.info(f"EMO BON ref_code: {conf['ref_code']}")
                     return conf
             elif math.isnan(row[0]):
@@ -863,7 +864,7 @@ def move_files_out_of_results(new_archive_path):
 
 def sync_to_s3(conf):
     """
-    s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync ./EMOBON00141 s3://mgf-data-products
+    s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync ./{source_mat_id} s3://mgf-data-products
     """
     # We need to be in the RO_CRATE_REPO_PATH to run the s5cmd command
     # ie the dir above the ro-crate directory
@@ -872,15 +873,15 @@ def sync_to_s3(conf):
 
     # Move the ro-crate-metadata.json and ro-crate-preview.html to the parent directory
     # so that they are not included in the sync
-    ro_crate_metatadata_path = Path(conf["ref_code"], "ro-crate-metadata.json")
+    ro_crate_metatadata_path = Path(conf["source_mat_id"], "ro-crate-metadata.json")
     temp_ro_crate_metadata_path = Path.cwd() / "ro-crate-metadata.json"
     ro_crate_metatadata_path.rename(temp_ro_crate_metadata_path)
 
-    ro_crate_preview_path = Path(conf["ref_code"], "ro-crate-preview.html")
+    ro_crate_preview_path = Path(conf["source_mat_id"], "ro-crate-preview.html")
     temp_ro_crate_preview_path = Path.cwd() / "ro-crate-preview.html"
     ro_crate_preview_path.rename(temp_ro_crate_preview_path)
 
-    cmd = f"s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync {conf['ref_code']} s3://mgf-data-products"
+    cmd = f"s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync {conf['source_mat_id']} s3://mgf-data-products"
     child = subprocess.Popen(
         str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
     )
@@ -972,7 +973,7 @@ def main(target_directory, yaml_config, with_dvc, debug):
     writeHTMLpreview(metadata_path)
 
     log.debug("Renaming and moving target directory...")
-    new_archive_path = Path(RO_CRATE_REPO_PATH, conf["ref_code"])
+    new_archive_path = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"])
     try:
         Path(target_directory).rename(new_archive_path)
     except OSError as e:
@@ -1018,8 +1019,8 @@ def main(target_directory, yaml_config, with_dvc, debug):
         log.info("Syncing RO-Crate directly to S3...")
         sync_to_s3(conf)
         # Rename new ro-crate
-        ro_crate_name = Path(RO_CRATE_REPO_PATH, conf["ref_code"] + "-ro-crate")
-        Path(RO_CRATE_REPO_PATH, conf["ref_code"]).rename(ro_crate_name)
+        ro_crate_name = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"] + "-ro-crate")
+        Path(RO_CRATE_REPO_PATH, conf["source_mat_id"]).rename(ro_crate_name)
         log.info("Renamed ro-crate directory")
         remove_data_files_from_ro_crate(ro_crate_name)
         log.info("Done without error")
