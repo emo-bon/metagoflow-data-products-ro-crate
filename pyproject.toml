@@ -5,6 +5,7 @@ description = ""
 authors = ["Cymon J. Cox <cymon.cox@googlemail.com>"]
 license = "MIT"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
