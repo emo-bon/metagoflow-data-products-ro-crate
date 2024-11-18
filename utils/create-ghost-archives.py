@@ -16,6 +16,9 @@ Create Ghost Archives for MetaGOflow Data Products
 This script creates a 'ghost' archive of a bzipped
 tarball of the MetaGOflow run archive where the archive
 consists of all the files but without any file content
+
+You can do a similar thing with the following command:
+$ cp --archive --attributes-only ./* /tmp
 """
 
 
