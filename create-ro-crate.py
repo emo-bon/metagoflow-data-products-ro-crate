@@ -781,7 +781,7 @@ def initialise_dvc_repo():
     cwd_dir = Path.cwd()
     os.chdir(RO_CRATE_REPO_PATH)
     cmds = [
-        "dvc init --no-scm ",  # should we be using --subdir git submodule here?
+        "dvc init"  # --no-scm " - now using submodule
         "dvc remote add -d myremote s3://mgf-data-products",
         "dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr",
         "dvc remote modify myremote profile 'eosc-fairease1'",
