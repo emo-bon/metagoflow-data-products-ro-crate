@@ -109,7 +109,9 @@ CONFIG_YAML_PARAMETERS = [
     "missing_files",
 ]
 
-RO_CRATE_REPO_PATH = "emo-bon-ro-crate-repository"
+# This is a submodule of the current repository
+# https://github.com/emo-bon/metaGOflow-rocrates-dvc
+RO_CRATE_REPO_PATH = "metaGOflow-rocrates-dvc"
 
 MANDATORY_FILES = [
     "fastp.html",
@@ -329,11 +331,7 @@ def read_yaml(yaml_config):
 
 
 def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
-    """Check that all mandatory files are present in the target directory
-
-    TODO: Add sequence catalogisation files to the filepaths list else they
-    will not be included in the payload
-    """
+    """Check that all mandatory files are present in the target directory"""
 
     workflow_yaml_path = WORKFLOW_YAML_FILENAME.format(**conf)
     filepaths = [f.format(**conf) for f in MANDATORY_FILES]
@@ -717,14 +715,14 @@ def write_metadata_json(target_directory, conf, filepaths):
     return json.dumps(template, indent=4)
 
 
-def write_dvc_upload_script(conf):
+def write_dvc_upload_script(conf, remove_files=False):
     """Write the DVC S3 and Github upload script
     
     s5cmd --profile eosc-fairease1 \
         --endpoint-url https://s3.mesocentre.uca.fr ls s3://mgf-data-products/
     """
     log.debug(f"MANDATORY_FILES = {MANDATORY_FILES}")
-    upload_script_path = Path(RO_CRATE_REPO_PATH, f"{conf['ref_code']}_upload.sh")
+    upload_script_path = Path(RO_CRATE_REPO_PATH, f"{conf['source_mat_id']}_upload.sh")
     with open(upload_script_path, "w") as f:
         f.write("#!/bin/bash\n")
         f.write("set -e\n")
@@ -735,75 +733,84 @@ def write_dvc_upload_script(conf):
         for fp in MANDATORY_FILES:
             if fp == "RNA-counts":
                 np = Path(
-                    conf["ref_code"] + "-ro-crate",
+                    conf["source_mat_id"] + "-ro-crate",
                     "taxonomy-summary",
                     fp.format(**conf),
                 )
             else:
-                np = Path(conf["ref_code"] + "-ro-crate", fp.format(**conf))
+                np = Path(conf["source_mat_id"] + "-ro-crate", fp.format(**conf))
             f.write(f"dvc add {np}\n")
 
         f.write("\n")
         f.write("dvc push\n")
         f.write("\n")
 
-        # Remove the files
-        for fp in MANDATORY_FILES:
-            if fp == "RNA-counts":
-                np = Path(
-                    conf["ref_code"] + "-ro-crate",
-                    "taxonomy-summary",
-                    fp.format(**conf),
-                )
-            else:
-                np = Path(conf["ref_code"] + "-ro-crate", fp.format(**conf))
-            f.write(f"rm {np}\n")
+        if remove_files:
+            # Remove the files
+            for fp in MANDATORY_FILES:
+                if fp == "RNA-counts":
+                    np = Path(
+                        conf["ref_code"] + "-ro-crate",
+                        "taxonomy-summary",
+                        fp.format(**conf),
+                    )
+                else:
+                    np = Path(conf["ref_code"] + "-ro-crate", fp.format(**conf))
+                f.write(f"rm {np}\n")
 
-        f.write("\n")
+            f.write("\n")
     log.info("Written DVC S3 and Github upload script")
     return upload_script_path
 
 
-def initialise_dvc_repo():
-    """Initialise the DVC repository in RO_CRATE_REPO_PATH
+# def initialise_dvc_repo(warn=True):
+#     """Initialise the DVC repository in RO_CRATE_REPO_PATH
 
-    dvc remote add -d myremote s3://mgf-data-products
-    dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr
-    dvc remote modify myremote profile "eosc-fairease1"
+#     dvc remote add -d myremote s3://mgf-data-products
+#     dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr
+#     dvc remote modify myremote profile "eosc-fairease1"
 
-    The issue here is that ./RO_CRATE_REPO_PATH is not a git repository
-    so cannot initialise DVC with git.
+#     The issue here is that ./RO_CRATE_REPO_PATH is not a git repository
+#     so cannot initialise DVC with git.
 
-    A solution might be to have the repo as a submodule of a git repo
-    https://git-scm.com/book/en/v2/Git-Tools-Submodules
+#     A solution might be to have the repo as a submodule of a git repo
+#     https://git-scm.com/book/en/v2/Git-Tools-Submodules
 
-    """
-    cwd_dir = Path.cwd()
-    os.chdir(RO_CRATE_REPO_PATH)
-    cmds = [
-        "dvc init"  # --no-scm " - now using submodule
-        "dvc remote add -d myremote s3://mgf-data-products",
-        "dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr",
-        "dvc remote modify myremote profile 'eosc-fairease1'",
-    ]
-    for cmd in cmds:
-        child = subprocess.Popen(
-            str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        )
-        stdoutdata, stderrdata = child.communicate()
-        return_code = child.returncode
-        if return_code != 0:
-            log.error(f"Error whilst trying to run command: {cmd}")
-            log.error("Stderr: %s " % stderrdata)
-            log.error("Return code: %s" % return_code)
-            log.error("Exiting...")
-            sys.exit()
-    os.chdir(cwd_dir)
+#     """
+#     msg = ("The ro-crate DVC repository should be cloned as a submodule this repository. "
+#            "https://github.com/emo-bon/metaGOflow-rocrates-dvc"
+#     )
+#     if warn:
+#         log.warning(msg)
+#         sys.exit()
+
+#     # This code should not run - just leaving it here for reference
+#     cwd_dir = Path.cwd()
+#     os.chdir(RO_CRATE_REPO_PATH)
+#     cmds = [
+#         "dvc init"  # --no-scm " - now using submodule
+#         "dvc remote add -d myremote s3://mgf-data-products",
+#         "dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr",
+#         "dvc remote modify myremote profile 'eosc-fairease1'",
+#     ]
+#     for cmd in cmds:
+#         child = subprocess.Popen(
+#             str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+#         )
+#         stdoutdata, stderrdata = child.communicate()
+#         return_code = child.returncode
+#         if return_code != 0:
+#             log.error(f"Error whilst trying to run command: {cmd}")
+#             log.error("Stderr: %s " % stderrdata)
+#             log.error("Return code: %s" % return_code)
+#             log.error("Exiting...")
+#             sys.exit()
+#     os.chdir(cwd_dir)
 
 
 def run_dvc_upload_script(upload_script_path):
     """Run the DVC upload script"""
-    # Path(ro_crate_path, f"{conf['ref_code']}_upload.sh")
+    # Path(ro_crate_path, f"{conf['source_mat_id']}_upload.sh")
     # First move to the ro-crate directory
     cwd_dir = Path.cwd()
     upload_script = Path(upload_script_path).name
@@ -923,9 +930,7 @@ def remove_data_files_from_ro_crate(ro_crate_name):
 
 
 def main(target_directory, yaml_config, with_dvc, debug):
-    """
-    TODO: change the ro-crate name to sampl_mat_id
-    """
+    """ """
     # Logging
     if debug:
         log_level = log.DEBUG
@@ -956,6 +961,7 @@ def main(target_directory, yaml_config, with_dvc, debug):
 
     # Check all files are present
     log.info("Checking data files...")
+    # filepaths includes the seq_cat files
     filepaths = check_and_format_data_file_paths(
         target_directory, conf, check_exists=True
     )
@@ -993,37 +999,22 @@ def main(target_directory, yaml_config, with_dvc, debug):
     log.debug("Moving all files out of the results directory...")
     move_files_out_of_results(new_archive_path)
 
-    if with_dvc:
-        """
-        This is just a bad bad idea, so not doing it
-
-        Yes, it works but there is no usable download URL for the files
-        You have to install DVC and clone the repo to get the files
-        """
-        # Init the DVC repository
-        if not Path(RO_CRATE_REPO_PATH, ".dvc").exists():
-            log.info(f"Initialising DVC repository in {RO_CRATE_REPO_PATH}")
-            initialise_dvc_repo()
-            log.info("DVC repository initialised")
-        # Write the S3 and Github upload script
-        log.debug("Writing S3 and Github upload script...")
-        upload_script_path = write_dvc_upload_script(conf)
-        log.info(f"Written upload script to {upload_script_path}")
-        log.info("Running upload script...")
-        run_dvc_upload_script(upload_script_path)
-        log.info(" DVC upload script completed without error")
-        log.info("Done without error")
-        sys.exit()
-    else:
-        # Sync the RO-Crate to S3
-        log.info("Syncing RO-Crate directly to S3...")
-        sync_to_s3(conf)
-        # Rename new ro-crate
-        ro_crate_name = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"] + "-ro-crate")
-        Path(RO_CRATE_REPO_PATH, conf["source_mat_id"]).rename(ro_crate_name)
-        log.info("Renamed ro-crate directory")
-        remove_data_files_from_ro_crate(ro_crate_name)
-        log.info("Done without error")
+    # Write the S3 and Github upload script
+    log.debug("Writing S3 and Github upload script...")
+    upload_script_path = write_dvc_upload_script(conf)
+    log.info(f"Written upload script to {upload_script_path}")
+    log.info("Running upload script...")
+    run_dvc_upload_script(upload_script_path)
+    log.info("DVC upload script completed without error")
+    # Sync the RO-Crate to S3
+    log.info("Syncing RO-Crate directly to S3...")
+    sync_to_s3(conf)
+    # Rename new ro-crate
+    ro_crate_name = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"] + "-ro-crate")
+    Path(RO_CRATE_REPO_PATH, conf["source_mat_id"]).rename(ro_crate_name)
+    log.info("Renamed ro-crate directory")
+    remove_data_files_from_ro_crate(ro_crate_name)
+    log.info("Done without error")
 
 
 if __name__ == "__main__":
