@@ -626,7 +626,12 @@ def write_metadata_json(target_directory, conf, filepaths):
         stanza["@id"] = stanza["@id"].format(**conf)
         if "hasPart" in stanza:
             for entry in stanza["hasPart"]:
-                entry["@id"] = entry["@id"].format(**conf)
+                target = Path(target_directory, entry["@id"])
+                log.debug(f"hasPart stanza, target file: {target}")
+                if target.is_file():
+                    entry["@id"] = entry["@id"].format(**conf) + ".dvc"
+                else:
+                    entry["@id"] = entry["@id"].format(**conf)
 
     # Add the download URLs to mandatory files
     for filepath in filepaths:
@@ -642,18 +647,20 @@ def write_metadata_json(target_directory, conf, filepaths):
                 if stanza["@id"] == filename and filename == "RNA_counts":
                     link = os.path.join(
                         S3_STORE_URL,
-                        conf["ref_code"]
+                        conf["source_mat_id"]
                         + "%2F"
                         + "taxonomy-summary"
                         + "%2F"
                         + filename,
                     )
                     stanza["downloadUrl"] = f"{link}"
+                    stanza["@id"] = filename + ".dvc"
                 elif stanza["@id"] == filename:
                     link = os.path.join(
-                        S3_STORE_URL, conf["ref_code"] + "%2F" + filename
+                        S3_STORE_URL, conf["source_mat_id"] + "%2F" + filename
                     )
                     stanza["downloadUrl"] = f"{link}"
+                    stanza["@id"] = filename + ".dvc"
 
         elif len(bits) == 2:
             # "functional-annotation/{prefix}.merged_CDS.I5.tsv.gz",
@@ -668,9 +675,10 @@ def write_metadata_json(target_directory, conf, filepaths):
                 if stanza["@id"] == filename:
                     link = os.path.join(
                         S3_STORE_URL,
-                        conf["ref_code"] + "%2F" + bits[0] + "%2F" + filename,
+                        conf["source_mat_id"] + "%2F" + bits[0] + "%2F" + filename,
                     )
                     stanza["downloadUrl"] = f"{link}"
+                    stanza["@id"] = filename + ".dvc"
         elif len(bits) == 3:
             # "functional-annotation/stats/go.stats",
             # "functional-annotation/stats/interproscan.stats",
@@ -694,7 +702,7 @@ def write_metadata_json(target_directory, conf, filepaths):
                 if stanza["@id"] == filename:
                     link = os.path.join(
                         S3_STORE_URL,
-                        conf["ref_code"]
+                        conf["source_mat_id"]
                         + "%2F"
                         + bits[0]
                         + "%2F"
@@ -703,6 +711,7 @@ def write_metadata_json(target_directory, conf, filepaths):
                         + filename,
                     )
                     stanza["downloadUrl"] = f"{link}"
+                    stanza["@id"] = filename + ".dvc"
         else:
             log.error(f"Cannot find stanza for {filename}")
             sys.exit()
