@@ -37,7 +37,6 @@
             {"@id": "functional_annotation/"},
             {"@id": "sequence-categorisation/"},
             {"@id": "taxonomic-summary/"},
-            {"@id": "RNA-counts"},
             {"@id": "config.yml"}
         ]
     },
