@@ -10,6 +10,7 @@ import json
 import datetime
 import requests
 import shutil
+import urllib
 import glob
 import subprocess
 import logging as log
@@ -75,7 +76,7 @@ BATCH2_ENA_ACCESSION_INFO_PATH = (
 # The combined sampling event logsheets for batch 1 and 2
 COMBINED_LOGSHEETS_PATH = (
     "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
-    "refs/heads/main/validated-data/Batch1and2_combined_logsheets_2024-09-19.csv"
+    "refs/heads/main/validated-data/Batch1and2_combined_logsheets_2024-11-12.csv"
 )
 OBSERVATORY_LOGSHEETS_PATH = (
     "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
@@ -97,7 +98,7 @@ SEDIMENTS_MGF_PATH = (
 )
 
 # S3 store path
-S3_STORE_URL = "https://s3.mesocentre.uca.fr/mgf-data-products"
+S3_STORE_URL = "https://s3.mesocentre.uca.fr/mgf-data-products/files/md5"
 
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
 # "run_wf.sh" script:
@@ -188,6 +189,22 @@ def concatenate_ips_chunks(path):
         Path(chunk).unlink()
 
 
+def remove_hmm_chunk_file(target_directory, conf):
+    """Remove the single HMM chunk file"""
+    p = Path(
+        target_directory,
+        "results",
+        "functional-annotation",
+        f"{conf['prefix']}.merged.hmm.tsv.chunks",
+    )
+    if p.exists():
+        log.info("Removing HMM chunk file")
+        p.unlink()
+    else:
+        log.error("No HMM chunk file to remove")
+        sys.exit()
+
+
 def get_ref_code_and_prefix(conf):
     """Get the reference code for a given run_id.
     run_id is the last part of the reads_name in the run information file.
@@ -212,6 +229,7 @@ def get_ref_code_and_prefix(conf):
     sys.exit()
 
 
+# No longer used
 def writeHTMLpreview(roc_path):
     """Write the HTML preview file using rochtml-
     https://www.npmjs.com/package/ro-crate-html
@@ -241,7 +259,7 @@ def writeHTMLpreview(roc_path):
 
 def sequence_categorisation_stanzas(target_directory, template, conf):
     """Glob the sequence_categorisation directory and build a stanza for each
-    zipped data file
+    zipped data file; add to MANDATORY_FILES list
 
     Return updated template, and list of sequence category filenames
     """
@@ -252,28 +270,33 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
     # Add the sequence categorisation files to the list of mandatory files
     # So that they can be used to build the upload script later
     global MANDATORY_FILES
-    MANDATORY_FILES.extend([Path(*sq.parts[4:]) for sq in seq_cat_paths])
+    MANDATORY_FILES.extend(
+        [
+            "/".join(["sequence-categorisation", str(Path(*sq.parts[4:]))])
+            for sq in seq_cat_paths
+        ]
+    )
     log.debug(f"MANDATORY_FILES = {MANDATORY_FILES}")
     seq_cat_files = [f.name for f in seq_cat_paths]
     log.debug(f"Sequence categorisation files: {seq_cat_files}")
     # Sequence-categorisation stanza
     for i, stanza in enumerate(template["@graph"]):
         if stanza["@id"] == "sequence-categorisation/":
-            stanza["hasPart"] = [dict([("@id", fn)]) for fn in seq_cat_files]
+            stanza["hasPart"] = [dict([("@id", f"{fn}")]) for fn in seq_cat_files]
             sq_index = i
             break
 
     seq_cat_files.reverse()
     for fn in seq_cat_files:
-        link = os.path.join(
-            S3_STORE_URL,
-            conf["ref_code"] + "%2F" + "sequence-categorisation" + "%2F" + fn,
-        )
+        # link = os.path.join(
+        #    S3_STORE_URL,
+        #    conf["source_mat_id"] + "%2F" + "sequence-categorisation" + "%2F" + fn,
+        # )
         d = dict(
             [
-                ("@id", fn),
+                ("@id", f"{fn}"),
                 ("@type", "File"),
-                ("downloadUrl", link),
+                ("downloadUrl", ""),
                 ("encodingFormat", "application/zip"),
             ]
         )
@@ -383,15 +406,20 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
             else:
                 log.debug("Found %s" % path)
 
+    # There's a single HMM file that needs to be removed
+    remove_hmm_chunk_file(target_directory, conf)
     log.info("Data look good...")
-    filepaths.append(workflow_yaml_path)
-    return filepaths
+    return
 
 
 def get_persons_and_institution_data(conf):
     """Get the sampling person and institution for a given ref_code."""
     # Read the relevant row in sample sheet
-    df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH)
+    try:
+        df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH)
+    except urllib.error.HTTPError:
+        log.error("Cannot find the combined logsheets at %s" % COMBINED_LOGSHEETS_PATH)
+        sys.exit()
     row_samp = df_samp.loc[df_samp["ref_code"] == conf["ref_code"]].to_dict()
     log.debug("Row in sample sheet: %s" % row_samp)
     # Get the env_package either water_column or soft_sediments
@@ -482,7 +510,7 @@ def get_ena_accession_data(conf):
     return conf
 
 
-def write_metadata_json(target_directory, conf, filepaths):
+def write_metadata_json(target_directory, conf):
     metadata_json_template = "ro-crate-metadata.json-template"
     if os.path.exists(metadata_json_template):
         log.debug("Using local metadata.json template")
@@ -621,114 +649,18 @@ def write_metadata_json(target_directory, conf, filepaths):
         target_directory, template, conf
     )
 
-    # Format the {prefix} in the filepaths and other @id fields
-    for stanza in template["@graph"]:
-        stanza["@id"] = stanza["@id"].format(**conf)
-        if "hasPart" in stanza:
-            for entry in stanza["hasPart"]:
-                target = Path(target_directory, entry["@id"])
-                log.debug(f"hasPart stanza, target file: {target}")
-                if target.is_file():
-                    entry["@id"] = entry["@id"].format(**conf) + ".dvc"
-                else:
-                    entry["@id"] = entry["@id"].format(**conf)
-
-    # Add the download URLs to mandatory files
-    for filepath in filepaths:
-        bits = Path(filepath).parts
-        if len(bits) == 1:
-            # "fastp.html",
-            # "final.contigs.fa",
-            # "RNA-counts",
-            # "{run_parameter}.yml"
-            # "config.yml",
-            filename = bits[0].format(**conf)
-            for stanza in template["@graph"]:
-                if stanza["@id"] == filename and filename == "RNA_counts":
-                    link = os.path.join(
-                        S3_STORE_URL,
-                        conf["source_mat_id"]
-                        + "%2F"
-                        + "taxonomy-summary"
-                        + "%2F"
-                        + filename,
-                    )
-                    stanza["downloadUrl"] = f"{link}"
-                    stanza["@id"] = filename + ".dvc"
-                elif stanza["@id"] == filename:
-                    link = os.path.join(
-                        S3_STORE_URL, conf["source_mat_id"] + "%2F" + filename
-                    )
-                    stanza["downloadUrl"] = f"{link}"
-                    stanza["@id"] = filename + ".dvc"
-
-        elif len(bits) == 2:
-            # "functional-annotation/{prefix}.merged_CDS.I5.tsv.gz",
-            # "functional-annotation/{prefix}.merged.hmm.tsv.gz",
-            # "functional-annotation/{prefix}.merged.summary.go",
-            # "functional-annotation/{prefix}.merged.summary.go_slim",
-            # "functional-annotation/{prefix}.merged.summary.ips",
-            # "functional-annotation/{prefix}.merged.summary.ko",
-            # "functional-annotation/{prefix}.merged.summary.pfam",
-            filename = bits[1].format(**conf)
-            for stanza in template["@graph"]:
-                if stanza["@id"] == filename:
-                    link = os.path.join(
-                        S3_STORE_URL,
-                        conf["source_mat_id"] + "%2F" + bits[0] + "%2F" + filename,
-                    )
-                    stanza["downloadUrl"] = f"{link}"
-                    stanza["@id"] = filename + ".dvc"
-        elif len(bits) == 3:
-            # "functional-annotation/stats/go.stats",
-            # "functional-annotation/stats/interproscan.stats",
-            # "functional-annotation/stats/ko.stats",
-            # "functional-annotation/stats/orf.stats",
-            # "functional-annotation/stats/pfam.stats",
-            # "taxonomy-summary/LSU/krona.html",
-            # "taxonomy-summary/SSU/krona.html",
-            # "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz",
-            # "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_hdf5.biom",
-            # "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom",
-            # "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv",
-            # "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt",
-            # "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.gz",
-            # "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_hdf5.biom",
-            # "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom",
-            # "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv",
-            # "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt",
-            filename = bits[-1].format(**conf)
-            for stanza in template["@graph"]:
-                if stanza["@id"] == filename:
-                    link = os.path.join(
-                        S3_STORE_URL,
-                        conf["source_mat_id"]
-                        + "%2F"
-                        + bits[0]
-                        + "%2F"
-                        + bits[1]
-                        + "%2F"
-                        + filename,
-                    )
-                    stanza["downloadUrl"] = f"{link}"
-                    stanza["@id"] = filename + ".dvc"
-        else:
-            log.error(f"Cannot find stanza for {filename}")
-            sys.exit()
-
-        log.debug(f"bits = {bits}")
-        log.debug(f"filename = {filename}")
-        log.debug(f"link = {link}")
-
-    log.info("Metadata JSON formatted")
-    return json.dumps(template, indent=4)
+    log.info("Metadata (first part) JSON written...")
+    return template
 
 
-def write_dvc_upload_script(conf, remove_files=False):
+def write_dvc_upload_script(conf):
     """Write the DVC S3 and Github upload script
     
     s5cmd --profile eosc-fairease1 \
         --endpoint-url https://s3.mesocentre.uca.fr ls s3://mgf-data-products/
+    
+    Note that DVC is auto-staging files added using dvc add, so just need a dvc push
+    and later git commit
     """
     log.debug(f"MANDATORY_FILES = {MANDATORY_FILES}")
     upload_script_path = Path(RO_CRATE_REPO_PATH, f"{conf['source_mat_id']}_upload.sh")
@@ -740,35 +672,21 @@ def write_dvc_upload_script(conf, remove_files=False):
 
         # Add the DVC commands
         for fp in MANDATORY_FILES:
+            log.debug(f"fp filepath = {fp}")
             if fp == "RNA-counts":
                 np = Path(
-                    conf["source_mat_id"] + "-ro-crate",
+                    conf["source_mat_id"],
                     "taxonomy-summary",
                     fp.format(**conf),
                 )
             else:
-                np = Path(conf["source_mat_id"] + "-ro-crate", fp.format(**conf))
+                np = Path(conf["source_mat_id"], fp.format(**conf))
             f.write(f"dvc add {np}\n")
 
         f.write("\n")
         f.write("dvc push\n")
         f.write("\n")
-
-        if remove_files:
-            # Remove the files
-            for fp in MANDATORY_FILES:
-                if fp == "RNA-counts":
-                    np = Path(
-                        conf["ref_code"] + "-ro-crate",
-                        "taxonomy-summary",
-                        fp.format(**conf),
-                    )
-                else:
-                    np = Path(conf["ref_code"] + "-ro-crate", fp.format(**conf))
-                f.write(f"rm {np}\n")
-
-            f.write("\n")
-    log.info("Written DVC S3 and Github upload script")
+    log.info("Written DVC S3 upload script")
     return upload_script_path
 
 
@@ -819,7 +737,6 @@ def write_dvc_upload_script(conf, remove_files=False):
 
 def run_dvc_upload_script(upload_script_path):
     """Run the DVC upload script"""
-    # Path(ro_crate_path, f"{conf['source_mat_id']}_upload.sh")
     # First move to the ro-crate directory
     cwd_dir = Path.cwd()
     upload_script = Path(upload_script_path).name
@@ -878,6 +795,7 @@ def move_files_out_of_results(new_archive_path):
     shutil.rmtree(src_path)  # incl. files not destined for the RO-Crate
 
 
+# No longer used
 def sync_to_s3(conf):
     """
     s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync ./{source_mat_id} s3://mgf-data-products
@@ -919,26 +837,70 @@ def sync_to_s3(conf):
 
 
 def remove_data_files_from_ro_crate(ro_crate_name):
-    """Remove the data files from the ro-crate directory"""
-    data_dirs = [
-        "functional-annotation",
-        "sequence-categorisation",
-        "taxonomy-summary",
-    ]
-    for dd in data_dirs:
-        shutil.rmtree(ro_crate_name / dd)
-    data_files = [
-        "config.yml",
-        "fastp.html",
-        "final.contigs.fa",
-        "run.yml",
-    ]
-    for df in data_files:
-        Path(ro_crate_name, df).unlink()
+    """Remove the data files from the ro-crate directory
+
+    To save space, but also now the ro-crate dir will only contain git tracked files
+    """
+    ignore_files = ["ro-crate-metadata.json", ".gitignore"]
+    all_dvcs = list(Path(ro_crate_name).rglob("*.dvc"))
+    for f in Path(ro_crate_name).rglob("*"):
+        if f.is_file() and f.name not in ignore_files and f not in all_dvcs:
+            f.unlink()
+            log.debug(f"Removed {f.name}")
+        else:
+            log.debug(f"Keeping {f.name}")
     log.info("Removed data files from ro-crate directory")
 
 
-def main(target_directory, yaml_config, with_dvc, debug):
+def format_file_ids_and_add_download_links(metadata_json, new_archive_path, conf):
+    """Format the file @ids with .dvc and add the download links
+    to the metadata.json file from the DVC files
+    """
+
+    # Make a path dict from the MANDATONY_FILES
+    pd = {}
+    for f in MANDATORY_FILES:
+        pd[Path(f).name.format(**conf)] = f.format(**conf)
+
+    for stanza in metadata_json["@graph"]:
+        stanza["@id"] = stanza["@id"].format(**conf)
+        log.debug(f"stanza @id = {stanza["@id"].format(**conf)}")
+        if stanza["@type"] and stanza["@type"] == "File":
+            if stanza["@id"] == "RNA-counts":
+                fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
+            else:
+                fn = Path(new_archive_path, pd[stanza["@id"]] + ".dvc")
+            if not fn.exists():
+                log.error(f"Cannot find the file {fn}")
+                sys.exit()
+            md5 = yaml.safe_load(open(fn))["outs"][0]["md5"]
+            md5_link = os.path.join(S3_STORE_URL, md5[:2], md5[2:])
+            stanza["downloadUrl"] = f"{md5_link}"
+            stanza["@id"] = stanza["@id"] + ".dvc"
+
+        elif "hasPart" in stanza:
+            log.debug(f"in hasPart stanza @id = {stanza["@id"]}")
+            for entry in stanza["hasPart"]:
+                # Deal with RNA-counts separately
+                if entry["@id"] == "RNA-counts":
+                    entry["@id"] = "RNA-counts.dvc"
+                    continue
+                # Only files need .dvc
+                try:
+                    # Triggers a keyerror if the entry is not in MANDATORY_FILES
+                    target = Path(new_archive_path, pd[entry["@id"].format(**conf)])
+                    log.debug(
+                        f"hasPart stanza, target file: '{target}' and  = {target.is_file()}"
+                    )
+                    entry["@id"] = target.name + ".dvc"
+                except KeyError:
+                    log.debug(f"Writing entry @id to {entry["@id"].format(**conf)}")
+                    entry["@id"] = entry["@id"].format(**conf)
+
+    return json.dumps(metadata_json, indent=4)
+
+
+def main(target_directory, yaml_config, debug):
     """ """
     # Logging
     if debug:
@@ -971,21 +933,17 @@ def main(target_directory, yaml_config, with_dvc, debug):
     # Check all files are present
     log.info("Checking data files...")
     # filepaths includes the seq_cat files
-    filepaths = check_and_format_data_file_paths(
-        target_directory, conf, check_exists=True
-    )
+    check_and_format_data_file_paths(target_directory, conf, check_exists=True)
 
-    # Write the ro-crate-metadata.json file to the ro-crate root directory
+    # Create the metadata.json file but dont write yet, need to add links later
     log.info("Formatting metadata.json...")
-    metadata_json_formatted = write_metadata_json(target_directory, conf, filepaths)
+    metadata_json = write_metadata_json(target_directory, conf)
 
-    # Write the metadata.json an HTML preview to the ro-crate root directory
-    metadata_path = Path(target_directory, "ro-crate-metadata.json")
-    log.info(f"Writing metadata.json to {metadata_path}")
-    with open(metadata_path, "w") as outfile:
-        outfile.write(metadata_json_formatted)
-    log.info("Writing ro-crate HTML preview...")
-    writeHTMLpreview(metadata_path)
+    # Note: we need to move the archive into the ro-crate repo directory before
+    # we sync to S3 using DVC so that the git and DVC paths are correct, but we
+    # also need to add the files to DVC before using the DVC yaml files to grab
+    # the md5 to use a links, so this order looks weird but is necessary
+    # TODO: Could probably just move the writing of the metadata.json to the end
 
     log.debug("Renaming and moving target directory...")
     new_archive_path = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"])
@@ -1015,9 +973,20 @@ def main(target_directory, yaml_config, with_dvc, debug):
     log.info("Running upload script...")
     run_dvc_upload_script(upload_script_path)
     log.info("DVC upload script completed without error")
-    # Sync the RO-Crate to S3
-    log.info("Syncing RO-Crate directly to S3...")
-    sync_to_s3(conf)
+    os.remove(upload_script_path)
+
+    # OK now we can write the URLs to the metadata.json file
+    log.info("Adding download links to metadata.json...")
+    metadata_json_formatted = format_file_ids_and_add_download_links(
+        metadata_json,
+        new_archive_path,
+        conf,
+    )
+    metadata_path = Path(new_archive_path, "ro-crate-metadata.json")
+    log.info(f"Writing metadata.json to {metadata_path}")
+    with open(metadata_path, "w") as outfile:
+        outfile.write(metadata_json_formatted)
+
     # Rename new ro-crate
     ro_crate_name = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"] + "-ro-crate")
     Path(RO_CRATE_REPO_PATH, conf["source_mat_id"]).rename(ro_crate_name)
@@ -1038,22 +1007,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "yaml_config", help="Name of YAML config file for building RO-Crate"
     )
-    parser.add_argument(
-        "-u",
-        "--with-dvc",
-        help="Upload using DVC (not recommended)",
-        default=False,
-        action="store_true",
-    )
     parser.add_argument("-d", "--debug", action="store_true", help="DEBUG logging")
     args = parser.parse_args()
-    if args.with_dvc:
-        log.info(
-            "Use DVC (not recommended) and not allowing you!"
-            "You're going to have to edit the code to make this work"
-            "This is here just for legacy reasons"
-            "But yes, it does work, as such..."
-        )
-        log.info("Exiting...")
-        sys.exit()
-    main(args.target_directory, args.yaml_config, args.with_dvc, args.debug)
+    main(args.target_directory, args.yaml_config, args.debug)
