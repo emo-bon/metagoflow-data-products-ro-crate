@@ -269,16 +269,16 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
     log.debug(f"Sequence categorisation paths: {seq_cat_paths}")
     # Add the sequence categorisation files to the list of mandatory files
     # So that they can be used to build the upload script later
+    qualified_paths = [
+        "/".join(["sequence-categorisation", str(Path(*sq.parts[4:]))])
+        for sq in seq_cat_paths
+    ]
     global MANDATORY_FILES
-    MANDATORY_FILES.extend(
-        [
-            "/".join(["sequence-categorisation", str(Path(*sq.parts[4:]))])
-            for sq in seq_cat_paths
-        ]
-    )
+    MANDATORY_FILES.extend(qualified_paths)
     log.debug(f"MANDATORY_FILES = {MANDATORY_FILES}")
-    seq_cat_files = [f.name for f in seq_cat_paths]
-    log.debug(f"Sequence categorisation files: {seq_cat_files}")
+
+    # Just the file names as @ids changed later
+    seq_cat_files = [Path(sq).name for sq in qualified_paths]
     # Sequence-categorisation stanza
     for i, stanza in enumerate(template["@graph"]):
         if stanza["@id"] == "sequence-categorisation/":
@@ -286,7 +286,7 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
             sq_index = i
             break
 
-    seq_cat_files.reverse()
+    qualified_paths.reverse()
     for fn in seq_cat_files:
         # link = os.path.join(
         #    S3_STORE_URL,
@@ -301,7 +301,7 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
             ]
         )
         template["@graph"].insert(sq_index + 1, d)
-    return template, seq_cat_files
+    return template
 
 
 def read_yaml(yaml_config):
@@ -640,9 +640,7 @@ def write_metadata_json(target_directory, conf):
     #    template["@graph"].insert(8, creator_person_station_stanza)
 
     # Add sequence_categorisation stanza separately as they can vary in number and identity
-    template, seq_cat_files = sequence_categorisation_stanzas(
-        target_directory, template, conf
-    )
+    template = sequence_categorisation_stanzas(target_directory, template, conf)
 
     log.info("Metadata (first part) JSON written...")
     return template
@@ -856,10 +854,16 @@ def format_file_ids_and_add_download_links(metadata_json, new_archive_path, conf
     pd = {}
     for f in MANDATORY_FILES:
         pd[Path(f).name.format(**conf)] = f.format(**conf)
+    log.debug(f"pd = {pd}")
 
+    # Note that the @ids in the stanza and hasParts are not qualified,
+    # except in sequene-categorisation, so need to be fully qualified
+    # ie they are just the file name, need to fully qualify them
     for stanza in metadata_json["@graph"]:
         stanza["@id"] = stanza["@id"].format(**conf)
         log.debug(f"stanza @id = {stanza["@id"].format(**conf)}")
+
+        # Get the md5 sum from the DVC files and use as the download link
         if stanza["@type"] and stanza["@type"] == "File":
             if stanza["@id"] == "RNA-counts":
                 fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
@@ -871,26 +875,20 @@ def format_file_ids_and_add_download_links(metadata_json, new_archive_path, conf
             md5 = yaml.safe_load(open(fn))["outs"][0]["md5"]
             md5_link = os.path.join(S3_STORE_URL, md5[:2], md5[2:])
             stanza["downloadUrl"] = f"{md5_link}"
-            stanza["@id"] = stanza["@id"] + ".dvc"
+
+            # @id paths are fully qualified
+            stanza["@id"] = pd[stanza["@id"]]
 
         elif "hasPart" in stanza:
+            # This is very janky, cant think for a better way to do it
             log.debug(f"in hasPart stanza @id = {stanza["@id"]}")
             for entry in stanza["hasPart"]:
                 # Deal with RNA-counts separately
                 if entry["@id"] == "RNA-counts":
-                    entry["@id"] = "RNA-counts.dvc"
+                    entry["@id"] = "taxonomy-summary/RNA-counts"
                     continue
-                # Only files need .dvc
-                try:
-                    # Triggers a keyerror if the entry is not in MANDATORY_FILES
-                    target = Path(new_archive_path, pd[entry["@id"].format(**conf)])
-                    log.debug(
-                        f"hasPart stanza, target file: '{target}' and  = {target.is_file()}"
-                    )
-                    entry["@id"] = target.name + ".dvc"
-                except KeyError:
-                    log.debug(f"Writing entry @id to {entry["@id"].format(**conf)}")
-                    entry["@id"] = entry["@id"].format(**conf)
+                else:
+                    entry["@id"] = str(Path(stanza["@id"], entry["@id"].format(**conf)))
 
     return json.dumps(metadata_json, indent=4)
 
