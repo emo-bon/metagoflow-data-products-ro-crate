@@ -412,8 +412,12 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
     return
 
 
-def get_persons_and_institution_data(conf):
-    """Get the sampling person and institution for a given ref_code."""
+def get_creator_and_mgf_version_information(conf):
+    """Get the creator and mgf version information.
+
+    TODO remove sampling person and institution data leaving just creator
+    hard coded for CCMAR and HCMR
+    """
     # Read the relevant row in sample sheet
     try:
         df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH)
@@ -429,26 +433,26 @@ def get_persons_and_institution_data(conf):
         log.error("Cannot find the env_package for ref_code %s" % conf["ref_code"])
         sys.exit()
     # Get the observatory ID
-    obs_id = list(row_samp["obs_id"].values())[0]
+    # obs_id = list(row_samp["obs_id"].values())[0]
 
     # Get the observatory data
-    df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
+    # df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
     # Get the observatory data using the obs_id and env_package variables
-    row_obs = df_obs.loc[
-        (df_obs["obs_id"] == obs_id) & (df_obs["env_package"] == env_package)
-    ].to_dict()
+    # row_obs = df_obs.loc[
+    #    (df_obs["obs_id"] == obs_id) & (df_obs["env_package"] == env_package)
+    # ].to_dict()
 
     # Sampling person name and ORCID
-    conf["sampling_person_name"] = list(row_samp["sampl_person"].values())[0]
-    conf["sampling_person_identifier"] = list(row_samp["sampl_person_orcid"].values())[
-        0
-    ]
+    # conf["sampling_person_name"] = list(row_samp["sampl_person"].values())[0]
+    # conf["sampling_person_identifier"] = list(row_samp["sampl_person_orcid"].values())[
+    #    0
+    # ]
     # Sampling person affiliation
-    conf["sampling_person_station_edmoid"] = list(
-        row_obs["organization_edmoid"].values()
-    )[0]
-    conf["sampling_person_station_name"] = list(row_obs["organization"].values())[0]
-    conf["sampling_person_station_country"] = list(row_obs["geo_loc_name"].values())[0]
+    # conf["sampling_person_station_edmoid"] = list(
+    #    row_obs["organization_edmoid"].values()
+    # )[0]
+    # conf["sampling_person_station_name"] = list(row_obs["organization"].values())[0]
+    # conf["sampling_person_station_country"] = list(row_obs["geo_loc_name"].values())[0]
 
     # Add MGF analysis creator_person
     mgf_path = FILTERS_MGF_PATH if env_package == "water_column" else SEDIMENTS_MGF_PATH
@@ -459,21 +463,21 @@ def get_persons_and_institution_data(conf):
             if row["who"] == "CCMAR":
                 conf["creator_person_name"] = "Cymon J. Cox"
                 conf["creator_person_identifier"] = "0000-0002-4927-979X"
-                conf["creator_person_station_edmoid"] = "2516"
-                conf["creator_person_station_name"] = (
-                    "Centre of Marine Sciences (CCMAR)"
-                )
-                conf["creator_person_station_country"] = "Portugal"
+                # conf["creator_person_station_edmoid"] = "2516"
+                # conf["creator_person_station_name"] = (
+                #    "Centre of Marine Sciences (CCMAR)"
+                # )
+                # conf["creator_person_station_country"] = "Portugal"
             elif row["who"] == "HCMR":
-                conf["creator_person"] = "Stelios Ninidakis"
+                conf["creator_person_name"] = "Stelios Ninidakis"
                 conf["creator_person_identifier"] = "0000-0003-3898-9451"
-                conf["creator_person_station_edmoid"] = "141"
-                conf["creator_person_station_name"] = (
-                    "Institute of Marine Biology "
-                    "Biotechnology and Aquaculture (IMBBC) Hellenic Centre "
-                    "for Marine Research (HCMR)"
-                )
-                conf["creator_person_station_country"] = "Greece"
+                # conf["creator_person_station_edmoid"] = "141"
+                # conf["creator_person_station_name"] = (
+                #    "Institute of Marine Biology "
+                #    "Biotechnology and Aquaculture (IMBBC) Hellenic Centre "
+                #    "for Marine Research (HCMR)"
+                # )
+                # conf["creator_person_station_country"] = "Greece"
             else:
                 log.error("Unrecognised creater of MGF data: %s" % row["who"])
                 sys.exit()
@@ -528,8 +532,8 @@ def write_metadata_json(target_directory, conf):
             log.error("Exiting...")
             sys.exit()
 
-    # Build the persons and institution stanzas
-    conf = get_persons_and_institution_data(conf)
+    # Build the conf dictionary
+    conf = get_creator_and_mgf_version_information(conf)
     conf = get_ena_accession_data(conf)
     log.debug("Conf dict: %s" % conf)
 
@@ -579,70 +583,61 @@ def write_metadata_json(target_directory, conf):
     # Now add structural elements
     # wasAsscoicatedWith - the sampling event persons and institution
     # "wasAssociatedWith": {}
-    template["@graph"][1]["wasAssociatedWith"] = template["@graph"][1][
-        "wasAssociatedWith"
-    ] = dict(
-        [
-            ("@id", f"{conf['sampling_person_name']}"),
-            ("name", f"{conf['sampling_person_name']}"),
-        ]
-    )
+    # template["@graph"][1]["wasAssociatedWith"] = template["@graph"][1][
+    #    "wasAssociatedWith"
+    # ] = dict(
+    #    [
+    #        ("@id", f"{conf['sampling_person_name']}"),
+    #        ("name", f"{conf['sampling_person_name']}"),
+    #    ]
+    # )
 
     # creator  - the MGF data creator and institution
     # "creator": {}
     template["@graph"][1]["creator"] = template["@graph"][1]["creator"] = dict(
+        [("@id", f"{conf['creator_person_identifier']}")]
+    )
+
+    # Add creater person stanza
+    person_stanza = dict(
         [
-            ("@id", f"{conf['creator_person_name']}"),
+            ("@id", f"{conf['creator_person_identifier']}"),
+            ("@type", "Person"),
             ("name", f"{conf['creator_person_name']}"),
         ]
     )
+    template["@graph"].insert(5, person_stanza)
 
     # Add the sampling persons and institution stanzas
-    for person in ["sampling_person", "creator_person"]:
-        person_stanza = dict(
-            [
-                ("@id", f"{conf[f'{person}_name']}"),
-                ("@type", "Person"),
-                ("name", f"{conf[f'{person}_name']}"),
-                ("memberOf", f"{conf[f'{person}_station_name']}"),
-                ("identifier", f"https://orcid.org/{conf[f'{person}_identifier']}"),
-                (
-                    "affiliation",
-                    f"https://edmo.seadatanet.org/report/{conf[f'{person}_station_edmoid']}",
-                ),
-            ]
-        )
-        template["@graph"].insert(5, person_stanza)
+    # sampling_person_station_stanza = dict(
+    #    [
+    #        ("@id", f"{conf['sampling_person_station_name']}"),
+    #        ("@type", "Organization"),
+    #        ("name", f"{conf['sampling_person_station_name']}"),
+    #        ("country", f"{conf['sampling_person_station_country']}"),
+    #        (
+    #            "identifier",
+    #            f"https://edmo.seadatanet.org/report/{conf['sampling_person_station_edmoid']}",
+    #        ),
+    #    ]
+    # )
+    # template["@graph"].insert(6, sampling_person_station_stanza)
 
-    # Add the sampling persons and institution stanzas
-    sampling_person_station_stanza = dict(
-        [
-            ("@id", f"{conf['sampling_person_station_name']}"),
-            ("@type", "Organization"),
-            ("name", f"{conf['sampling_person_station_name']}"),
-            ("country", f"{conf['sampling_person_station_country']}"),
-            (
-                "identifier",
-                f"https://edmo.seadatanet.org/report/{conf['sampling_person_station_edmoid']}",
-            ),
-        ]
-    )
-    template["@graph"].insert(6, sampling_person_station_stanza)
     ## Add creator institution if different from sampling institution
-    if not conf["sampling_person_station_name"] == conf["creator_person_station_name"]:
-        creator_person_station_stanza = dict(
-            [
-                ("@id", f"{conf['creator_person_station_name']}"),
-                ("@type", "Organization"),
-                ("name", f"{conf['creator_person_station_name']}"),
-                ("country", f"{conf['creator_person_station_country']}"),
-                (
-                    "identifier",
-                    f"https://edmo.seadatanet.org/report/{conf['creator_person_station_edmoid']}",
-                ),
-            ]
-        )
-        template["@graph"].insert(8, creator_person_station_stanza)
+    # if not conf["sampling_person_station_name"] == conf["creator_person_station_name"]:
+    #    creator_person_station_stanza = dict(
+    #        [
+    #            ("@id", f"{conf['creator_person_station_name']}"),
+    #            ("@type", "Organization"),
+    #            ("name", f"{conf['creator_person_station_name']}"),
+    #            ("country", f"{conf['creator_person_station_country']}"),
+    #            (
+    #                "identifier",
+    #                f"https://edmo.seadatanet.org/report/{conf['creator_person_station_edmoid']}",
+    #            ),
+    #        ]
+    #    )
+    #    template["@graph"].insert(8, creator_person_station_stanza)
 
     # Add sequence_categorisation stanza separately as they can vary in number and identity
     template, seq_cat_files = sequence_categorisation_stanzas(
