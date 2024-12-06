@@ -14,6 +14,7 @@
         "datePublished": "{datePublished}",                                              
         "licence": {"@id": "https://creativecommons.org/licenses/by/4.0"},                      
         "publisher": {"@id": "EMBRC", "name": "European Marine Biological Resource Centre"},
+        "conformsTo":  "https://github.com/emo-bon/analysis-results-profile",
         "wasAssociatedWith": {},
         "creator": {},
         "title": "MetaGoFlow data products {ref_code} for Sampling Event {source_mat_id}",
