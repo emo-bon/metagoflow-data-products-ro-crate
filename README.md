@@ -1,10 +1,11 @@
 # MetaGOflow-Data-Products-RO-Crate
-This RO-Crate contains the MetaGOflow workflow results and metadata for the analysis of one EMO BON sampling event (i.e. 1 sequence result (shotgun sequencing reaction) from 1 DNA sample from 1 sampling event at 1 site).
+This code builds the **metagoflow-data-products-ro-crate**'s which contain the [MetaGOflow](https://github.com/emo-bon/MetaGOflow) workflow results for the analysis of one EMO BON sampling event.
+
+This code uses [Data Version Control (dvc)](https://dvc.org/) to store files in a LFS S3 store and uses the .dvc stub files as the payload. The (prototype) ro-crate holding repository [metaGOflow-rocrates-dvc](https://github.com/emo-bon/metaGOflow-rocrates-dvc) is a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) of this repository and contains the dvc root.
 
 This ro-crate is specifically for the [FAIR-EASE Biodiversity Use Case VRE data products](https://fairease.eu/use-cases/biodiversity-observation) - it does not include all of the MetaGOflow output.
 
 # How to create RO-Crate:
-
 
 `$ create-ro-crate.py target_directory yaml_configuration`
 
