@@ -1,5 +1,9 @@
-{ "@context": "https://w3id.org/ro/crate/1.1/context", 
-  "@graph": [
+{ 
+    "@context": {
+        "@vocab": "https://w3id.org/ro/crate/1.2-DRAFT",
+        "dcat": "http://www.w3.org/ns/dcat#"
+    },
+    "@graph": [
     {
         "@id": "ro-crate-metadata.json",
         "@type": "CreativeWork",
