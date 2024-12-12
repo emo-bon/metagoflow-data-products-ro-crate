@@ -4,7 +4,6 @@ import subprocess
 import logging
 from pathlib import Path
 import shutil
-import psutil
 
 log = logging.getLogger(__name__)
 
@@ -20,9 +19,7 @@ def find_bzip2():
     # Find best bzip2 programme
     if shutil.which("lbzip2"):
         # Get nunmber of threads/cpu cores
-        threads = psutil.cpu_count() - 2
-        log.info(f"Using lbzip2 with {threads} threads")
-        bzip2_program = f"lbzip2 -n {threads}"
+        bzip2_program = "lbzip2"
     elif shutil.which("bzip2"):
         log.info("Using bzip2")
         bzip2_program = "bzip2"
@@ -47,7 +44,7 @@ def open_archive(tarball_file, bzip2_program):
         log.error("Exiting...")
         sys.exit()
     os.chdir("temp")
-    log.info(f"Opening archive {tarball_file} with {bzip2_program}")
+    log.debug(f"Opening archive {tarball_file} with {bzip2_program}")
     # tar --use-compress-program lbunzip2 -xvf ../HMNJKDSX3.UDI200.tar.bz2
     subprocess.check_call(
         [
@@ -121,6 +118,7 @@ def fix_all_archives(target_directory, fix_archive, debug):
         sys.exit()
     else:
         # Where the open archives will go
+        log.debug("Creating fixed-archives directory")
         Path("fixed-archives").mkdir(exist_ok=True)
 
     bzip2_program = find_bzip2()

@@ -7,6 +7,7 @@ import logging as log
 import argparse
 import textwrap
 import subprocess
+import psutil
 
 from utils import find_bzip2, open_archive
 
@@ -21,6 +22,7 @@ FILE_PATTERNS = [
     "*.fastq.trimmed.fasta",
     "*.merged_CDS.faa",
     "*.merged_CDS.ffn",
+    "*.merged.cmsearch.all.tblout.deoverlapped",
     "*.merged.fasta",
     "*.merged.motus.tsv",
     "*.merged.unfiltered_fasta",
@@ -46,6 +48,7 @@ def main(
     # CD to target directory
     log.info(f"Changing directory to {target_directory}")
     home_dir = Path.cwd()
+    target_directory = Path(home_dir, target_directory)
     os.chdir(target_directory)
 
     # Get list of tarball files
@@ -53,7 +56,6 @@ def main(
 
     log.debug(f"Found {len(tarball_files)} tarball files")
     for tarball in tarball_files:
-        log.debug(f"Tarball: {tarball}")
         log.debug(f"Tarball name: {tarball.name}")
     tarball_files = [f.name for f in tarball_files]
     if len(tarball_files) == 0:
@@ -62,7 +64,11 @@ def main(
 
     # Where the open archives will go
     outpath = "prepared_archives"
-    Path(outpath).mkdir(exist_ok=True)
+    if Path(outpath).exists():
+        log.debug("'prepared_archives' directory already exists")
+    else:
+        log.debug("Creating 'prepared_archives' directory")
+        Path(outpath).mkdir()
 
     bzip2_program = find_bzip2()
 
@@ -70,7 +76,6 @@ def main(
     for tarball_file in tarball_files:
         run_id = Path(str(tarball_file).rsplit(".", 2)[0])
 
-        log.debug(f"run_id = {run_id}")
         oca_dir = Path(outpath, f"{run_id}")
         if oca_dir.exists():
             log.info(f"An prepared archive already exists for {run_id}")
@@ -86,15 +91,38 @@ def main(
         # Compress the sequence archive files
         log.info(f"Compressing sequence files for {run_id}")
         os.chdir(Path(run_id, "results"))
+        log.debug(f"CWD: {os.getcwd()}")
         for fp in FILE_PATTERNS:
             sf = Path("./").glob(fp)
             for f in sf:
                 log.debug(f"Compressing {f}")
-                subprocess.call([f"{bzip2_program}", "-9" f"{f}"])
+                # Can't use f{} style formatting in subprocess call
+                # of the program name
+                if bzip2_program == "lbzip2":
+                    threads = psutil.cpu_count() - 2
+                    log.debug(f"Using lbzip2 with {threads} threads")
+                    subprocess.check_call(
+                        [
+                            "lbzip2",
+                            "-9",
+                            f"-n {threads}",
+                            f"./{f}",
+                        ]
+                    )
+                elif bzip2_program == "bzip2":
+                    log.debug(f"bzip2 -9 {f}")
+                    subprocess.check_call(
+                        [
+                            "bzip2",
+                            "-9",
+                            f"./{f}",
+                        ]
+                    )
 
         # Move the compressed files to the open-compressed-samples directory
+        log.debug(f"Moving to {target_directory}")
         os.chdir(target_directory)
-        log.info("Moving compressed files to open-compressed-samples directory")
+        log.info(f"Moving compressed files to '{outpath}'")
         log.debug(f"Moving {run_id} to {oca_dir}")
         Path(run_id).rename(oca_dir)
 
@@ -112,19 +140,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "target_directory",
-        help="Name of target directory containing MetaGOflow output",
+        help=(
+            "Name of target directory containing MetaGOflow output"
+            " archives to prepare relative to the current working directory"
+        ),
     )
     parser.add_argument("-d", "--debug", action="store_true", help="DEBUG logging")
-    parser.add_argument(
-        "-f",
-        "--fix_archive",
-        action="store_true",
-        default=False,
-        help="Fix archives that lack a top level directory",
-    )
     args = parser.parse_args()
     main(
         args.target_directory,
-        args.fix_archive,
         args.debug,
     )
