@@ -1,6 +1,6 @@
 { 
     "@context": {
-        "@vocab": "https://w3id.org/ro/crate/1.1",
+        "@vocab": "https://w3id.org/ro/crate/1.2-DRAFT/context",
         "dcat": "http://www.w3.org/ns/dcat#"
     },
     "@graph": [
@@ -67,7 +67,6 @@
         "@type": "ContactPoint",
         "contactType": "Help Desk",
         "email": "help@embrc.org",
-        "identifier": "help@embrc.org",
         "url": "https://www.embrc.eu/about-us/contact-us"
     },
     {
