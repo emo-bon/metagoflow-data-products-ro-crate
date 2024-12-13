@@ -1,7 +1,8 @@
 { 
     "@context": {
         "@vocab": "https://w3id.org/ro/crate/1.2-DRAFT/context",
-        "dcat": "http://www.w3.org/ns/dcat#"
+        "dcat": "http://www.w3.org/ns/dcat#",
+        "pcdm": "http://pcdm.org/models#"
     },
     "@graph": [
     {
@@ -44,9 +45,11 @@
                 {"@id":"https://vocabularyserver.com/asfa/?tema=3248"},
                 {"@id":"https://vocabularyserver.com/asfa/?tema=2091"}
         ],
-        "hasPart":[
+        "pcdm:hasMember":[
             {"@id": "{ena_accession_number_url}"},  
-            {"@id": "{metagoflow_version}"},  
+            {"@id": "{metagoflow_version}"}  
+        ],
+        "hasPart":[
             {"@id": "{run_parameter}.yml"},
             {"@id": "fastp.html"},
             {"@id": "final.contigs.fa"},
