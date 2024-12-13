@@ -115,35 +115,35 @@ CONFIG_YAML_PARAMETERS = [
 RO_CRATE_REPO_PATH = "metaGOflow-rocrates-dvc"
 
 MANDATORY_FILES = [
-    "fastp.html",
-    "final.contigs.fa.bz2",
-    "RNA-counts",
-    "config.yml",
-    "functional-annotation/stats/go.stats",
-    "functional-annotation/stats/interproscan.stats",
-    "functional-annotation/stats/ko.stats",
-    "functional-annotation/stats/orf.stats",
-    "functional-annotation/stats/pfam.stats",
-    "taxonomy-summary/LSU/krona.html",
-    "taxonomy-summary/SSU/krona.html",
-    "functional-annotation/{prefix}.merged_CDS.I5.tsv.gz",
-    "functional-annotation/{prefix}.merged.hmm.tsv.gz",
-    "functional-annotation/{prefix}.merged.summary.go",
-    "functional-annotation/{prefix}.merged.summary.go_slim",
-    "functional-annotation/{prefix}.merged.summary.ips",
-    "functional-annotation/{prefix}.merged.summary.ko",
-    "functional-annotation/{prefix}.merged.summary.pfam",
-    "functional-annotation/{prefix}.merged.emapper.summary.eggnog",
-    "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz",
-    "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_hdf5.biom",
-    "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom",
-    "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv",
-    "taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt",
-    "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.gz",
-    "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_hdf5.biom",
-    "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom",
-    "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv",
-    "taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt",
+    "./fastp.html",
+    "./final.contigs.fa.bz2",
+    "./RNA-counts",
+    "./config.yml",
+    "./functional-annotation/stats/go.stats",
+    "./functional-annotation/stats/interproscan.stats",
+    "./functional-annotation/stats/ko.stats",
+    "./functional-annotation/stats/orf.stats",
+    "./functional-annotation/stats/pfam.stats",
+    "./taxonomy-summary/LSU/krona.html",
+    "./taxonomy-summary/SSU/krona.html",
+    "./functional-annotation/{prefix}.merged_CDS.I5.tsv.gz",
+    "./functional-annotation/{prefix}.merged.hmm.tsv.gz",
+    "./functional-annotation/{prefix}.merged.summary.go",
+    "./functional-annotation/{prefix}.merged.summary.go_slim",
+    "./functional-annotation/{prefix}.merged.summary.ips",
+    "./functional-annotation/{prefix}.merged.summary.ko",
+    "./functional-annotation/{prefix}.merged.summary.pfam",
+    "./functional-annotation/{prefix}.merged.emapper.summary.eggnog",
+    "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz",
+    "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_hdf5.biom",
+    "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom",
+    "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv",
+    "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt",
+    "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.gz",
+    "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_hdf5.biom",
+    "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom",
+    "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv",
+    "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt",
 ]
 
 YAML_ERROR = """
@@ -257,13 +257,13 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
 
     seq_cat_dir_path = Path(target_directory, "results", "sequence-categorisation")
     seq_cat_paths = seq_cat_dir_path.glob("*.gz")
-    log.debug(f"Sequence categorisation paths: {seq_cat_paths}")
     # Just the file names as @ids changed later
     seq_cat_files = [sq.name for sq in seq_cat_paths]
+    log.debug(f"Seq_cat_files: {seq_cat_files}")
     # Add the sequence categorisation files to the list of mandatory files
     # So that they can be used to build the upload script later
     qualified_paths = [
-        "/".join(["sequence-categorisation", str(sq)]) for sq in seq_cat_files
+        "/".join(["./sequence-categorisation", str(sq)]) for sq in seq_cat_files
     ]
     global MANDATORY_FILES
     MANDATORY_FILES.extend(qualified_paths)
@@ -271,12 +271,14 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
 
     # Sequence-categorisation stanza
     for i, stanza in enumerate(template["@graph"]):
-        if stanza["@id"] == "sequence-categorisation/":
-            stanza["hasPart"] = [dict([("@id", f"{fn}")]) for fn in seq_cat_files]
+        if stanza["@id"] == "./sequence-categorisation/":
+            # NB these get updated later with the qualified paths
+            stanza["hasPart"] = [dict([("@id", f"./{fn}")]) for fn in seq_cat_files]
+            log.debug(f"Seq catagoriastaion stanza['hasPart'] == {stanza['hasPart']}")
             sq_index = i
             break
 
-    qualified_paths.reverse()
+    seq_cat_files.reverse()
     for fn in seq_cat_files:
         # link = os.path.join(
         #    S3_STORE_URL,
@@ -284,7 +286,7 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
         # )
         d = dict(
             [
-                ("@id", f"{fn}"),
+                ("@id", f"./{fn}"),
                 ("@type", "File"),
                 ("downloadUrl", ""),
                 ("encodingFormat", "application/zip"),
@@ -359,13 +361,13 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
         # The fixed file paths
         for filepath in filepaths:
             log.debug(f"File path: {filepath}")
-            if filepath == "config.yml":
+            if filepath == "./config.yml":
                 path = Path(target_directory, filepath)
             else:
                 path = Path(target_directory, "results", filepath)
             if (
                 filepath
-                == f"functional-annotation/{conf['prefix']}.merged_CDS.I5.tsv.gz"
+                == f"./functional-annotation/{conf['prefix']}.merged_CDS.I5.tsv.gz"
                 and not path.exists()
             ):
                 # Originally MGF did not concatenate the I5 files so this is needed for some of V1.0 and development runs
@@ -722,10 +724,17 @@ def move_files_out_of_results(new_archive_path):
     # grabs all files and dirs in results
     # not recursive: good! we can move the dirs as is
     for fp in src_path.glob("*"):
-        if fp.is_dir() or fp.name in MANDATORY_FILES:
+        if fp.is_dir():
             trg_path = src_path.parent  # gets the parent of the folder
             log.debug(f"Moving {fp} to {trg_path.joinpath(fp.name)}")
             fp.rename(trg_path.joinpath(fp.name))  # moves to parent folder.
+
+        # Note that:
+        # Path("./RNA-counts").name not in ["./RNA-counts"]
+        elif os.path.join("./", str(fp.name)) in MANDATORY_FILES:
+            trg_path = src_path.parent
+            log.debug(f"Moving {fp} to {trg_path.joinpath(fp.name)}")
+            fp.rename(trg_path.joinpath(fp.name))
         else:
             continue
             # the intermediate sequence files get left behind and removed below
@@ -827,7 +836,7 @@ def format_file_ids_and_add_download_links(
         # Get the md5 sum from the DVC files and use as the download link
         if format_download_links:
             if stanza["@type"] and stanza["@type"] == "File":
-                if stanza["@id"] == "RNA-counts":
+                if stanza["@id"] == "./RNA-counts":
                     fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
                 else:
                     fn = Path(new_archive_path, pd[stanza["@id"]] + ".dvc")
@@ -846,11 +855,13 @@ def format_file_ids_and_add_download_links(
             log.debug(f"in hasPart stanza @id = {stanza["@id"]}")
             for entry in stanza["hasPart"]:
                 # Deal with RNA-counts separately
-                if entry["@id"] == "RNA-counts":
-                    entry["@id"] = "taxonomy-summary/RNA-counts"
+                if entry["@id"] == "./RNA-counts":
+                    entry["@id"] = "./taxonomy-summary/RNA-counts"
                     continue
                 else:
-                    entry["@id"] = str(Path(stanza["@id"], entry["@id"].format(**conf)))
+                    entry["@id"] = "./" + str(
+                        Path(stanza["@id"], entry["@id"].format(**conf))
+                    )
 
     return json.dumps(metadata_json, indent=4)
 
