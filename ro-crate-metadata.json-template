@@ -8,7 +8,8 @@
     {
         "@id": "ro-crate-metadata.json",
         "@type": "CreativeWork",
-        "conformsTo": {"@id": "https://w3id.org/ro/crate/1.1"},
+        "conformsTo": [{"@id": "https://w3id.org/ro/crate/1.1"},
+                    {"@id":"https://github.com/emo-bon/analysis-results-profile"}],
         "about": {"@id": "./"}
     },
     {
@@ -20,7 +21,6 @@
         "licence": {"@id": "https://creativecommons.org/licenses/by/4.0/"},
 
         "publisher": {"@id": "https://ror.org/0038zss60"},
-        "conformsTo":  "https://github.com/emo-bon/analysis-results-profile",
         "creator": {},
         "title": "MetaGoFlow data products {ref_code} for Sampling Event {source_mat_id}",
         "keywords":[
