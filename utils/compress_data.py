@@ -99,7 +99,7 @@ def main(
                 # Can't use f{} style formatting in subprocess call
                 # of the program name
                 if bzip2_program == "lbzip2":
-                    threads = psutil.cpu_count() - 2
+                    threads = psutil.cpu_count() - 4
                     log.debug(f"Using lbzip2 with {threads} threads")
                     subprocess.check_call(
                         [
