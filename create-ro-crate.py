@@ -8,6 +8,7 @@ import sys
 import yaml
 import json
 import datetime
+import re
 import requests
 import shutil
 import urllib
@@ -102,7 +103,7 @@ S3_STORE_URL = "https://s3.mesocentre.uca.fr/mgf-data-products/files/md5"
 
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
 # "run_wf.sh" script:
-WORKFLOW_YAML_FILENAME = "{run_parameter}.yml"
+WORKFLOW_YAML_FILENAME = "./{run_parameter}.yml"
 CONFIG_YAML_PARAMETERS = [
     "datePublished",
     "run_parameter",
@@ -212,6 +213,7 @@ def get_ref_code_and_prefix(conf):
                     conf["batch_number"] = i + 1
                     conf["source_mat_id"] = row[2]
                     log.info(f"EMO BON ref_code: {conf['ref_code']}")
+                    log.info(f"Prefix: {conf['prefix']}")
                     return conf
             elif math.isnan(row[0]):
                 # Not all samples with an EMO BON code were sent to sequencing
@@ -265,9 +267,9 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
     qualified_paths = [
         "/".join(["./sequence-categorisation", str(sq)]) for sq in seq_cat_files
     ]
-    global MANDATORY_FILES
+    # global MANDATORY_FILES
     MANDATORY_FILES.extend(qualified_paths)
-    log.debug(f"MANDATORY_FILES = {MANDATORY_FILES}")
+    log.debug(f"MANDATORY_FILES (after seq_categorisation)= {MANDATORY_FILES}")
 
     # Sequence-categorisation stanza
     for i, stanza in enumerate(template["@graph"]):
@@ -293,6 +295,133 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
             ]
         )
         template["@graph"].insert(sq_index + 1, d)
+    return template
+
+
+def add_sequence_data_stanzas(target_directory, template, conf):
+    """
+    Add the sequence data stanzas to the template:
+
+    DBH_AAACOSDA_1_1_HWLTKDRXY.UDI211_clean.fastq.trimmed.fasta.bz2
+    DBH_AAACOSDA_1_1_HWLTKDRXY.UDI211_clean.fastq.trimmed.qc_summary
+    DBH_AAACOSDA_1_2_HWLTKDRXY.UDI211_clean.fastq.trimmed.fasta.bz2
+    DBH_AAACOSDA_1_2_HWLTKDRXY.UDI211_clean.fastq.trimmed.qc_summary
+    DBH.merged_CDS.faa.bz2
+    DBH.merged_CDS.ffn.bz2
+    DBH.merged.cmsearch.all.tblout.deoverlapped.bz2
+    DBH.merged.fasta.bz2
+    DBH.merged.motus.tsv.bz2
+    DBH.merged.qc_summary
+    DBH.merged.unfiltered_fasta.bz2
+
+    """
+    data = {
+        r"^{prefix}_[A-Za-z0-9]+_[1,2]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.fasta\.bz2$": (
+            "Trimmed forward reads",
+            "All forward reads after trimming in fasta format",
+            "application/x-bzip2",
+        ),
+        r"^{prefix}_[A-Za-z0-9]+_[1,2]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.qc_summary$": (
+            "Trimmed forward reads QC summary",
+            "Quality control summary of trimmed forward reads",
+            "text/plain",
+        ),
+        r"^{prefix}_[A-Za-z0-9]+_[1,2]_2_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.fasta\.bz2$": (
+            "Trimmed reverse reads",
+            "All reverse reads after trimming in fasta format",
+            "application/x-bzip2",
+        ),
+        r"^{prefix}_[A-Za-z0-9]+_[1,2]_2_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.qc_summary$": (
+            "Trimmed reverse reads QC summary",
+            "Quality control summary of trimmed reverse reads",
+            "text/plain",
+        ),
+        "{prefix}.merged_CDS.faa.bz2": (
+            "Protein coding amino acid sequences",
+            "Coding sequences of merged reads in amino acid format",
+            "application/x-bzip2",
+        ),
+        "{prefix}.merged_CDS.ffn.bz2": (
+            "Protein coding nucleotide sequences",
+            "Coding sequences of merged reads in nucleotide format",
+            "application/x-bzip2",
+        ),
+        "{prefix}.merged.cmsearch.all.tblout.deoverlapped.bz2": (
+            "Overlapped coding sequences",
+            "Overlapped coding sequences (intermediate file)",
+            "application/x-bzip2",
+        ),
+        "{prefix}.merged.fasta.bz2": (
+            "Merged reads",
+            "Merged forward and reverse reads in fasta format",
+            "application/x-bzip2",
+        ),
+        "{prefix}.merged.motus.tsv.bz2": (
+            "MOTUs",
+            "Metagenomic Operational Taxonomic Units (MOTUs) in tab-separated format",
+            "application/x-bzip2",
+        ),
+        "{prefix}.merged.qc_summary": (
+            "QC summary of merged reads",
+            "Quality control analysis summary of merged reads",
+            "text/plain",
+        ),
+        "{prefix}.merged.unfiltered_fasta.bz2": (
+            "Unfiltered merged reads",
+            "All merged reads before fileting in fasta format",
+            "application/x-bzip2",
+        ),
+    }
+    seq_data_paths = Path(target_directory, "results").glob(f"{conf['prefix']}*")
+    # Just the file names as @ids changed later
+    seq_data_files = [sq.name for sq in seq_data_paths]
+    if len(seq_data_files) != 11:
+        log.error("Expected 11 sequence data files, found %s" % len(seq_data_files))
+        log.error(f"sequence data files: {seq_data_files}")
+        sys.exit()
+    log.debug(f"Seq_data_files: {seq_data_files}")
+
+    # global MANDATORY_FILES
+    MANDATORY_FILES.extend([f"./{fn}" for fn in seq_data_files])
+    log.debug(f"MANDATORY_FILES (after seq_data_files) = {MANDATORY_FILES}")
+
+    for stanza in template["@graph"]:
+        if stanza["@id"] == "./":
+            # Update the hasPart dict with the sequence data files
+            ns = [dict([("@id", f"./{fn.format(**conf)}")]) for fn in seq_data_files]
+            stanza["hasPart"].extend(ns)
+            break
+
+    # Add the sequence data stanzas after config.yml
+    # Get the config.yml index
+    for sq_index, stanza in enumerate(template["@graph"]):
+        if stanza["@id"] == "./config.yml":
+            break
+
+    for seq_file in seq_data_files:
+        log.debug(f"Looking for seq_file: {seq_file}")
+        for patt, value in data.items():
+            found = False
+            filename = patt.format(**conf)
+            if re.match(filename, seq_file):
+                d = dict(
+                    [
+                        ("@id", f"./{seq_file}"),
+                        ("@type", "File"),
+                        ("name", value[0]),
+                        ("description", value[1]),
+                        ("downloadUrl", ""),
+                        ("encodingFormat", value[2]),
+                    ]
+                )
+                template["@graph"].insert(sq_index + 1, d)
+                found = True
+                log.debug(f"Added stanza for {seq_file}")
+                break
+        if not found:
+            log.error(f"Cannot find pattern for {seq_file}")
+            sys.exit()
+
     return template
 
 
@@ -506,7 +635,7 @@ def get_ena_accession_data(conf):
     return conf
 
 
-def write_metadata_json(target_directory, conf):
+def write_metadata_json(target_directory, conf, add_sequence_data=False):
     metadata_json_template = "ro-crate-metadata.json-template"
     if os.path.exists(metadata_json_template):
         log.debug("Using local metadata.json template")
@@ -601,6 +730,8 @@ def write_metadata_json(target_directory, conf):
 
     # Add sequence_categorisation stanza separately as they can vary in number and identity
     template = sequence_categorisation_stanzas(target_directory, template, conf)
+    if add_sequence_data:
+        template = add_sequence_data_stanzas(target_directory, template, conf)
 
     log.info("Metadata (first part) JSON written...")
     return template
@@ -626,7 +757,7 @@ def write_dvc_upload_script(conf):
         # Add the DVC commands
         for fp in MANDATORY_FILES:
             log.debug(f"fp filepath = {fp}")
-            if fp == "RNA-counts":
+            if fp == "./RNA-counts":
                 np = Path(
                     conf["source_mat_id"],
                     "taxonomy-summary",
@@ -711,7 +842,9 @@ def run_dvc_upload_script(upload_script_path):
 
 
 def move_files_out_of_results(new_archive_path):
-    """Remove chunk lists from functional-annotation so that dirs can be copied
+    """Move files from results to the parent directory, ro-crate root
+
+    Also remove chunk lists from functional-annotation so that dirs can be copied
     as is to the RO-Crate
     """
     src_path = new_archive_path / "results"
@@ -724,27 +857,25 @@ def move_files_out_of_results(new_archive_path):
     # grabs all files and dirs in results
     # not recursive: good! we can move the dirs as is
     for fp in src_path.glob("*"):
+        log.debug(f"File in results glob: {fp}")
         if fp.is_dir():
             trg_path = src_path.parent  # gets the parent of the folder
-            log.debug(f"Moving {fp} to {trg_path.joinpath(fp.name)}")
+            log.info(f"Moving {fp} to {trg_path.joinpath(fp.name)}")
             fp.rename(trg_path.joinpath(fp.name))  # moves to parent folder.
 
         # Note that:
         # Path("./RNA-counts").name not in ["./RNA-counts"]
-        elif os.path.join("./", str(fp.name)) in MANDATORY_FILES:
-            trg_path = src_path.parent
-            log.debug(f"Moving {fp} to {trg_path.joinpath(fp.name)}")
-            fp.rename(trg_path.joinpath(fp.name))
-        else:
-            continue
-            # the intermediate sequence files get left behind and removed below
-            # in particular the *.merged data is not included in the ro-crate
-            # DBH.merged_CDS.faa
-            # DBH.merged.fasta
-            # DBH.merged.qc_summary
-            # DBH.merged_CDS.ffn
-            # DBH.merged.motus.tsv
-            # DBH.merged.unfiltered_fasta
+        elif fp.is_file():
+            nfp = os.path.join("./", str(fp.name))
+            log.debug(f"Is_file: new file path = {nfp}")
+            log.debug(f"new file path in MANDATORY_FILES = {nfp in MANDATORY_FILES  }")
+            if nfp in MANDATORY_FILES:
+                trg_path = src_path.parent
+                log.info(f"Moving {fp} to {trg_path.joinpath(fp.name)}")
+                fp.rename(trg_path.joinpath(fp.name))
+            else:
+                log.error("Could not deal with file: %s" % fp)
+                sys.exit()
     # Move RNA-counts into the taxonomy-summary directory
     old_path = new_archive_path.joinpath("RNA-counts")
     new_path = new_archive_path.joinpath("taxonomy-summary", "RNA-counts")
@@ -836,10 +967,14 @@ def format_file_ids_and_add_download_links(
         # Get the md5 sum from the DVC files and use as the download link
         if format_download_links:
             if stanza["@type"] and stanza["@type"] == "File":
+                log.debug("In @type File stanza")
                 if stanza["@id"] == "./RNA-counts":
                     fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
                 else:
-                    fn = Path(new_archive_path, pd[stanza["@id"]] + ".dvc")
+                    # Remove the ./ from the @id
+                    key = Path(stanza["@id"]).name
+                    log.debug(f"Path(stanza['@id']).name = {key}")
+                    fn = Path(new_archive_path, pd[key] + ".dvc")
                 if not fn.exists():
                     log.error(f"Cannot find the file {fn}")
                     sys.exit()
@@ -847,13 +982,12 @@ def format_file_ids_and_add_download_links(
                 md5_link = os.path.join(S3_STORE_URL, md5[:2], md5[2:])
                 stanza["downloadUrl"] = f"{md5_link}"
 
-                # @id paths are fully qualified
-                stanza["@id"] = pd[stanza["@id"]]
-
         if "hasPart" in stanza:
             # This is very janky, cant think for a better way to do it
             log.debug(f"in hasPart stanza @id = {stanza["@id"]}")
+            log.debug(f"stanza hasPart = {stanza["hasPart"]}")
             for entry in stanza["hasPart"]:
+                log.debug(f"entry @id = {entry["@id"]}")
                 # Deal with RNA-counts separately
                 if entry["@id"] == "./RNA-counts":
                     entry["@id"] = "./taxonomy-summary/RNA-counts"
@@ -866,7 +1000,9 @@ def format_file_ids_and_add_download_links(
     return json.dumps(metadata_json, indent=4)
 
 
-def main(target_directory, yaml_config, debug, upload_dvc=False):
+def main(
+    target_directory, yaml_config, debug, upload_dvc=False, add_sequence_data=False
+):
     """ """
     # Logging
     if debug:
@@ -903,7 +1039,7 @@ def main(target_directory, yaml_config, debug, upload_dvc=False):
 
     # Create the metadata.json file but dont write yet, need to add links later
     log.info("Formatting metadata.json...")
-    metadata_json = write_metadata_json(target_directory, conf)
+    metadata_json = write_metadata_json(target_directory, conf, add_sequence_data)
 
     # Note: we need to move the archive into the ro-crate repo directory before
     # we sync to S3 using DVC so that the git and DVC paths are correct, but we
@@ -939,8 +1075,10 @@ def main(target_directory, yaml_config, debug, upload_dvc=False):
     if upload_dvc:
         log.info("Running upload script...")
         run_dvc_upload_script(upload_script_path)
-    log.info("DVC upload script completed without error")
-    os.remove(upload_script_path)
+        log.info("DVC upload script completed without error")
+        os.remove(upload_script_path)
+    else:
+        log.info("Not running DVC/S3 upload script")
 
     # OK now we can write the URLs to the metadata.json file
     log.info("Adding download links to metadata.json...")
@@ -965,7 +1103,7 @@ def main(target_directory, yaml_config, debug, upload_dvc=False):
     # else keep them
     if upload_dvc:
         remove_data_files_from_ro_crate(ro_crate_name)
-    log.info("Done without error")
+    log.info(f"{ro_crate_name} written without error")
 
 
 if __name__ == "__main__":
@@ -985,7 +1123,21 @@ if __name__ == "__main__":
         "-u",
         "--upload_dvc",
         action="store_true",
+        default=False,
         help="Upload files to S3 using DVC (default: False)",
     )
+    parser.add_argument(
+        "-s",
+        "--add_sequence_data",
+        action="store_true",
+        default=False,
+        help="Add sequence data files (default: False)",
+    )
     args = parser.parse_args()
-    main(args.target_directory, args.yaml_config, args.debug, args.upload_dvc)
+    main(
+        args.target_directory,
+        args.yaml_config,
+        args.debug,
+        args.upload_dvc,
+        args.add_sequence_data,
+    )
