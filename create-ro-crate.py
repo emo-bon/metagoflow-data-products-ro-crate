@@ -512,7 +512,10 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
                             "Ignoring specified missing file: %s"
                             % os.path.split(filepath)[1]
                         )
-                        filepaths.remove(filepath)
+                        parts = list(Path(filepath).parts[:-1])
+                        fn = os.path.join("./", str(Path(*parts, filename)))
+                        log.debug(f"Removed {fn} from MANDATORY_FILES")
+                        MANDATORY_FILES.remove(fn)
                         break
                 else:
                     log.error(
@@ -627,11 +630,38 @@ def get_ena_accession_data(conf):
     row_ena = df_ena.loc[df_ena["ref_code"] == conf["ref_code"]].to_dict()
     # Get the ENA accession data
     conf["ena_accession_number"] = list(
-        row_ena["ena_accession_number_sample"].values()
+        row_ena["ena_accession_number_run_metag"].values()
     )[0]
     conf["ena_accession_number_url"] = (
         f"https://www.ebi.ac.uk/ena/browser/view/{conf['ena_accession_number']}"
     )
+    return conf
+
+
+def add_sequence_data_links(conf):
+    """Add the links to the raw sequence data files in ENA"""
+    # ENA ACCESSION filereport for sample
+    filereport_url = (
+        "https://www.ebi.ac.uk/ena/portal/api/filereport?accession={ena_accession_number}"
+        "&result=read_run&fields=submitted_ftp&format=json&download=true&limit=-1"
+    )
+    log.debug(f"ENA filereport URL: {filereport_url.format(**conf)}")
+    filereport = requests.get(filereport_url.format(**conf))
+    if filereport.status_code == requests.codes.ok:
+        filereport_json = filereport.json()
+        log.debug(f"ENA filereport: {filereport_json}")
+    else:
+        log.error("Cannot get the ENA filereport")
+        log.error("Raw sequence data are not available from ENA")
+        sys.exit()
+    # Get the FTP links to the raw sequence data
+    links = filereport_json[0]["submitted_ftp"].split(";")
+    if len(links) != 2:
+        log.error("Cannot find the 2 raw sequence data links in the ENA filereport")
+        sys.exit()
+    # Add the links to the conf dictionary
+    conf["forward_reads_link"] = f"https://{links[0]}"
+    conf["reverse_reads_link"] = f"https://{links[1]}"
     return conf
 
 
@@ -656,6 +686,7 @@ def write_metadata_json(target_directory, conf, add_sequence_data=False):
     # Build the conf dictionary
     conf = get_creator_and_mgf_version_information(conf)
     conf = get_ena_accession_data(conf)
+    conf = add_sequence_data_links(conf)
     log.debug("Conf dict: %s" % conf)
 
     log.info("Writing ro-crate-metadata.json...")
@@ -707,10 +738,12 @@ def write_metadata_json(target_directory, conf, add_sequence_data=False):
             stanza["@id"] = stanza["@id"].format(**conf)
             stanza["name"] = stanza["name"].format(**conf)
             stanza["downloadUrl"] = stanza["downloadUrl"].format(**conf)
-            break
-    else:
-        log.error("Cannot find the ENA accession number stanza")
-        sys.exit()
+            continue
+        # Add the raw sequence data links
+        if stanza["@id"] in ["{forward_reads_link}", "{reverse_reads_link}"]:
+            stanza["@id"] = stanza["@id"].format(**conf)
+            stanza["description"] = stanza["description"].format(**conf)
+            stanza["downloadUrl"] = stanza["downloadUrl"].format(**conf)
 
     # creator  - the MGF data creator and institution
     # "creator": {}
@@ -841,7 +874,7 @@ def run_dvc_upload_script(upload_script_path):
     os.chdir(cwd_dir)
 
 
-def move_files_out_of_results(new_archive_path):
+def move_files_out_of_results(new_archive_path, add_sequence_data=False):
     """Move files from results to the parent directory, ro-crate root
 
     Also remove chunk lists from functional-annotation so that dirs can be copied
@@ -860,22 +893,33 @@ def move_files_out_of_results(new_archive_path):
         log.debug(f"File in results glob: {fp}")
         if fp.is_dir():
             trg_path = src_path.parent  # gets the parent of the folder
-            log.info(f"Moving {fp} to {trg_path.joinpath(fp.name)}")
+            log.info(f"Moving dir {fp} to {trg_path.joinpath(fp.name)}")
             fp.rename(trg_path.joinpath(fp.name))  # moves to parent folder.
 
         # Note that:
         # Path("./RNA-counts").name not in ["./RNA-counts"]
         elif fp.is_file():
-            nfp = os.path.join("./", str(fp.name))
-            log.debug(f"Is_file: new file path = {nfp}")
-            log.debug(f"new file path in MANDATORY_FILES = {nfp in MANDATORY_FILES  }")
-            if nfp in MANDATORY_FILES:
+            # Only move the top level files
+            if fp.name in ["fastp.html", "RNA-counts"]:
                 trg_path = src_path.parent
-                log.info(f"Moving {fp} to {trg_path.joinpath(fp.name)}")
+                log.info(f"Moving file {fp} to {trg_path.joinpath(fp.name)}")
                 fp.rename(trg_path.joinpath(fp.name))
-            else:
-                log.error("Could not deal with file: %s" % fp)
-                sys.exit()
+                continue
+            if add_sequence_data:
+                # Move all files to the parent directory incl sequence data files
+                nfp = os.path.join("./", str(fp.name))
+                log.debug(f"Is_file: new file path = {nfp}")
+                log.debug(
+                    f"New file path in MANDATORY_FILES = {nfp in MANDATORY_FILES  }"
+                )
+                if nfp in MANDATORY_FILES:
+                    trg_path = src_path.parent
+                    log.info(f"Moving file {fp} to {trg_path.joinpath(fp.name)}")
+                    fp.rename(trg_path.joinpath(fp.name))
+                else:
+                    log.error("Could not deal with file: %s" % fp)
+                    sys.exit()
+
     # Move RNA-counts into the taxonomy-summary directory
     old_path = new_archive_path.joinpath("RNA-counts")
     new_path = new_archive_path.joinpath("taxonomy-summary", "RNA-counts")
@@ -963,6 +1007,25 @@ def format_file_ids_and_add_download_links(
         stanza["@id"] = stanza["@id"].format(**conf)
         log.debug(f"stanza @id = {stanza["@id"].format(**conf)}")
 
+        if "hasPart" in stanza:
+            log.debug(f"in hasPart stanza @id = {stanza["@id"]}")
+            log.debug(f"stanza hasPart = {stanza["hasPart"]}")
+            for entry in stanza["hasPart"]:
+                formatted_entry = entry["@id"].format(**conf)
+                log.debug(f"Formatted entry @id = {formatted_entry}")
+
+                # Deal with RNA-counts separately
+                if entry["@id"] == "./RNA-counts":
+                    entry["@id"] = "./taxonomy-summary/RNA-counts"
+                    continue
+                elif formatted_entry.startswith("https://"):
+                    entry["@id"] = formatted_entry
+                    # Skip the sequence data links
+                    continue
+                else:
+                    # Fully qualify the @id?
+                    entry["@id"] = "./" + str(Path(stanza["@id"], formatted_entry))
+
         # If run_dvc_upload is False, do not add download links
         # Get the md5 sum from the DVC files and use as the download link
         if format_download_links:
@@ -981,21 +1044,6 @@ def format_file_ids_and_add_download_links(
                 md5 = yaml.safe_load(open(fn))["outs"][0]["md5"]
                 md5_link = os.path.join(S3_STORE_URL, md5[:2], md5[2:])
                 stanza["downloadUrl"] = f"{md5_link}"
-
-        if "hasPart" in stanza:
-            # This is very janky, cant think for a better way to do it
-            log.debug(f"in hasPart stanza @id = {stanza["@id"]}")
-            log.debug(f"stanza hasPart = {stanza["hasPart"]}")
-            for entry in stanza["hasPart"]:
-                log.debug(f"entry @id = {entry["@id"]}")
-                # Deal with RNA-counts separately
-                if entry["@id"] == "./RNA-counts":
-                    entry["@id"] = "./taxonomy-summary/RNA-counts"
-                    continue
-                else:
-                    entry["@id"] = "./" + str(
-                        Path(stanza["@id"], entry["@id"].format(**conf))
-                    )
 
     return json.dumps(metadata_json, indent=4)
 
@@ -1066,7 +1114,7 @@ def main(
     # Move all files out of the results directory into top level
     # and remove the results directory and files not in the RO-Crate
     log.debug("Moving all files out of the results directory...")
-    move_files_out_of_results(new_archive_path)
+    move_files_out_of_results(new_archive_path, add_sequence_data=add_sequence_data)
 
     # Write the S3 and Github upload script
     log.debug("Writing S3 and Github upload script...")
