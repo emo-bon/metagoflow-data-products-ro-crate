@@ -213,6 +213,7 @@ def get_ref_code_and_prefix(conf):
                     conf["batch_number"] = i + 1
                     conf["source_mat_id"] = row[2]
                     log.info(f"EMO BON ref_code: {conf['ref_code']}")
+                    log.info(f"Source mat ID: {conf['source_mat_id']}")
                     log.info(f"Prefix: {conf['prefix']}")
                     return conf
             elif math.isnan(row[0]):
@@ -490,20 +491,37 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
         # The fixed file paths
         for filepath in filepaths:
             log.debug(f"File path: {filepath}")
+
+            # Deal with config.yml
             if filepath == "./config.yml":
                 path = Path(target_directory, filepath)
             else:
                 path = Path(target_directory, "results", filepath)
+
+            # Originally MGF did not concatenate the I5 files so this is needed for some of V1.0 and development runs
             if (
                 filepath
                 == f"./functional-annotation/{conf['prefix']}.merged_CDS.I5.tsv.gz"
                 and not path.exists()
             ):
-                # Originally MGF did not concatenate the I5 files so this is needed for some of V1.0 and development runs
                 log.info(
                     "Functional annotation I5 files are in chunks... concatenating..."
                 )
                 concatenate_ips_chunks(path)
+
+            # Deal with the emapper summary file
+            if (
+                filepath
+                == f"./functional-annotation/{conf['prefix']}.merged.emapper.summary.eggnog"
+                and not path.exists()
+            ):
+                log.info("Eggnog emapper summary file is missing")
+                fn = "./functional-annotation/{prefix}.merged.emapper.summary.eggnog"
+                log.debug(f"Removing '{fn} from MANDATORY_FILES")
+                MANDATORY_FILES.remove(fn)
+                continue
+
+            # And the rest
             if not os.path.exists(path):
                 for filename in conf["missing_files"]:
                     if os.path.split(filepath)[1] == filename.format(**conf):
@@ -533,10 +551,10 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
     # There's a single HMM file that needs to be removed
     remove_hmm_chunk_file(target_directory, conf)
     log.info("Data look good...")
-    return
+    return conf
 
 
-def get_creator_and_mgf_version_information(conf):
+def get_creator_and_mgf_version_information(conf, overide_error=False):
     """Get the creator and mgf version information.
 
     TODO remove sampling person and institution data leaving just creator
@@ -605,14 +623,26 @@ def get_creator_and_mgf_version_information(conf):
             else:
                 log.error("Unrecognised creater of MGF data: %s" % row["who"])
                 sys.exit()
-            log.debug("MetaGOflow version: %s" % row["version"])
+            log.info("MetaGOflow run at: %s" % row["who"])
+            log.info("MetaGOflow version: %s" % row["version"])
             conf["metagoflow_version_id"] = row["version"]
             break
     else:
-        log.error(
-            "Cannot find the creator of MGF data for ref_code %s" % conf["ref_code"]
-        )
-        sys.exit()
+        if not overide_error:
+            log.error(
+                f"Cannot find the creator of MGF data for ref_code {conf['ref_code']}"
+            )
+            log.error(
+                "You can overide this error by setting the 'overide_error' flag to True"
+            )
+            log.error("This will set the default to CCMAR")
+            sys.exit()
+        else:
+            log.info("Creator person missing: defaulting to CCMAR")
+            conf["creator_person_name"] = "Cymon J. Cox"
+            conf["creator_person_identifier"] = "0000-0002-4927-979X"
+            log.info("MetaGOflow version missing: defaulting to develop (3cf3a7d)")
+            conf["metagoflow_version_id"] = "develop (3cf3a7d)"
 
     return conf
 
@@ -638,7 +668,7 @@ def get_ena_accession_data(conf):
     return conf
 
 
-def add_sequence_data_links(conf):
+def add_sequence_data_links(conf, override_error=False):
     """Add the links to the raw sequence data files in ENA"""
     # ENA ACCESSION filereport for sample
     filereport_url = (
@@ -650,22 +680,32 @@ def add_sequence_data_links(conf):
     if filereport.status_code == requests.codes.ok:
         filereport_json = filereport.json()
         log.debug(f"ENA filereport: {filereport_json}")
+        # Get the FTP links to the raw sequence data
+        links = filereport_json[0]["submitted_ftp"].split(";")
+        if len(links) != 2:
+            log.error("Cannot find the 2 raw sequence data links in the ENA filereport")
+            sys.exit()
+        # Add the links to the conf dictionary
+        conf["forward_reads_link"] = f"https://{links[0]}"
+        conf["reverse_reads_link"] = f"https://{links[1]}"
+        log.info("ENA raw sequence data links added to conf")
     else:
-        log.error("Cannot get the ENA filereport")
-        log.error("Raw sequence data are not available from ENA")
-        sys.exit()
-    # Get the FTP links to the raw sequence data
-    links = filereport_json[0]["submitted_ftp"].split(";")
-    if len(links) != 2:
-        log.error("Cannot find the 2 raw sequence data links in the ENA filereport")
-        sys.exit()
-    # Add the links to the conf dictionary
-    conf["forward_reads_link"] = f"https://{links[0]}"
-    conf["reverse_reads_link"] = f"https://{links[1]}"
+        if not override_error:
+            log.error("Cannot get the ENA filereport")
+            log.error("Raw sequence data are not available from ENA")
+            log.error("Use override_error flag to bypass this error")
+            sys.exit()
+        else:
+            log.info("Raw sequence data links missing: defaulting to local")
+            conf["forward_reads_link"] = "http://localhost/forward_reads_link"
+            conf["reverse_reads_link"] = "http://localhost/reverse_reads_link"
+
     return conf
 
 
-def write_metadata_json(target_directory, conf, add_sequence_data=False):
+def write_metadata_json(
+    target_directory, conf, add_sequence_data=False, override_error=False
+):
     metadata_json_template = "ro-crate-metadata.json-template"
     if os.path.exists(metadata_json_template):
         log.debug("Using local metadata.json template")
@@ -684,9 +724,9 @@ def write_metadata_json(target_directory, conf, add_sequence_data=False):
             sys.exit()
 
     # Build the conf dictionary
-    conf = get_creator_and_mgf_version_information(conf)
+    conf = get_creator_and_mgf_version_information(conf, override_error)
     conf = get_ena_accession_data(conf)
-    conf = add_sequence_data_links(conf)
+    conf = add_sequence_data_links(conf, override_error)
     log.debug("Conf dict: %s" % conf)
 
     log.info("Writing ro-crate-metadata.json...")
@@ -761,8 +801,42 @@ def write_metadata_json(target_directory, conf, add_sequence_data=False):
     )
     template["@graph"].insert(5, person_stanza)
 
+    # Add eggnog summary file if present
+    if (
+        "./functional-annotation/{prefix}.merged.emapper.summary.eggnog"
+        in MANDATORY_FILES
+    ):
+        log.info("Adding Eggnog emapper summary stanza to graph")
+        eggnog_summary = dict(
+            [
+                (
+                    "@id",
+                    f"./functional-annotation/{conf['prefix']}.merged.emapper.summary.eggnog",
+                ),
+                ("@type", "File"),
+                ("name", "Eggnog emapper summary"),
+                ("description", "Summary of Eggnog emapper analysis"),
+                ("downloadUrl", ""),
+                ("encodingFormat", "text/plain"),
+            ]
+        )
+        for stanza in template["@graph"]:
+            if stanza["@id"] == "./functional-annotation/":
+                fn = f"./{conf['prefix']}.merged.emapper.summary.eggnog"
+                stanza["hasPart"].append(dict([("@id", fn)]))
+                break
+        else:
+            log.error("Cannot find the functional-annotation stanza")
+            sys.exit()
+        # Add the eggnog summary stanza to the graph before the sequence categorisation stanzas
+        for i, stanza in enumerate(template["@graph"]):
+            if stanza["@id"] == "./sequence-categorisation/":
+                template["@graph"].insert(i, eggnog_summary)
+                log.debug(f"Added eggnog summary stanza at index {i}")
+                break
     # Add sequence_categorisation stanza separately as they can vary in number and identity
     template = sequence_categorisation_stanzas(target_directory, template, conf)
+    # Add sequence data stanzas
     if add_sequence_data:
         template = add_sequence_data_stanzas(target_directory, template, conf)
 
@@ -893,7 +967,7 @@ def move_files_out_of_results(new_archive_path, add_sequence_data=False):
         log.debug(f"File in results glob: {fp}")
         if fp.is_dir():
             trg_path = src_path.parent  # gets the parent of the folder
-            log.info(f"Moving dir {fp} to {trg_path.joinpath(fp.name)}")
+            log.debug(f"Moving dir {fp} to {trg_path.joinpath(fp.name)}")
             fp.rename(trg_path.joinpath(fp.name))  # moves to parent folder.
 
         # Note that:
@@ -902,7 +976,7 @@ def move_files_out_of_results(new_archive_path, add_sequence_data=False):
             # Only move the top level files
             if fp.name in ["fastp.html", "RNA-counts"]:
                 trg_path = src_path.parent
-                log.info(f"Moving file {fp} to {trg_path.joinpath(fp.name)}")
+                log.debug(f"Moving file {fp} to {trg_path.joinpath(fp.name)}")
                 fp.rename(trg_path.joinpath(fp.name))
                 continue
             if add_sequence_data:
@@ -914,7 +988,7 @@ def move_files_out_of_results(new_archive_path, add_sequence_data=False):
                 )
                 if nfp in MANDATORY_FILES:
                     trg_path = src_path.parent
-                    log.info(f"Moving file {fp} to {trg_path.joinpath(fp.name)}")
+                    log.debug("Moving file {fp} to {trg_path.joinpath(fp.name)}")
                     fp.rename(trg_path.joinpath(fp.name))
                 else:
                     log.error("Could not deal with file: %s" % fp)
@@ -1012,7 +1086,7 @@ def format_file_ids_and_add_download_links(
             log.debug(f"stanza hasPart = {stanza["hasPart"]}")
             for entry in stanza["hasPart"]:
                 formatted_entry = entry["@id"].format(**conf)
-                log.debug(f"Formatted entry @id = {formatted_entry}")
+                log.debug(f"Formatting entry @id = {formatted_entry}")
 
                 # Deal with RNA-counts separately
                 if entry["@id"] == "./RNA-counts":
@@ -1049,7 +1123,12 @@ def format_file_ids_and_add_download_links(
 
 
 def main(
-    target_directory, yaml_config, debug, upload_dvc=False, add_sequence_data=False
+    target_directory,
+    yaml_config,
+    debug,
+    upload_dvc=False,
+    add_sequence_data=False,
+    override_error=False,
 ):
     """ """
     # Logging
@@ -1080,6 +1159,13 @@ def main(
     # Get the emo bon ref_code, batch number, and prefix
     conf = get_ref_code_and_prefix(conf)
 
+    # Check that an archive with the same name does not already exist
+    ro_crate_name = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"] + "-ro-crate")
+    if os.path.exists(ro_crate_name):
+        log.error(f"An archive with the name {ro_crate_name} already exists")
+        log.error("Exiting...")
+        sys.exit()
+
     # Check all files are present
     log.info("Checking data files...")
     # filepaths includes the seq_cat files
@@ -1087,7 +1173,9 @@ def main(
 
     # Create the metadata.json file but dont write yet, need to add links later
     log.info("Formatting metadata.json...")
-    metadata_json = write_metadata_json(target_directory, conf, add_sequence_data)
+    metadata_json = write_metadata_json(
+        target_directory, conf, add_sequence_data, override_error
+    )
 
     # Note: we need to move the archive into the ro-crate repo directory before
     # we sync to S3 using DVC so that the git and DVC paths are correct, but we
@@ -1119,7 +1207,7 @@ def main(
     # Write the S3 and Github upload script
     log.debug("Writing S3 and Github upload script...")
     upload_script_path = write_dvc_upload_script(conf)
-    log.info(f"Written upload script to {upload_script_path}")
+    log.debug(f"Written upload script to {upload_script_path}")
     if upload_dvc:
         log.info("Running upload script...")
         run_dvc_upload_script(upload_script_path)
@@ -1143,7 +1231,6 @@ def main(
         outfile.write(metadata_json_formatted)
 
     # Rename new ro-crate
-    ro_crate_name = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"] + "-ro-crate")
     Path(RO_CRATE_REPO_PATH, conf["source_mat_id"]).rename(ro_crate_name)
     log.info("Renamed ro-crate directory")
 
@@ -1181,6 +1268,13 @@ if __name__ == "__main__":
         default=False,
         help="Add sequence data files (default: False)",
     )
+    parser.add_argument(
+        "-o",
+        "--override_error",
+        action="store_true",
+        default=False,
+        help="Override creator person missing error (default: False)",
+    )
     args = parser.parse_args()
     main(
         args.target_directory,
@@ -1188,4 +1282,5 @@ if __name__ == "__main__":
         args.debug,
         args.upload_dvc,
         args.add_sequence_data,
+        args.override_error,
     )

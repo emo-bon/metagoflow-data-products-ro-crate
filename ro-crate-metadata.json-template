@@ -146,7 +146,7 @@
         "encodingFormat": "text/yaml"
     },
     {
-        "@id": "./functional_annotation/",
+        "@id": "./functional-annotation/",
         "@type": "Dataset",
         "name": "Functional annotation results",
         "description": "Functional annotation of merged reads",
