@@ -117,8 +117,8 @@ RO_CRATE_REPO_PATH = "metaGOflow-rocrates-dvc"
 
 MANDATORY_FILES = [
     "./fastp.html",
-    "./final.contigs.fa.bz2",
     "./RNA-counts",
+    "./final.contigs.fa.bz2",
     "./config.yml",
     "./functional-annotation/stats/go.stats",
     "./functional-annotation/stats/interproscan.stats",
@@ -1075,44 +1075,43 @@ def format_file_ids_and_add_download_links(
         pd[Path(f).name.format(**conf)] = f.format(**conf)
     log.debug(f"pd = {pd}")
 
-    # Note that the @ids in the stanza and hasParts are not qualified,
-    # except in sequence-categorisation, so need to be fully qualified
-    # ie they are just the file name, need to fully qualify them
+    # Note that the @ids in the stanza and hasParts are qualified
     for stanza in metadata_json["@graph"]:
         stanza["@id"] = stanza["@id"].format(**conf)
         log.debug(f"stanza @id = {stanza["@id"].format(**conf)}")
 
-        if "hasPart" in stanza:
-            log.debug(f"in hasPart stanza @id = {stanza["@id"]}")
-            log.debug(f"stanza hasPart = {stanza["hasPart"]}")
-            for entry in stanza["hasPart"]:
-                formatted_entry = entry["@id"].format(**conf)
-                log.debug(f"Formatting entry @id = {formatted_entry}")
+        # if "hasPart" in stanza:
+        #     log.debug(f"in hasPart stanza @id = {stanza["@id"]}")
+        #     log.debug(f"stanza hasPart = {stanza["hasPart"]}")
+        #     for entry in stanza["hasPart"]:
+        #         formatted_entry = entry["@id"].format(**conf)
+        #         log.debug(f"Formatting entry @id = {formatted_entry}")
 
-                # Deal with RNA-counts separately
-                if entry["@id"] == "./RNA-counts":
-                    entry["@id"] = "./taxonomy-summary/RNA-counts"
-                    continue
-                elif formatted_entry.startswith("https://"):
-                    entry["@id"] = formatted_entry
-                    # Skip the sequence data links
-                    continue
-                else:
-                    # Fully qualify the @id?
-                    entry["@id"] = "./" + str(Path(stanza["@id"], formatted_entry))
+        #         # Deal with RNA-counts separately
+        #         if entry["@id"] == "./taxonomy-summary/RNA-counts":
+        #             continue
+        #         # Skip the sequence data links
+        #         elif formatted_entry.startswith("https://"):
+        #             entry["@id"] = formatted_entry
+        #             continue
+        #         else:
+        #             # Fully qualify the @id?
+        #             entry["@id"] = "./" + str(Path(stanza["@id"], formatted_entry))
 
         # If run_dvc_upload is False, do not add download links
         # Get the md5 sum from the DVC files and use as the download link
         if format_download_links:
             if stanza["@type"] and stanza["@type"] == "File":
                 log.debug("In @type File stanza")
-                if stanza["@id"] == "./RNA-counts":
-                    fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
-                else:
-                    # Remove the ./ from the @id
-                    key = Path(stanza["@id"]).name
-                    log.debug(f"Path(stanza['@id']).name = {key}")
-                    fn = Path(new_archive_path, pd[key] + ".dvc")
+
+                # if stanza["@id"] == "./taxonomy-summary/RNA-counts":
+                #     fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
+                # else:
+
+                # Remove the ./ from the @id
+                key = Path(stanza["@id"]).name
+                log.debug(f"Path(stanza['@id']).name = {key}")
+                fn = Path(new_archive_path, pd[key] + ".dvc")
                 if not fn.exists():
                     log.error(f"Cannot find the file {fn}")
                     sys.exit()
@@ -1265,9 +1264,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-s",
         "--add_sequence_data",
-        action="store_true",
-        default=False,
-        help="Add sequence data files (default: False)",
+        action="store_false",
+        default=True,
+        help="Add sequence data files (default: True)",
     )
     parser.add_argument(
         "-o",
