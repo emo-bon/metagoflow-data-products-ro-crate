@@ -6,7 +6,7 @@
 "run_parameter": ""
 
 #This is the URL to the MetaGOflow Version RO-Crate
-"metagoflow_version": "https://workflowhub.eu/workflows/384?version=3"
+"metagoflow_version": "https://github.com/emo-bon/MetaGOflow/commit/3cf3a7d39fabc6e75a8cb2971a711c2d781c84d0"
 
 #Missing files - if a mandatory file is missing, but you still want to build a
 #ro-crate, specify file paths here as a list of strings:

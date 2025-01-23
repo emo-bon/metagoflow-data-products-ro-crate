@@ -275,14 +275,14 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
     # Sequence-categorisation stanza
     for i, stanza in enumerate(template["@graph"]):
         if stanza["@id"] == "./sequence-categorisation/":
-            # NB these get updated later with the qualified paths
-            stanza["hasPart"] = [dict([("@id", f"./{fn}")]) for fn in seq_cat_files]
+            # NB with the qualified paths
+            stanza["hasPart"] = [dict([("@id", f"{fn}")]) for fn in qualified_paths]
             log.debug(f"Seq catagoriastaion stanza['hasPart'] == {stanza['hasPart']}")
             sq_index = i
             break
 
-    seq_cat_files.reverse()
-    for fn in seq_cat_files:
+    qualified_paths.reverse()
+    for fn in qualified_paths:
         # link = os.path.join(
         #    S3_STORE_URL,
         #    conf["source_mat_id"] + "%2F" + "sequence-categorisation" + "%2F" + fn,
