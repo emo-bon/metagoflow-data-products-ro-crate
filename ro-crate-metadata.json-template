@@ -2,6 +2,7 @@
     "@context": {
         "@vocab": "https://w3id.org/ro/crate/1.2-DRAFT/context",
         "dcat": "http://www.w3.org/ns/dcat#",
+        "dct": "http://purl.org/dc/terms/",
         "pcdm": "http://pcdm.org/models#"
     },
     "@graph": [
@@ -14,7 +15,7 @@
     },
     {
         "@id": "./", 
-        "@type": "Dataset",
+        "@type": ["Dataset", "dcat:Dataset"],
         "name" : "MetaGoFlow data products {ref_code} for Sampling Event {source_mat_id}",                       
         "description" : "EMO BON project RO-Crate for the data products from the MetaGOflow analysis of molecular data {ref_code} derived from sampling event {ref_code}",
         "datePublished": "{datePublished}",                                              
@@ -22,7 +23,7 @@
 
         "publisher": {"@id": "https://ror.org/0038zss60"},
         "creator": {},
-        "title": "MetaGoFlow data products {ref_code} for Sampling Event {source_mat_id}",
+        "dct:title": "MetaGoFlow data products {ref_code} for Sampling Event {source_mat_id}",
         "keywords":[
                 "sample",
                 "measurement",
