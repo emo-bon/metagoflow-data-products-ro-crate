@@ -555,11 +555,8 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
 
 
 def get_creator_and_mgf_version_information(conf, overide_error=False):
-    """Get the creator and mgf version information.
+    """Get the creator and mgf version information."""
 
-    TODO remove sampling person and institution data leaving just creator
-    hard coded for CCMAR and HCMR
-    """
     # Read the relevant row in sample sheet
     try:
         df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH)
@@ -604,7 +601,9 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
             log.debug("Row in %s: %s" % (mgf_path, row))
             if row["who"] == "CCMAR":
                 conf["creator_person_name"] = "Cymon J. Cox"
-                conf["creator_person_identifier"] = "0000-0002-4927-979X"
+                conf["creator_person_identifier"] = (
+                    "https://orcid.org/0000-0002-4927-979X"
+                )
                 # conf["creator_person_station_edmoid"] = "2516"
                 # conf["creator_person_station_name"] = (
                 #    "Centre of Marine Sciences (CCMAR)"
@@ -612,7 +611,9 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
                 # conf["creator_person_station_country"] = "Portugal"
             elif row["who"] == "HCMR":
                 conf["creator_person_name"] = "Stelios Ninidakis"
-                conf["creator_person_identifier"] = "0000-0003-3898-9451"
+                conf["creator_person_identifier"] = (
+                    "https://orcid.org/0000-0003-3898-9451"
+                )
                 # conf["creator_person_station_edmoid"] = "141"
                 # conf["creator_person_station_name"] = (
                 #    "Institute of Marine Biology "
@@ -640,7 +641,7 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
         else:
             log.info("Creator person missing: defaulting to CCMAR")
             conf["creator_person_name"] = "Cymon J. Cox"
-            conf["creator_person_identifier"] = "0000-0002-4927-979X"
+            conf["creator_person_identifier"] = "https://orcid.org/0000-0002-4927-979X"
             log.info("MetaGOflow version missing: defaulting to develop (3cf3a7d)")
             conf["metagoflow_version_id"] = "develop (3cf3a7d)"
 
