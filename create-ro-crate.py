@@ -571,6 +571,11 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
     except IndexError:
         log.error("Cannot find the env_package for ref_code %s" % conf["ref_code"])
         sys.exit()
+    log.debug("env_package: %s" % env_package)
+    assert env_package in ["water_column", "soft_sediments"], (
+        "env_package must be either 'water_column' or 'soft_sediments'"
+        "Found: %s" % env_package
+    )
     # Get the observatory ID
     # obs_id = list(row_samp["obs_id"].values())[0]
 
@@ -738,7 +743,9 @@ def write_metadata_json(
     template["@graph"][1]["description"] = template["@graph"][1]["description"].format(
         **conf
     )
-    template["@graph"][1]["title"] = template["@graph"][1]["title"].format(**conf)
+    template["@graph"][1]["dct:title"] = template["@graph"][1]["dct:title"].format(
+        **conf
+    )
 
     # Add date to "datePublished"
     if "datePublished" in conf:
