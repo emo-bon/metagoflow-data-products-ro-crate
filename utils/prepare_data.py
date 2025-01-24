@@ -12,7 +12,8 @@ import psutil
 from utils import find_bzip2, open_archive
 
 desc = """
-Prepare the MGF data archives for the ro-crate building
+Prepare the MGF data archives for the ro-crate building. All files in the target
+directory will be opened and the sequence files compressed.
 
 This script opens the MGF results archive and compresses the individual data
 files from building the ro-crate.

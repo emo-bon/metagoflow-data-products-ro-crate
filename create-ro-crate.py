@@ -107,7 +107,6 @@ WORKFLOW_YAML_FILENAME = "./{run_parameter}.yml"
 CONFIG_YAML_PARAMETERS = [
     "datePublished",
     "run_parameter",
-    "metagoflow_version",
     "missing_files",
 ]
 
@@ -289,7 +288,7 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
         # )
         d = dict(
             [
-                ("@id", f"./{fn}"),
+                ("@id", f"{fn}"),
                 ("@type", "File"),
                 ("downloadUrl", ""),
                 ("encodingFormat", "application/zip"),
@@ -572,8 +571,8 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
         log.error("Cannot find the env_package for ref_code %s" % conf["ref_code"])
         sys.exit()
     log.debug("env_package: %s" % env_package)
-    assert env_package in ["water_column", "soft_sediments"], (
-        "env_package must be either 'water_column' or 'soft_sediments'"
+    assert env_package in ["water_column", "soft_sediment"], (
+        "env_package must be either 'water_column' or 'soft_sediment'"
         "Found: %s" % env_package
     )
     # Get the observatory ID
@@ -629,9 +628,25 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
             else:
                 log.error("Unrecognised creater of MGF data: %s" % row["who"])
                 sys.exit()
+
+            # Metagoflow
             log.info("MetaGOflow run at: %s" % row["who"])
             log.info("MetaGOflow version: %s" % row["version"])
             conf["metagoflow_version_id"] = row["version"]
+            # Hard coding the metagoflow version URL here:
+            if row["version"] == "develop (3cf3a7d)":
+                log.info("MetaGOflow version is develop (3cf3a7d)")
+                conf["metagoflow_version"] = (
+                    "https://github.com/emo-bon/MetaGOflow/commit/3cf3a7d39fabc6e75a8cb2971a711c2d781c84d0"
+                )
+            elif row["version"] == "1.0":
+                conf["metagoflow_version"] = (
+                    "https://github.com/emo-bon/MetaGOflow/releases/tag/v1.0.0"
+                )
+            else:
+                log.error("Unrecognised MetaGOflow version: %s" % row["version"])
+                sys.exit()
+
             break
     else:
         if not overide_error:
@@ -649,6 +664,9 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
             conf["creator_person_identifier"] = "https://orcid.org/0000-0002-4927-979X"
             log.info("MetaGOflow version missing: defaulting to develop (3cf3a7d)")
             conf["metagoflow_version_id"] = "develop (3cf3a7d)"
+            conf["metagoflow_version"] = (
+                "https://github.com/emo-bon/MetaGOflow/commit/3cf3a7d39fabc6e75a8cb2971a711c2d781c84d0"
+            )
 
     return conf
 
@@ -710,7 +728,7 @@ def add_sequence_data_links(conf, override_error=False):
 
 
 def write_metadata_json(
-    target_directory, conf, add_sequence_data=False, override_error=False
+    target_directory, conf, without_sequence_data=False, override_error=False
 ):
     metadata_json_template = "ro-crate-metadata.json-template"
     if os.path.exists(metadata_json_template):
@@ -741,9 +759,6 @@ def write_metadata_json(
     # Add "ref_code"'s to "name", "title", and "description" fields
     template["@graph"][1]["name"] = template["@graph"][1]["name"].format(**conf)
     template["@graph"][1]["description"] = template["@graph"][1]["description"].format(
-        **conf
-    )
-    template["@graph"][1]["dct:title"] = template["@graph"][1]["dct:title"].format(
         **conf
     )
 
@@ -845,7 +860,7 @@ def write_metadata_json(
     # Add sequence_categorisation stanza separately as they can vary in number and identity
     template = sequence_categorisation_stanzas(target_directory, template, conf)
     # Add sequence data stanzas
-    if add_sequence_data:
+    if not without_sequence_data:
         template = add_sequence_data_stanzas(target_directory, template, conf)
 
     log.info("Metadata (first part) JSON written...")
@@ -956,7 +971,7 @@ def run_dvc_upload_script(upload_script_path):
     os.chdir(cwd_dir)
 
 
-def move_files_out_of_results(new_archive_path, add_sequence_data=False):
+def move_files_out_of_results(new_archive_path, without_sequence_data=False):
     """Move files from results to the parent directory, ro-crate root
 
     Also remove chunk lists from functional-annotation so that dirs can be copied
@@ -987,7 +1002,7 @@ def move_files_out_of_results(new_archive_path, add_sequence_data=False):
                 log.debug(f"Moving file {fp} to {trg_path.joinpath(fp.name)}")
                 fp.rename(trg_path.joinpath(fp.name))
                 continue
-            if add_sequence_data:
+            if not without_sequence_data:
                 # Move all files to the parent directory incl sequence data files
                 nfp = os.path.join("./", str(fp.name))
                 log.debug(f"Is_file: new file path = {nfp}")
@@ -1087,23 +1102,24 @@ def format_file_ids_and_add_download_links(
         stanza["@id"] = stanza["@id"].format(**conf)
         log.debug(f"stanza @id = {stanza["@id"].format(**conf)}")
 
-        # if "hasPart" in stanza:
-        #     log.debug(f"in hasPart stanza @id = {stanza["@id"]}")
-        #     log.debug(f"stanza hasPart = {stanza["hasPart"]}")
-        #     for entry in stanza["hasPart"]:
-        #         formatted_entry = entry["@id"].format(**conf)
-        #         log.debug(f"Formatting entry @id = {formatted_entry}")
+        if "hasPart" in stanza:
+            log.debug(f"in hasPart stanza @id = {stanza["@id"]}")
+            log.debug(f"stanza hasPart = {stanza["hasPart"]}")
+            for entry in stanza["hasPart"]:
+                formatted_entry = entry["@id"].format(**conf)
+                entry["@id"] = formatted_entry
+                log.debug(f"Formatting entry @id = {formatted_entry}")
 
-        #         # Deal with RNA-counts separately
-        #         if entry["@id"] == "./taxonomy-summary/RNA-counts":
-        #             continue
-        #         # Skip the sequence data links
-        #         elif formatted_entry.startswith("https://"):
-        #             entry["@id"] = formatted_entry
-        #             continue
-        #         else:
-        #             # Fully qualify the @id?
-        #             entry["@id"] = "./" + str(Path(stanza["@id"], formatted_entry))
+                # # Deal with RNA-counts separately
+                # if entry["@id"] == "./taxonomy-summary/RNA-counts":
+                #     continue
+                # # Skip the sequence data links
+                # elif formatted_entry.startswith("https://"):
+                #     entry["@id"] = formatted_entry
+                #     continue
+                # else:
+                #     # Fully qualify the @id?
+                #     entry["@id"] = formatted_entry
 
         # If run_dvc_upload is False, do not add download links
         # Get the md5 sum from the DVC files and use as the download link
@@ -1111,20 +1127,25 @@ def format_file_ids_and_add_download_links(
             if stanza["@type"] and stanza["@type"] == "File":
                 log.debug("In @type File stanza")
 
-                # if stanza["@id"] == "./taxonomy-summary/RNA-counts":
-                #     fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
-                # else:
-
-                # Remove the ./ from the @id
-                key = Path(stanza["@id"]).name
-                log.debug(f"Path(stanza['@id']).name = {key}")
-                fn = Path(new_archive_path, pd[key] + ".dvc")
+                if stanza["@id"] == "./taxonomy-summary/RNA-counts":
+                    fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
+                else:
+                    # Remove the ./ from the @id
+                    key = Path(stanza["@id"]).name
+                    log.debug(f"Path(stanza['@id']).name = {key}")
+                    fn = Path(new_archive_path, pd[key] + ".dvc")
                 if not fn.exists():
                     log.error(f"Cannot find the file {fn}")
                     sys.exit()
                 md5 = yaml.safe_load(open(fn))["outs"][0]["md5"]
                 md5_link = os.path.join(S3_STORE_URL, md5[:2], md5[2:])
                 stanza["downloadUrl"] = f"{md5_link}"
+
+                # Add contentSize
+                fp = Path(new_archive_path, pd[key])
+                fsize = os.path.getsize(fp)
+                stanza["contentSize"] = f"{fsize}"
+                log.debug(f"Adding contentSize {fsize} to {fp}")
 
     return json.dumps(metadata_json, indent=4)
 
@@ -1134,7 +1155,7 @@ def main(
     yaml_config,
     debug,
     upload_dvc=False,
-    add_sequence_data=False,
+    without_sequence_data=False,
     override_error=False,
 ):
     """ """
@@ -1181,7 +1202,7 @@ def main(
     # Create the metadata.json file but dont write yet, need to add links later
     log.info("Formatting metadata.json...")
     metadata_json = write_metadata_json(
-        target_directory, conf, add_sequence_data, override_error
+        target_directory, conf, without_sequence_data, override_error
     )
 
     # Note: we need to move the archive into the ro-crate repo directory before
@@ -1209,7 +1230,9 @@ def main(
     # Move all files out of the results directory into top level
     # and remove the results directory and files not in the RO-Crate
     log.debug("Moving all files out of the results directory...")
-    move_files_out_of_results(new_archive_path, add_sequence_data=add_sequence_data)
+    move_files_out_of_results(
+        new_archive_path, without_sequence_data=without_sequence_data
+    )
 
     # Write the S3 and Github upload script
     log.debug("Writing S3 and Github upload script...")
@@ -1269,11 +1292,11 @@ if __name__ == "__main__":
         help="Upload files to S3 using DVC (default: False)",
     )
     parser.add_argument(
-        "-s",
-        "--add_sequence_data",
-        action="store_false",
-        default=True,
-        help="Add sequence data files (default: True)",
+        "-w",
+        "--without_sequence_data",
+        action="store_true",
+        default=False,
+        help="Do not add sequence data files (default: False)",
     )
     parser.add_argument(
         "-o",
@@ -1288,6 +1311,6 @@ if __name__ == "__main__":
         args.yaml_config,
         args.debug,
         args.upload_dvc,
-        args.add_sequence_data,
+        args.without_sequence_data,
         args.override_error,
     )

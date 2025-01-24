@@ -24,7 +24,6 @@
 
         "publisher": {"@id": "https://ror.org/0038zss60"},
         "creator": {},
-        "dct:title": "MetaGoFlow data products {ref_code} for Sampling Event {source_mat_id}",
         "keywords":[
                 "sample",
                 "measurement",
@@ -59,7 +58,7 @@
             {"@id": "{reverse_reads_link}"},
             {"@id": "./functional_annotation/"},
             {"@id": "./sequence-categorisation/"},
-            {"@id": "./taxonomic-summary/"},
+            {"@id": "./taxonomy-summary/"},
             {"@id": "./config.yml"}
         ]
     },
@@ -266,128 +265,128 @@
         "description": "Identify specific loci in the sample."
     },
     {
-        "@id": "./taxonomic-summary/",
+        "@id": "./taxonomy-summary/",
         "@type": "Dataset",
         "name": "Taxonomic summary",
         "description": "Summary of taxonomic identification results",
         "hasPart": [
-            {"@id": "./taxonomic-summary/RNA-counts"},
-            {"@id": "./taxonomic-summary/LSU/"},
-            {"@id": "./taxonomic-summary/SSU/"}
+            {"@id": "./taxonomy-summary/RNA-counts"},
+            {"@id": "./taxonomy-summary/LSU/"},
+            {"@id": "./taxonomyc-summary/SSU/"}
         ]
     },
             {
-                "@id": "./taxonomic-summary/RNA-counts",
+                "@id": "./taxonomy-summary/RNA-counts",
                 "@type": "File",
                 "name": "Numbers of RNA's counted",
                 "downloadUrl": "",
                 "encodingFormat": "text/plain"
             },
             {
-                "@id": "./taxonomic-summary/LSU/",
+                "@id": "./taxonomy-summary/LSU/",
                 "@type": "Dataset",
                 "name": "Summary of LSU taxonomic indentification results",
                 "hasPart": [
-                            {"@id": "./taxonomic-summary/LSU/krona.html"},
-                            {"@id": "./taxonomic-summary/LSU/{prefix}.merged_LSU.fasta.mseq.gz"},
-                            {"@id": "./taxonomic-summary/LSU/{prefix}.merged_LSU.fasta.mseq_hdf5.biom"},
-                            {"@id": "./taxonomic-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom"},
-                            {"@id": "./taxonomic-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv"},
-                            {"@id": "./taxonomic-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt"}
+                            {"@id": "./taxonomy-summary/LSU/krona.html"},
+                            {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.gz"},
+                            {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_hdf5.biom"},
+                            {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom"},
+                            {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv"},
+                            {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt"}
                             ]
             },
                 {
-                    "@id": "./taxonomic-summary/LSU/krona.html",
+                    "@id": "./taxonomy-summary/LSU/krona.html",
                     "@type": "File",
                     "name": "Krona summary of LSU taxonomic inventory",
                     "downloadUrl": "",
                     "encodingFormat": "application/html"
                 },
                 {
-                    "@id": "./taxonomic-summary/LSU/{prefix}.merged_LSU.fasta.mseq.gz",
+                    "@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.gz",
                     "@type": "File",
                     "name": "LSU sequences used for indentification",
                     "downloadUrl": "",
                     "encodingFormat": "application/zip"
                 },
                 {
-                    "@id": "./taxonomic-summary/LSU/{prefix}.merged_LSU.fasta.mseq_hdf5.biom",
+                    "@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_hdf5.biom",
                     "@type": "File",
                     "name": "BIOM formatted hdf5 taxon counts for LSU sequences",
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
-                    "@id": "./taxonomic-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom",
+                    "@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom",
                     "@type": "File",
                     "name": "BIOM formatted taxon counts for LSU sequences",
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
-                    "@id": "./taxonomic-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv",
+                    "@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv",
                     "@type": "File",
                     "name": "Tab-separated formatted taxon counts for LSU sequences",
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
-                    "@id": "./taxonomic-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt",
+                    "@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt",
                     "@type": "File",
                     "name": "Text-based taxon counts for LSU sequences",
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
             {
-                "@id": "./taxonomic-summary/SSU/",
+                "@id": "./taxonomy-summary/SSU/",
                 "@type": "Dataset",
                 "name": "Summary of SSU taxonomic indentification results",
                 "hasPart": [
-                            {"@id": "./taxonomic-summary/SSU/krona.html"},
-                            {"@id": "./taxonomic-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz"},
-                            {"@id": "./taxonomic-summary/SSU/{prefix}.merged_SSU.fasta.mseq_hdf5.biom"},
-                            {"@id": "./taxonomic-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom"},
-                            {"@id": "./taxonomic-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv"},
-                            {"@id": "./taxonomic-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt"}
+                            {"@id": "./taxonomy-summary/SSU/krona.html"},
+                            {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz"},
+                            {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_hdf5.biom"},
+                            {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom"},
+                            {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv"},
+                            {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt"}
                             ]
             },
                 {
-                    "@id": "./taxonomic-summary/SSU/krona.html",
+                    "@id": "./taxonomy-summary/SSU/krona.html",
                     "@type": "File",
                     "name": "Krona summary of SSU taxonomic inventory",
                     "downloadUrl": "",
                     "encodingFormat": "text/html"
                 },
                 {
-                    "@id": "./taxonomic-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz",
+                    "@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz",
                     "@type": "File",
                     "name": "LSU sequences used for indentification",
                     "downloadUrl": "",
                     "encodingFormat": "application/zip"
                 },
                 {
-                    "@id": "./taxonomic-summary/SSU/{prefix}.merged_SSU.fasta.mseq_hdf5.biom",
+                    "@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_hdf5.biom",
                     "@type": "File",
                     "name": "BIOM formatted hdf5 taxon counts for SSU sequences",
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
-                    "@id": "./taxonomic-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom",
+                    "@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom",
                     "@type": "File",
                     "name": "BIOM formatted taxon counts for SSU sequences",
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
-                    "@id": "./taxonomic-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv",
+                    "@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv",
                     "@type": "File",
                     "name": "Tab-separated formatted taxon counts for SSU sequences",
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
                 {
-                    "@id": "./taxonomic-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt",
+                    "@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt",
                     "@type": "File",
                     "name": "Text-based formatted taxon counts for SSU sequences",
                     "downloadUrl": "",
