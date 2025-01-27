@@ -8,10 +8,8 @@
 *.swp
 .ruff_cache
 metaGOflow-data-products-RO-crate-example.code-workspace
-git-repositories.code-workspace
 utils/__pycache__
 bash_loop.sh
 working
-#ro-crates-examples/*
 README.napb
 

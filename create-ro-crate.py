@@ -282,14 +282,19 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
 
     qualified_paths.reverse()
     for fn in qualified_paths:
-        # link = os.path.join(
-        #    S3_STORE_URL,
-        #    conf["source_mat_id"] + "%2F" + "sequence-categorisation" + "%2F" + fn,
-        # )
+        bits = Path(fn).name.split(".")
+        if bits[0] == "5_8S":
+            name_string = f"RNA prediction for {bits[0]}"
+        else:
+            name_string = (
+                f"RNA prediction for {bits[0]} - Rfam accesssion number: {bits[1]}"
+            )
+
         d = dict(
             [
                 ("@id", f"{fn}"),
                 ("@type", "File"),
+                ("name", name_string),
                 ("downloadUrl", ""),
                 ("encodingFormat", "application/zip"),
             ]
