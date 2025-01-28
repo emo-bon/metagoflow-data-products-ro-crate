@@ -640,7 +640,6 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
             conf["metagoflow_version_id"] = row["version"]
             # Hard coding the metagoflow version URL here:
             if row["version"] == "develop (3cf3a7d)":
-                log.info("MetaGOflow version is develop (3cf3a7d)")
                 conf["metagoflow_version"] = (
                     "https://github.com/emo-bon/MetaGOflow/commit/3cf3a7d39fabc6e75a8cb2971a711c2d781c84d0"
                 )

@@ -17,8 +17,8 @@
     {
         "@id": "./", 
         "@type": ["Dataset", "dcat:Dataset"],
-        "name" : "MetaGoFlow data products {ref_code} for Sampling Event {source_mat_id}",                       
-        "description" : "EMO BON project RO-Crate for the data products from the MetaGOflow analysis of molecular data {ref_code} derived from sampling event {ref_code}",
+        "name" : "MetaGoFlow metagenomics data products {ref_code} for Sampling Event {source_mat_id}",                       
+        "description" : "EMO BON project RO-Crate for the data products from the MetaGOflow analysis of molecular data derived from sampling event {source_mat_id}",
         "datePublished": "{datePublished}",                                              
         "license": {"@id": "https://creativecommons.org/licenses/by/4.0/"},
 
