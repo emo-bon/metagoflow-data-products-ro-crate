@@ -56,7 +56,7 @@
             {"@id": "./final.contigs.fa.bz2"},
             {"@id": "{forward_reads_link}"},
             {"@id": "{reverse_reads_link}"},
-            {"@id": "./functional_annotation/"},
+            {"@id": "./functional-annotation/"},
             {"@id": "./sequence-categorisation/"},
             {"@id": "./taxonomy-summary/"},
             {"@id": "./config.yml"}
