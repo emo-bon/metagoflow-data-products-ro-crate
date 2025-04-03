@@ -1,6 +1,10 @@
 #! /usr/bin/env python3
 
 import subprocess
+from pathlib import Path
+
+# Relative to the utils directory
+TEST_DATA_PATH = "../tests/arup/data/HVWGWDSX5.UDI134"
 
 WORK_YML_TEMPLATE = """
 vars:
@@ -24,53 +28,57 @@ vars:
 subyt:
   - extra_sources:
       go_annotations:
-        path: ./functional-annotation/{PREFIX}.merged.summary.go
+        path: ./results/functional-annotation/{PREFIX}.merged.summary.go
         mime: text/csv
         header: ID,sub_process,process,abundance
       ips_annotations: 
-        path: ./functional-annotation/{PREFIX}.merged.summary.ips
+        path: ./results/functional-annotation/{PREFIX}.merged.summary.ips
         mime: text/csv
         header: Abundance,ID,sequence_domain_region_name
       kegg_annotations: 
-        path: ./functional-annotation/{PREFIX}.merged.summary.ko
+        path: ./results/functional-annotation/{PREFIX}.merged.summary.ko
         mime: text/csv
         header: Abundance,ID,name
       pfam_annotations: 
-        path: ./functional-annotation/{PREFIX}.merged.summary.pfam
+        path: ./results/functional-annotation/{PREFIX}.merged.summary.pfam
         mime: text/csv
         header: Abundance,ID,name
       eggnog_annotations: 
-        path: ./functional-annotation/{PREFIX}.merged.emapper.summary.eggnog
+        path: ./results/functional-annotation/{PREFIX}.merged.emapper.summary.eggnog
         mime: text/csv
         header: Abundance,ID,name
-    sink: ./{GENOSCOPE_ID}/functional-annotation
+    sink: ./{GENOSCOPE_ID}/results/functional-annotation
     template_name: functional-annotation.ldt.ttl
     mode: no-it
   - source: 
-      path: ./taxonomy-summary/LSU/DBH.merged_LSU.fasta.mseq.csv
+      path: ./results/taxonomy-summary/LSU/{PREFIX}.merged_LSU.fasta.mseq.tsv
       mime: text/csv
       header: OTU_ID,LSU_rRNA,taxonomy,taxid
-    sink: ./{GENOSCOPE_ID}/taxonomy-summary
+    sink: ./{GENOSCOPE_ID}/results/taxonomy-summary
     template_name: taxon-info.ldt.ttl
 """
 
 
-def run_apptainer(config):
+def run_apptainer(data_path=TEST_DATA_PATH):
     """
     This function runs the apptainer command with the specified arguments.
     It captures the output and error messages in a log file.
     """
-    with open("/tmp/output.log", "a") as output:
-        cmd = "apptainer run "
+    with open("./apptainer_output.log", "a") as output:
+        cmd = (
+            "export ARUP_WORK=./work.yml && apptainer run "
+            f"--bind {data_path}:/rocrateroot "
+            "emobon_arup.sif"
+        )
+
         subprocess.call(cmd, shell=True, stdout=output, stderr=output)
 
 
-def write_work_yml_file(config):
+def write_work_yml_file(config, filepath):
     """
     This function writes the work YAML file with the specified configuration.
     """
-    with open("./work.yml", "w") as work_file:
-        work_file.write("work:\n")
+    with open(Path(filepath, "./work.yml"), "w") as work_file:
         work_file.write(WORK_YML_TEMPLATE.format(**config))
         work_file.write("\n")
 
@@ -78,19 +86,19 @@ def write_work_yml_file(config):
 if __name__ == "__main__":
     # Example configuration dictionary
     config = {
-        "PREFIX": "DBH",
+        "PREFIX": "DBB",
         "CLUSTER_ID": "analysis-results-cluster01-crate",
-        "GENOSCOPE_ID": "HWLTKDRXY.UDI211",  # target_directory
+        "GENOSCOPE_ID": "HVWGWDSX5.UDI134",  # target_directory
         "ENA_NR": "ENANUMBER123",  # conf["ena_accession_number"
-        "SOURCE_MAT_ID": "EMOBON_NRMCB_So_7",  # conf["source_material_id"]
-        "OBS_ID": "NRMCB",  # conf["obs_id"]
-        "ENVPACKAGE_ID": "Se",  # conf["env_package_id"]
+        "SOURCE_MAT_ID": "EMOBON_EMT21_Wa_22",  # conf["source_material_id"]
+        "OBS_ID": "EMT21",  # conf["obs_id"]
+        "ENVPACKAGE_ID": "Wa",  # conf["env_package_id"]
         "DOMAIN": "https://data.emobon.embrc.eu",
         "REPO_NAME": "analysis-results-cluster01-crate",
     }
 
     # Write the work YAML file
-    write_work_yml_file(config)
+    write_work_yml_file(config, filepath=TEST_DATA_PATH)
 
     # Run the apptainer command
-    # run_apptainer(config)
+    run_apptainer()
