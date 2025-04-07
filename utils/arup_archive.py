@@ -70,7 +70,14 @@ subyt:
       mime: text/csv
       delimiter: \\t
       header: OTU_ID\\tLSU_rRNA\\ttaxonomy\\ttaxid
-    sink: ./results/taxonomy-summary/taxonomy-summary.ttl
+    sink: ./results/taxonomy-summary/LSU-taxonomy-summary.ttl
+    template_name: taxon-info.ldt.ttl
+  - source: 
+      path: ./results/taxonomy-summary/SSU/{PREFIX}.merged_SSU.fasta.mseq.tsv
+      mime: text/csv
+      delimiter: \\t
+      header: OTU_ID\\tSSU_rRNA\\ttaxonomy\\ttaxid
+    sink: ./results/taxonomy-summary/SSU-taxonomy-summary.ttl
     template_name: taxon-info.ldt.ttl
 """
 
