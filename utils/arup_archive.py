@@ -75,7 +75,7 @@ subyt:
   - source: 
       path: ./results/taxonomy-summary/SSU/{PREFIX}.merged_SSU.fasta.mseq.tsv
       mime: text/csv
-      delimiter: \\t
+      delimiter: "\t"
       header: OTU_ID\\tSSU_rRNA\\ttaxonomy\\ttaxid
     sink: ./results/taxonomy-summary/SSU-taxonomy-summary.ttl
     template_name: taxon-info.ldt.ttl
