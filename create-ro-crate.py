@@ -18,6 +18,7 @@ import logging as log
 from pathlib import Path
 
 import pandas as pd
+from utils.arup_archive import main as arup_main  # noqa: F401
 
 desc = """
 Build a MetaGOflow Data Products ro-crate from a YAML configuration.
@@ -1154,6 +1155,52 @@ def format_file_ids_and_add_download_links(
     return json.dumps(metadata_json, indent=4)
 
 
+def run_arup(target_directory, conf):
+    """
+    Run the ARUP and build the 3 turtle files
+    """
+    arup_config = {
+        # PREFIX is the GENOSCOPE Project Code that prefixes the sequence result files
+        # "DBH_AAAVOSDA_1_1_HCFCYDSX5.UDI141_clean.fastq.gz is DBH"
+        # This varies
+        "PREFIX": conf["prefix"],
+        # CLUSTER_ID is name of the Github respository where the RO-Crates for the
+        # 'cluster' (effectively just several batches) are going to be stored
+        # e.g. https://github.com/emo-bon/analysis-results-cluster-01-crate
+        # will store Batch 1 and Batch 2 RO-Crates
+        "CLUSTER_ID": RO_CRATE_REPO_PATH,
+        # This is in fact the Flowcell id (e.g. HCFCYDSX5) and Index id (e.g. UDI141)
+        # of the sequencing machine where the sample was processed
+        # e.g. HCFCYDSX5.UDI141
+        # It is unique and used to name the MGF result archives
+        # e.g. HJWK3DSX7.UDI074.tar.bz2
+        "GENOSCOPE_ID": target_directory,
+        # This is the EMBL ENA Accesion number
+        "ENA_NR": conf["ena_accession_number"],
+        # This is the source material id
+        # This is the unique identifier created by the Observarory sample sheets
+        "SOURCE_MAT_ID": conf["source_material_id"],
+        # This is the abbreviated Observatory id
+        "OBS_ID": conf["obs_id"],
+        # This is the shortened version of the environment package id
+        # id's are "water_column" or "soft_sediment", here abrreviated to
+        # "Wa" and "Ss"
+        "ENVPACKAGE_ID": "Wa" if conf["env_package_id"] == "water_column" else "Ss",
+        # This is the domain URI of the EMO BON data repository
+        "DOMAIN": "https://data.emobon.embrc.eu",
+    }
+    log.debug("ARUP config: %s" % arup_config)
+    arup_main(arup_config, target_directory)
+    # Add the turtle files to the MANDATORY_FILES list
+    MANDATORY_FILES.extend(
+        [
+            "./functional-annotation/functional-annotation.ttl",
+            "./taxonomy-summary/LSU/LSU-taxonomy-summary.ttl",
+            "./taxonomy-summary/SSU/SSU-taxonomy-summary.ttl",
+        ]
+    )
+
+
 def main(
     target_directory,
     yaml_config,
@@ -1202,6 +1249,11 @@ def main(
     log.info("Checking data files...")
     # filepaths includes the seq_cat files
     check_and_format_data_file_paths(target_directory, conf, check_exists=True)
+
+    # Run ARUP
+    log.info("Running ARUP...")
+    run_arup(target_directory, conf)
+    log.info("ARUP completed without error")
 
     # Create the metadata.json file but dont write yet, need to add links later
     log.info("Formatting metadata.json...")
