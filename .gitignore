@@ -9,6 +9,7 @@
 .ruff_cache
 metaGOflow-data-products-RO-crate-example.code-workspace
 utils/__pycache__
+utils/container_emobon_arup.log
 bash_loop.sh
 working
 README.napb

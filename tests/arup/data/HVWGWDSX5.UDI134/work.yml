@@ -14,8 +14,6 @@ vars:
     value: "EMOBON_EMT21_Wa_22"
   - name: uri_to_crate
     value: "https://data.emobon.embrc.eu/analysis-results-cluster01-crate/EMOBON_EMT21_Wa_22-ro-crate"
-  - name: prefix
-    value: "DBB"
 
 subyt:
   - extra_sources:
@@ -39,13 +37,21 @@ subyt:
         path: ./results/functional-annotation/DBB.merged.emapper.summary.eggnog
         mime: text/csv
         header: Abundance,ID,name
-    sink: ./HVWGWDSX5.UDI134/results/functional-annotation
+    sink: ./results/functional-annotation/functional-annotation.ttl
     template_name: functional-annotation.ldt.ttl
     mode: no-it
   - source: 
       path: ./results/taxonomy-summary/LSU/DBB.merged_LSU.fasta.mseq.tsv
       mime: text/csv
-      header: OTU_ID,LSU_rRNA,taxonomy,taxid
-    sink: ./HVWGWDSX5.UDI134/results/taxonomy-summary
+      delimiter: "	"
+      header: "OTU_ID	LSU_rRNA	taxonomy	taxid"
+    sink: ./results/taxonomy-summary/LSU/LSU-taxonomy-summary.ttl
+    template_name: taxon-info.ldt.ttl
+  - source: 
+      path: ./results/taxonomy-summary/SSU/DBB.merged_SSU.fasta.mseq.tsv
+      mime: text/csv
+      delimiter: "	"
+      header: "OTU_ID	SSU_rRNA	taxonomy	taxid"
+    sink: ./results/taxonomy-summary/SSU/SSU-taxonomy-summary.ttl
     template_name: taxon-info.ldt.ttl
 

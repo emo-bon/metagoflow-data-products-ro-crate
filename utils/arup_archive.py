@@ -70,14 +70,14 @@ subyt:
       mime: text/csv
       delimiter: "\t"
       header: "OTU_ID\tLSU_rRNA\ttaxonomy\ttaxid"
-    sink: ./results/taxonomy-summary/LSU-taxonomy-summary.ttl
+    sink: ./results/taxonomy-summary/LSU/LSU-taxonomy-summary.ttl
     template_name: taxon-info.ldt.ttl
   - source: 
       path: ./results/taxonomy-summary/SSU/{PREFIX}.merged_SSU.fasta.mseq.tsv
       mime: text/csv
       delimiter: "\t"
       header: "OTU_ID\tSSU_rRNA\ttaxonomy\ttaxid"
-    sink: ./results/taxonomy-summary/SSU-taxonomy-summary.ttl
+    sink: ./results/taxonomy-summary/SSU/SSU-taxonomy-summary.ttl
     template_name: taxon-info.ldt.ttl
 """
 
@@ -89,7 +89,7 @@ def run_apptainer(path_to_data):
     """
     work_yml_path = Path(path_to_data, "work.yml")
     log.debug(f"work_yml_path: {work_yml_path}")
-    with open("./apptainer_output.log", "a") as output:
+    with open("./container_emobon_arup.log", "a") as output:
         cmd = (
             f'export ARUP_WORK="./work.yml" && apptainer run '
             f"--bind {path_to_data}:/rocrateroot "
@@ -125,27 +125,10 @@ def main(config, path_to_data, debug=False):
 
     """
 
-    log.basicConfig(
-        format="\t%(levelname)s: %(message)s", level=log.DEBUG if debug else log.INFO
-    )
-
     # Check if the path to data exists
-    path_to_data = Path(path_to_data)
     if not path_to_data.exists():
         raise FileNotFoundError(f"Path to data does not exist: {path_to_data}")
     log.debug(f"Found path to data: {path_to_data}")
-
-    # Check if ttl files aleady exist
-    fa_ttl = Path(
-        path_to_data, "results", "functional-annotation", "functional-annotation.ttl"
-    )
-    tax_ttl = Path(path_to_data, "results", "taxonomy-summary", "taxonomy-summary.ttl")
-    if fa_ttl.exists():
-        log.info("Functional Analysis TTL file already exists: removing...")
-        fa_ttl.unlink()
-    if tax_ttl.exists():
-        log.info("Taxonomy Summary TTL file already exists: removing...")
-        tax_ttl.unlink()
 
     # Check config keys
     required_keys = [
@@ -171,8 +154,7 @@ def main(config, path_to_data, debug=False):
     log.debug(f"Config: {config}")
 
     # Write the work YAML file
-    # write_work_yml_file(config, path_to_data)
-    # Move yml con
+    write_work_yml_file(config, path_to_data)
     # Run the apptainer command
     run_apptainer(path_to_data)
 
@@ -216,6 +198,33 @@ if __name__ == "__main__":
         "DOMAIN": "https://data.emobon.embrc.eu",
     }
 
-    # Run test
     args = parser.parse_args()
-    main(config, TEST_DATA_PATH, args.debug)
+
+    log.basicConfig(
+        format="\t%(levelname)s: %(message)s",
+        level=log.DEBUG if args.debug else log.INFO,
+    )
+
+    path_to_data = Path(TEST_DATA_PATH)
+    # Check if ttl files aleady exist
+    fa_ttl = (
+        path_to_data / "results" / "functional-annotation" / "functional-annotation.ttl"
+    )
+    tax_LSU_ttl = (
+        path_to_data / "results" / "taxonomy-summary" / "LSU" / "taxonomy-summary.ttl"
+    )
+    tax_SSU_ttl = (
+        path_to_data / "results" / "taxonomy-summary" / "SSU" / "taxonomy-summary.ttl"
+    )
+    if fa_ttl.exists():
+        log.info("Functional Analysis TTL file already exists: removing...")
+        fa_ttl.unlink()
+    if tax_LSU_ttl.exists():
+        log.info("LSU Taxonomy Summary TTL file already exists: removing...")
+        tax_LSU_ttl.unlink()
+    if tax_SSU_ttl.exists():
+        log.info("Taxonomy Summary TTL file already exists: removing...")
+        tax_SSU_ttl.unlink()
+
+    # Run test
+    main(config, path_to_data, args.debug)
