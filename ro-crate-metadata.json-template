@@ -303,7 +303,7 @@
                             {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom"},
                             {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv"},
                             {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt"},
-                            {"@id": "./taxonomy-summary/LSU/LSU-taxonomy-analyses.ttl"}
+                            {"@id": "./taxonomy-summary/LSU/LSU-taxonomy-summary.ttl"}
                             ]
             },
                 {
@@ -366,7 +366,7 @@
                             {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom"},
                             {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv"},
                             {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt"},
-                            {"@id": "./taxonomy-summary/SSU/SSU-taxonomy-analyses.ttl"}
+                            {"@id": "./taxonomy-summary/SSU/SSU-taxonomy-summary.ttl"}
                             ]
             },
                 {
