@@ -171,7 +171,7 @@ def main(config, path_to_data, debug=False):
     log.debug(f"Config: {config}")
 
     # Write the work YAML file
-    write_work_yml_file(config, path_to_data)
+    # write_work_yml_file(config, path_to_data)
     # Move yml con
     # Run the apptainer command
     run_apptainer(path_to_data)
