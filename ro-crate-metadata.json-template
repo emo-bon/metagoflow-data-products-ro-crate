@@ -161,7 +161,8 @@
             {"@id": "./functional-annotation/{prefix}.merged.summary.go_slim"},
             {"@id": "./functional-annotation/{prefix}.merged.summary.ips"},
             {"@id": "./functional-annotation/{prefix}.merged.summary.ko"},
-            {"@id": "./functional-annotation/{prefix}.merged.summary.pfam"}
+            {"@id": "./functional-annotation/{prefix}.merged.summary.pfam"},
+            {"@id": "./functional-annotation/functional-annotation.ttl"}
         ]
     },
     {
@@ -260,6 +261,13 @@
                 "downloadUrl": "",
                 "encodingFormat": "text/plain"
             },
+            {
+                "@id": "./functional-annotation/functional-annotation.ttl",
+                "@type": "File",
+                "name": "RDF 1.2 Turtle triples of the functional analyses results",
+                "downloadUrl": "",
+                "encodingFormat": "text/turtle"
+            },     
     {
         "@id": "./sequence-categorisation/",
         "@type": "Dataset",
@@ -294,7 +302,8 @@
                             {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_hdf5.biom"},
                             {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom"},
                             {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv"},
-                            {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt"}
+                            {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt"},
+                            {"@id": "./taxonomy-summary/LSU/LSU-taxonomy-analyses.ttl"}
                             ]
             },
                 {
@@ -339,7 +348,14 @@
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
-            {
+                {
+                    "@id": "./taxonomy-summary/LSU/taxonomy-summary.ttl",
+                    "@type": "File",
+                    "name": "RDF 1.2 Turtle triples of the LSU taxonomic analyses results",
+                    "downloadUrl": "",
+                    "encodingFormat": "text/turtle"
+                },
+                {
                 "@id": "./taxonomy-summary/SSU/",
                 "@type": "Dataset",
                 "name": "Summary of SSU taxonomic indentification results",
@@ -349,7 +365,8 @@
                             {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_hdf5.biom"},
                             {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom"},
                             {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv"},
-                            {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt"}
+                            {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt"},
+                            {"@id": "./taxonomy-summary/SSU/SSU-taxonomy-analyses.ttl"}
                             ]
             },
                 {
@@ -393,6 +410,13 @@
                     "name": "Text-based formatted taxon counts for SSU sequences",
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
+                },
+                {
+                    "@id": "./taxonomy-summary/SSU/taxonomy-summary.ttl",
+                    "@type": "File",
+                    "name": "RDF 1.2 Turtle triples of the SSU taxonomic analyses results",
+                    "downloadUrl": "",
+                    "encodingFormat": "text/turtle"
                 },
     {
         "@id": "http://semanticscience.org/resource/SIO_001050",
