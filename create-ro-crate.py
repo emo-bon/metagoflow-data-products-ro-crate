@@ -21,7 +21,7 @@ import pandas as pd
 from utils.arup_archive import main as arup_main  # noqa: F401
 
 desc = """
-Build a MetaGOflow Data Products ro-crate from a YAML configuration.
+Build a MetaGOflow Data Products ro-crate.
 
 Invoke
 $ create-ro-crate.py <target_directory> <yaml_configuration>
@@ -30,28 +30,21 @@ where:
     target_directory is the toplevel output directory of MetaGOflow
         This must be the MGF run_id, e.g. HWLTKDRXY.UDI210
     yaml_configuration is a YAML file of metadata specific to this ro-crate
-        a template is here:
-        https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/main/ro-crate-config.yaml
+        a template is here: ro-crate-config.yaml
 
-e.g.
+The script acts on one MGF analysis results archive at a time.
 
-$ create-ro-crate.py HWLTKDRXY-UDI210 config.yml
+This script builds an RDF Turtle file for the functional analyses results, and each
+of the taxonomic analyses (i.e. LSU and SSU), uploads all payload files to an S3
+store using DVC, writes the rocrate-metadata.json file, and renames and
+moves the ro-crate to the EMO BON cluster repository.
 
-This script expects to be pointed to directory of MetaGOflow output.
+By default will not upload the files to S3, but will add the sequence data files.
+To upload the files to S3 use the -u flag.
+To revmove sequence data files use the -w flag.
+To debug use the -d flag.
 
-When invoked, the MetaGOflow run_wf.sh script writes all output to a directory specified by
-the "-d" parameter:
-
-    $ run_wf.sh -n green -d  HWLTKDRXY-UDI210 -f input_data/${DATA_FORWARD} -r input_data/${DATA_REVERSE}
-
-    $ tree -1
-    HWLTKDRXY-UDI210
-    ├── prov
-    ├── results
-    ├── green.yml
-    └── tmp
-
-    3 directories, 1 file
+./create-ro-crate.py -d <target_directory> -y <yaml_configuration>
 
 """
 
@@ -559,8 +552,27 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
     return conf
 
 
-def get_creator_and_mgf_version_information(conf, overide_error=False):
-    """Get the creator and mgf version information."""
+def get_metadata_from_sample_logsheets(conf, overide_error=False):
+    """
+    Parse sample logsheet data from the combined logsheet on Github
+    and add to the configuration dictionary.
+
+    env_package_id
+    obs_id
+    #sampling_person_name
+    #sampling_person_identifier
+    #sampling_person_station_edmoid
+    #sampling_person_station_name
+    #sampling_person_station_country
+    creator_person_name
+    creator_person_identifier
+    #creator_person_station_edmoid
+    #creator_person_station_name
+    #creator_person_station_country
+    metagoflow_version_id
+    metagoflow_version
+
+    """
 
     # Read the relevant row in sample sheet
     try:
@@ -570,6 +582,7 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
         sys.exit()
     row_samp = df_samp.loc[df_samp["ref_code"] == conf["ref_code"]].to_dict()
     log.debug("Row in sample sheet: %s" % row_samp)
+
     # Get the env_package either water_column or soft_sediments
     try:
         env_package = list(row_samp["env_package"].values())[0]
@@ -581,8 +594,10 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
         "env_package must be either 'water_column' or 'soft_sediment'"
         "Found: %s" % env_package
     )
+    conf["env_package_id"] = env_package
+
     # Get the observatory ID
-    # obs_id = list(row_samp["obs_id"].values())[0]
+    conf["obs_id"] = list(row_samp["obs_id"].values())[0]
 
     # Get the observatory data
     # df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
@@ -751,12 +766,6 @@ def write_metadata_json(
             log.error(f"Check {TEMPLATE_URL}")
             log.error("Exiting...")
             sys.exit()
-
-    # Build the conf dictionary
-    conf = get_creator_and_mgf_version_information(conf, override_error)
-    conf = get_ena_accession_data(conf)
-    conf = add_sequence_data_links(conf, override_error)
-    log.debug("Conf dict: %s" % conf)
 
     log.info("Writing ro-crate-metadata.json...")
 
@@ -1179,7 +1188,7 @@ def run_arup(target_directory, conf):
         "ENA_NR": conf["ena_accession_number"],
         # This is the source material id
         # This is the unique identifier created by the Observarory sample sheets
-        "SOURCE_MAT_ID": conf["source_material_id"],
+        "SOURCE_MAT_ID": conf["source_mat_id"],
         # This is the abbreviated Observatory id
         "OBS_ID": conf["obs_id"],
         # This is the shortened version of the environment package id
@@ -1190,7 +1199,7 @@ def run_arup(target_directory, conf):
         "DOMAIN": "https://data.emobon.embrc.eu",
     }
     log.debug("ARUP config: %s" % arup_config)
-    arup_main(arup_config, target_directory)
+    arup_main(arup_config, Path(target_directory))
     # Add the turtle files to the MANDATORY_FILES list
     MANDATORY_FILES.extend(
         [
@@ -1249,6 +1258,12 @@ def main(
     log.info("Checking data files...")
     # filepaths includes the seq_cat files
     check_and_format_data_file_paths(target_directory, conf, check_exists=True)
+
+    # Build the conf dictionary
+    conf = get_metadata_from_sample_logsheets(conf, override_error)
+    conf = get_ena_accession_data(conf)
+    conf = add_sequence_data_links(conf, override_error)
+    log.debug("Conf dict: %s" % conf)
 
     # Run ARUP
     log.info("Running ARUP...")

@@ -21,7 +21,7 @@ the ../tests/arup/data/HVWGWDSX5.UDI134 directory.
 """
 
 # Relative to the utils directory
-TEST_DATA_PATH = "../tests/arup/data/HVWGWDSX5.UDI134"
+TEST_DATA_PATH = "tests/arup/data/HVWGWDSX5.UDI134"
 
 WORK_YML_TEMPLATE = """
 vars:
@@ -68,32 +68,43 @@ subyt:
   - source: 
       path: ./results/taxonomy-summary/LSU/{PREFIX}.merged_LSU.fasta.mseq.tsv
       mime: text/csv
-      delimiter: "\t"
-      header: "OTU_ID\tLSU_rRNA\ttaxonomy\ttaxid"
+      delimiter: "\\t"
+      header: "OTU_ID\\tLSU_rRNA\\ttaxonomy\\ttaxid"
     sink: ./results/taxonomy-summary/LSU/LSU-taxonomy-summary.ttl
     template_name: taxon-info.ldt.ttl
   - source: 
       path: ./results/taxonomy-summary/SSU/{PREFIX}.merged_SSU.fasta.mseq.tsv
       mime: text/csv
-      delimiter: "\t"
-      header: "OTU_ID\tSSU_rRNA\ttaxonomy\ttaxid"
+      delimiter: "\\t"
+      header: "OTU_ID\\tLSU_rRNA\\ttaxonomy\\ttaxid"
     sink: ./results/taxonomy-summary/SSU/SSU-taxonomy-summary.ttl
     template_name: taxon-info.ldt.ttl
 """
 
 
-def run_apptainer(path_to_data):
+def run_apptainer(config, path_to_data):
     """
     This function runs the apptainer command with the specified arguments.
     It captures the output and error messages in a log file.
     """
+
     work_yml_path = Path(path_to_data, "work.yml")
     log.debug(f"work_yml_path: {work_yml_path}")
-    with open("./container_emobon_arup.log", "a") as output:
+    if not work_yml_path.exists():
+        raise FileNotFoundError(f"work.yml file does not exist: {work_yml_path}")
+    log.debug(f"Found work.yml file: {work_yml_path}")
+
+    # Check if the container log file exists
+    conatainer_log_file = Path(f"logs/{config['GENOSCOPE_ID']}_emobon_arup.log")
+    if conatainer_log_file.exists():
+        log.debug(f"Removing existing container log file: {conatainer_log_file}")
+        conatainer_log_file.unlink()
+
+    with open(conatainer_log_file, "a") as output:
         cmd = (
             f'export ARUP_WORK="./work.yml" && apptainer run '
             f"--bind {path_to_data}:/rocrateroot "
-            "emobon_arup.sif"
+            "utils/emobon_arup.sif"
         )
         subprocess.call(cmd, shell=True, stdout=output, stderr=output)
         log.info("Apptainer command executed successfully")
@@ -156,7 +167,7 @@ def main(config, path_to_data, debug=False):
     # Write the work YAML file
     write_work_yml_file(config, path_to_data)
     # Run the apptainer command
-    run_apptainer(path_to_data)
+    run_apptainer(config, path_to_data)
 
 
 if __name__ == "__main__":

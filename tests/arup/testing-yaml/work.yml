@@ -44,7 +44,7 @@ subyt:
       path: ./results/taxonomy-summary/LSU/DBB.merged_LSU.fasta.mseq.tsv
       mime: text/csv
       delimiter: "\t"
-      header: "OTU_ID\tLSU_rRNA\ttaxonomy\ttaxid"
+      header: "OTU_ID\tLSU_rRNA	taxonomy\ttaxid"
     sink: ./results/taxonomy-summary/LSU/LSU-taxonomy-summary.ttl
     template_name: taxon-info.ldt.ttl
   - source: 
