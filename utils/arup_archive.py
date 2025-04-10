@@ -68,7 +68,8 @@ subyt:
   - source: 
       path: ./results/taxonomy-summary/LSU/{PREFIX}.merged_LSU.fasta.mseq.tsv
       mime: text/csv
-      delimiter: "\\t"
+      delimiter: "\\t
+      comment: "#"
       header: "OTU_ID\\tLSU_rRNA\\ttaxonomy\\ttaxid"
     sink: ./results/taxonomy-summary/LSU/LSU-taxonomy-summary.ttl
     template_name: taxon-info.ldt.ttl
@@ -76,6 +77,7 @@ subyt:
       path: ./results/taxonomy-summary/SSU/{PREFIX}.merged_SSU.fasta.mseq.tsv
       mime: text/csv
       delimiter: "\\t"
+      comment: "#"
       header: "OTU_ID\\tLSU_rRNA\\ttaxonomy\\ttaxid"
     sink: ./results/taxonomy-summary/SSU/SSU-taxonomy-summary.ttl
     template_name: taxon-info.ldt.ttl
