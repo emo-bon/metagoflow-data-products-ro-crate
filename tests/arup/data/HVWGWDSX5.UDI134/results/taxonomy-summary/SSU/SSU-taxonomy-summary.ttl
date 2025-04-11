@@ -1,4 +1,26 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . 
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix schema: <https://schema.org/> . 
+@prefix prov: <http://www.w3.org/ns/prov#> . 
+@prefix sosa: <http://www.w3.org/ns/sosa/> . 
+@prefix ssn: <http://www.w3.org/ns/ssn/> . 
+@prefix qudt: <http://qudt.org/schema/qudt/> . 
+@prefix sf: <http://www.opengis.net/ont/sf#> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix mr: <http://marineregions.org/ns/ontology#> .
+@prefix obi: <http://purl.obolibrary.org/obo/OBI_>.
+@prefix seq: <https://data.emobon.embrc.eu/ns/sequence#> .
+@prefix core: <https://data.emobon.embrc.eu/ns/core#> .
+@prefix sampling: <https://data.emobon.embrc.eu/ns/sampling#> .
+@prefix prod: <https://data.emobon.embrc.eu/ns/product#> .
 
+@base <https://data.emobon.embrc.eu/analysis-results-cluster01-crate/EMOBON_EMT21_Wa_22-ro-crate/taxonomy-summary> .
+
+<http://data.emobon.embrc.eu/observatory-EMT21-crate/Wa/sample/EMOBON_EMT21_Wa_22>
+    rdfs:seeAlso <https://www.ebi.ac.uk/ena/browser/view/ENANUMBER123> ;
+.
 
 <#2157>
     a prod:TaxonomicAnnotation ; 

@@ -68,7 +68,7 @@ subyt:
   - source: 
       path: ./results/taxonomy-summary/LSU/{PREFIX}.merged_LSU.fasta.mseq.tsv
       mime: text/csv
-      delimiter: "\\t
+      delimiter: "\\t"
       comment: "#"
       header: "OTU_ID\\tLSU_rRNA\\ttaxonomy\\ttaxid"
     sink: ./results/taxonomy-summary/LSU/LSU-taxonomy-summary.ttl
@@ -96,20 +96,15 @@ def run_apptainer(config, path_to_data):
         raise FileNotFoundError(f"work.yml file does not exist: {work_yml_path}")
     log.debug(f"Found work.yml file: {work_yml_path}")
 
-    # Check if the container log file exists
-    conatainer_log_file = Path(f"logs/{config['GENOSCOPE_ID']}_emobon_arup.log")
-    if conatainer_log_file.exists():
-        log.debug(f"Removing existing container log file: {conatainer_log_file}")
-        conatainer_log_file.unlink()
-
-    with open(conatainer_log_file, "a") as output:
-        cmd = (
-            f'export ARUP_WORK="./work.yml" && apptainer run '
-            f"--bind {path_to_data}:/rocrateroot "
-            "utils/emobon_arup.sif"
-        )
-        subprocess.call(cmd, shell=True, stdout=output, stderr=output)
-        log.info("Apptainer command executed successfully")
+    cmd = (
+        f'export ARUP_WORK="./work.yml" && apptainer run '
+        f"--bind {path_to_data}:/rocrateroot "
+        "utils/emobon_arup.sif"
+    )
+    output = subprocess.run(cmd, shell=True, capture_output=True)
+    if output.returncode != 0:
+        raise RuntimeError(f"Apptainer command failed: {output.stderr.decode()}")
+    log.info("Apptainer command executed successfully")
 
 
 def write_work_yml_file(config, path_to_data):
@@ -171,6 +166,36 @@ def main(config, path_to_data, debug=False):
     # Run the apptainer command
     run_apptainer(config, path_to_data)
 
+    # Check if the TTL files were created
+    fa_ttl = (
+        path_to_data / "results" / "functional-annotation" / "functional-annotation.ttl"
+    )
+    tax_LSU_ttl = (
+        path_to_data
+        / "results"
+        / "taxonomy-summary"
+        / "LSU"
+        / "LSU-taxonomy-summary.ttl"
+    )
+    tax_SSU_ttl = (
+        path_to_data
+        / "results"
+        / "taxonomy-summary"
+        / "SSU"
+        / "SSU-taxonomy-summary.ttl"
+    )
+    if not fa_ttl.exists():
+        raise FileNotFoundError(f"Functional Analysis TTL file not found: {fa_ttl}")
+    if not tax_LSU_ttl.exists():
+        raise FileNotFoundError(
+            f"LSU Taxonomy Summary TTL file not found: {tax_LSU_ttl}"
+        )
+    if not tax_SSU_ttl.exists():
+        raise FileNotFoundError(
+            f"SSU Taxonomy Summary TTL file not found: {tax_SSU_ttl}"
+        )
+    log.info("TTL files created successfully")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -224,19 +249,27 @@ if __name__ == "__main__":
         path_to_data / "results" / "functional-annotation" / "functional-annotation.ttl"
     )
     tax_LSU_ttl = (
-        path_to_data / "results" / "taxonomy-summary" / "LSU" / "taxonomy-summary.ttl"
+        path_to_data
+        / "results"
+        / "taxonomy-summary"
+        / "LSU"
+        / "LSU-taxonomy-summary.ttl"
     )
     tax_SSU_ttl = (
-        path_to_data / "results" / "taxonomy-summary" / "SSU" / "taxonomy-summary.ttl"
+        path_to_data
+        / "results"
+        / "taxonomy-summary"
+        / "SSU"
+        / "SSU-taxonomy-summary.ttl"
     )
     if fa_ttl.exists():
-        log.info("Functional Analysis TTL file already exists: removing...")
+        log.debug("Functional Analysis TTL file already exists: removing...")
         fa_ttl.unlink()
     if tax_LSU_ttl.exists():
-        log.info("LSU Taxonomy Summary TTL file already exists: removing...")
+        log.debug("LSU Taxonomy Summary TTL file already exists: removing...")
         tax_LSU_ttl.unlink()
     if tax_SSU_ttl.exists():
-        log.info("Taxonomy Summary TTL file already exists: removing...")
+        log.debug("Taxonomy Summary TTL file already exists: removing...")
         tax_SSU_ttl.unlink()
 
     # Run test
