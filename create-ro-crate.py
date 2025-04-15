@@ -691,8 +691,8 @@ def get_metadata_from_sample_logsheets(conf, overide_error=False):
     return conf
 
 
-def get_ena_accession_data(conf):
-    """Get the ENA accession data for a given ref_code."""
+def get_ena_accession_number(conf):
+    """Get the ENA accession number for a given ref_code."""
     # Read the relevant row in sample sheet
     if conf["batch_number"] == 1:
         df_ena = pd.read_csv(BATCH1_ENA_ACCESSION_INFO_PATH)
@@ -704,8 +704,18 @@ def get_ena_accession_data(conf):
     row_ena = df_ena.loc[df_ena["ref_code"] == conf["ref_code"]].to_dict()
     # Get the ENA accession data
     conf["ena_accession_number"] = list(
-        row_ena["ena_accession_number_run_metag"].values()
+        row_ena["ena_accession_number_sample"].values()
     )[0]
+    # If the ENA accession number is a NaN, exit
+    if pd.isna(conf["ena_accession_number"]):
+        log.error(
+            f"Cannot find the ENA accession number for ref_code {conf['ref_code']}\n"
+            "This should mean that the sample was not part of Batch 1 or 2\n"
+            "Please check the ENA accession number in the sample sheet\n"
+            f"Source mat ID: {conf['source_mat_id']}\n"
+            f"Batch number: {conf['batch_number']}\n"
+        )
+        sys.exit()
     conf["ena_accession_number_url"] = (
         f"https://www.ebi.ac.uk/ena/browser/view/{conf['ena_accession_number']}"
     )
@@ -721,8 +731,8 @@ def add_sequence_data_links(conf, override_error=False):
     )
     log.debug(f"ENA filereport URL: {filereport_url.format(**conf)}")
     filereport = requests.get(filereport_url.format(**conf))
-    if filereport.status_code == requests.codes.ok:
-        filereport_json = filereport.json()
+    filereport_json = filereport.json()
+    if filereport.status_code == requests.codes.ok and filereport_json:
         log.debug(f"ENA filereport: {filereport_json}")
         # Get the FTP links to the raw sequence data
         links = filereport_json[0]["submitted_ftp"].split(";")
@@ -735,7 +745,10 @@ def add_sequence_data_links(conf, override_error=False):
         log.info("ENA raw sequence data links added to conf")
     else:
         if not override_error:
-            log.error("Cannot get the ENA filereport")
+            log.error(
+                "Cannot get the ENA filereport: exit code %s" % filereport.status_code
+            )
+            log.error("Filereport: %s" % filereport_json)
             log.error("Raw sequence data are not available from ENA")
             log.error("Use override_error flag to bypass this error")
             sys.exit()
@@ -1261,14 +1274,13 @@ def main(
 
     # Build the conf dictionary
     conf = get_metadata_from_sample_logsheets(conf, override_error)
-    conf = get_ena_accession_data(conf)
+    conf = get_ena_accession_number(conf)
     conf = add_sequence_data_links(conf, override_error)
     log.debug("Conf dict: %s" % conf)
 
     # Run ARUP
     log.info("Running ARUP...")
     run_arup(target_directory, conf)
-    log.info("ARUP completed without error")
 
     # Create the metadata.json file but dont write yet, need to add links later
     log.info("Formatting metadata.json...")

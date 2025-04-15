@@ -104,7 +104,7 @@ def run_apptainer(config, path_to_data):
     output = subprocess.run(cmd, shell=True, capture_output=True)
     if output.returncode != 0:
         raise RuntimeError(f"Apptainer command failed: {output.stderr.decode()}")
-    log.info("Apptainer command executed successfully")
+    log.debug("Apptainer command executed successfully")
 
 
 def write_work_yml_file(config, path_to_data):
