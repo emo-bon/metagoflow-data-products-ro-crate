@@ -157,7 +157,7 @@ def main(config, path_to_data, debug=False):
         if not value:
             raise ValueError(f"Config key {key} has an empty value")
         if not isinstance(value, str):
-            raise TypeError(f"Config key {key} is not a string")
+            raise TypeError(f"Config key {key} is not a string: {config[key]}")
 
     log.debug(f"Config: {config}")
 
