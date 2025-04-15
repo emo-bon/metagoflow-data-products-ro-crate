@@ -1,0 +1,3 @@
+[submodule "analysis-results-cluster-01-crate"]
+	path = analysis-results-cluster-01-crate
+	url = git@github.com:emo-bon/analysis-results-cluster-01-crate.git
