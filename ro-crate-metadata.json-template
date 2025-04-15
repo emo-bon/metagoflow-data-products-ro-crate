@@ -266,7 +266,10 @@
                 "@type": "File",
                 "name": "RDF 1.2 Turtle triples of the functional analyses results",
                 "downloadUrl": "",
-                "encodingFormat": "text/turtle"
+                "encodingFormat": "text/turtle",
+                "conformsTo": {
+                    "@id": "https://data.emobon.embrc.eu/ns/profile#graph-harvestable-partition"
+                }
             },     
     {
         "@id": "./sequence-categorisation/",
@@ -353,7 +356,10 @@
                     "@type": "File",
                     "name": "RDF 1.2 Turtle triples of the LSU taxonomic analyses results",
                     "downloadUrl": "",
-                    "encodingFormat": "text/turtle"
+                    "encodingFormat": "text/turtle",
+                    "conformsTo": {
+                        "@id": "https://data.emobon.embrc.eu/ns/profile#graph-harvestable-partition"
+                    }
                 },
                 {
                 "@id": "./taxonomy-summary/SSU/",
@@ -416,7 +422,10 @@
                     "@type": "File",
                     "name": "RDF 1.2 Turtle triples of the SSU taxonomic analyses results",
                     "downloadUrl": "",
-                    "encodingFormat": "text/turtle"
+                    "encodingFormat": "text/turtle",
+                    "conformsTo": {
+                        "@id": "https://data.emobon.embrc.eu/ns/profile#graph-harvestable-partition"
+                    }
                 },
     {
         "@id": "http://semanticscience.org/resource/SIO_001050",
