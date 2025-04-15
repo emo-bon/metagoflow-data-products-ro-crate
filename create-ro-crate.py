@@ -256,6 +256,7 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
     # Just the file names as @ids changed later
     seq_cat_files = [sq.name for sq in seq_cat_paths]
     log.debug(f"Seq_cat_files: {seq_cat_files}")
+    log.info(f"Adding {len(seq_cat_files)} sequence categorisation files to graph")
     # Add the sequence categorisation files to the list of mandatory files
     # So that they can be used to build the upload script later
     qualified_paths = [
@@ -314,6 +315,7 @@ def add_sequence_data_stanzas(target_directory, template, conf):
     DBH.merged.unfiltered_fasta.bz2
 
     """
+    log.info("Adding 11 mandatory sequence data stanzas to graph")
     data = {
         r"^{prefix}_[A-Za-z0-9]+_[1,2]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.fasta\.bz2$": (
             "Trimmed forward reads",
@@ -890,7 +892,7 @@ def write_metadata_json(
     if not without_sequence_data:
         template = add_sequence_data_stanzas(target_directory, template, conf)
 
-    log.info("Metadata (first part) JSON written...")
+    log.info("Metadata (first part) JSON written")
     return template
 
 
@@ -1283,7 +1285,6 @@ def main(
     run_arup(target_directory, conf)
 
     # Create the metadata.json file but dont write yet, need to add links later
-    log.info("Formatting metadata.json...")
     metadata_json = write_metadata_json(
         target_directory, conf, without_sequence_data, override_error
     )
@@ -1294,8 +1295,8 @@ def main(
     # the md5 to use a links, so this order looks weird but is necessary
     # TODO: Could probably just move the writing of the metadata.json to the end
 
-    log.debug("Renaming and moving target directory...")
     new_archive_path = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"])
+    log.info(f"Moving archive to {new_archive_path}...")
     try:
         Path(target_directory).rename(new_archive_path)
     except OSError as e:
@@ -1308,21 +1309,19 @@ def main(
             )
             log.error(f"Error: {e}")
             sys.exit()
-    log.info(f"Renamed and moved {target_directory} to {new_archive_path}")
 
     # Move all files out of the results directory into top level
     # and remove the results directory and files not in the RO-Crate
-    log.debug("Moving all files out of the results directory...")
+    log.info("Reconfiguring the results directory...")
     move_files_out_of_results(
         new_archive_path, without_sequence_data=without_sequence_data
     )
 
     # Write the S3 and Github upload script
-    log.debug("Writing S3 and Github upload script...")
     upload_script_path = write_dvc_upload_script(conf)
     log.debug(f"Written upload script to {upload_script_path}")
     if upload_dvc:
-        log.info("Running upload script...")
+        log.info("Running DVC upload script...")
         run_dvc_upload_script(upload_script_path)
         log.info("DVC upload script completed without error")
         os.remove(upload_script_path)
@@ -1339,7 +1338,7 @@ def main(
         format_download_links=format_download_links,
     )
     metadata_path = Path(new_archive_path, "ro-crate-metadata.json")
-    log.info(f"Writing metadata.json to {metadata_path}")
+    log.info(f"Writing {metadata_path}")
     with open(metadata_path, "w") as outfile:
         outfile.write(metadata_json_formatted)
 
@@ -1352,6 +1351,7 @@ def main(
     if upload_dvc:
         remove_data_files_from_ro_crate(ro_crate_name)
     log.info(f"{ro_crate_name} written without error")
+    log.info("Done.")
 
 
 if __name__ == "__main__":

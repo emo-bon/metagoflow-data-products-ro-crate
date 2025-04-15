@@ -352,7 +352,7 @@
                     "encodingFormat": "application/json-ld"
                 },
                 {
-                    "@id": "./taxonomy-summary/LSU/taxonomy-summary.ttl",
+                    "@id": "./taxonomy-summary/LSU/LSU-taxonomy-summary.ttl",
                     "@type": "File",
                     "name": "RDF 1.2 Turtle triples of the LSU taxonomic analyses results",
                     "downloadUrl": "",
@@ -418,7 +418,7 @@
                     "encodingFormat": "application/json-ld"
                 },
                 {
-                    "@id": "./taxonomy-summary/SSU/taxonomy-summary.ttl",
+                    "@id": "./taxonomy-summary/SSU/SSU-taxonomy-summary.ttl",
                     "@type": "File",
                     "name": "RDF 1.2 Turtle triples of the SSU taxonomic analyses results",
                     "downloadUrl": "",
