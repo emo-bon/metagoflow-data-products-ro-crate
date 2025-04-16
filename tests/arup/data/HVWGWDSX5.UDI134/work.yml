@@ -1,0 +1,59 @@
+
+vars:
+  - name: cluster
+    value: "analysis-results-cluster01-crate"
+  - name: genoscopeID
+    value: "HVWGWDSX5.UDI134"
+  - name: enanumber
+    value: "ENANUMBER123"
+  - name: obs_id
+    value: "EMT21"
+  - name: env_package
+    value: "Wa"
+  - name: source_mat_id
+    value: "EMOBON_EMT21_Wa_22"
+  - name: uri_to_crate
+    value: "https://data.emobon.embrc.eu/analysis-results-cluster01-crate/EMOBON_EMT21_Wa_22-ro-crate"
+
+subyt:
+  - extra_sources:
+      go_annotations:
+        path: ./results/functional-annotation/DBB.merged.summary.go
+        mime: text/csv
+        header: ID,sub_process,process,abundance
+      ips_annotations: 
+        path: ./results/functional-annotation/DBB.merged.summary.ips
+        mime: text/csv
+        header: Abundance,ID,sequence_domain_region_name
+      kegg_annotations: 
+        path: ./results/functional-annotation/DBB.merged.summary.ko
+        mime: text/csv
+        header: Abundance,ID,name
+      pfam_annotations: 
+        path: ./results/functional-annotation/DBB.merged.summary.pfam
+        mime: text/csv
+        header: Abundance,ID,name
+      eggnog_annotations: 
+        path: ./results/functional-annotation/DBB.merged.emapper.summary.eggnog
+        mime: text/csv
+        header: Abundance,ID,name
+    sink: ./results/functional-annotation/functional-annotation.ttl
+    template_name: functional-annotation.ldt.ttl
+    mode: no-it
+  - source: 
+      path: ./results/taxonomy-summary/LSU/DBB.merged_LSU.fasta.mseq.tsv
+      mime: text/csv
+      delimiter: "\t"
+      comment: "#"
+      header: "OTU_ID\tLSU_rRNA\ttaxonomy\ttaxid"
+    sink: ./results/taxonomy-summary/LSU/LSU-taxonomy-summary.ttl
+    template_name: taxon-info.ldt.ttl
+  - source: 
+      path: ./results/taxonomy-summary/SSU/DBB.merged_SSU.fasta.mseq.tsv
+      mime: text/csv
+      delimiter: "\t"
+      comment: "#"
+      header: "OTU_ID\tLSU_rRNA\ttaxonomy\ttaxid"
+    sink: ./results/taxonomy-summary/SSU/SSU-taxonomy-summary.ttl
+    template_name: taxon-info.ldt.ttl
+

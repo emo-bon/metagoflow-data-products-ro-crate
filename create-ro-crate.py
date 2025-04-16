@@ -18,9 +18,10 @@ import logging as log
 from pathlib import Path
 
 import pandas as pd
+from utils.arup_archive import main as arup_main  # noqa: F401
 
 desc = """
-Build a MetaGOflow Data Products ro-crate from a YAML configuration.
+Build a MetaGOflow Data Products ro-crate.
 
 Invoke
 $ create-ro-crate.py <target_directory> <yaml_configuration>
@@ -29,28 +30,21 @@ where:
     target_directory is the toplevel output directory of MetaGOflow
         This must be the MGF run_id, e.g. HWLTKDRXY.UDI210
     yaml_configuration is a YAML file of metadata specific to this ro-crate
-        a template is here:
-        https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate/main/ro-crate-config.yaml
+        a template is here: ro-crate-config.yaml
 
-e.g.
+The script acts on one MGF analysis results archive at a time.
 
-$ create-ro-crate.py HWLTKDRXY-UDI210 config.yml
+This script builds an RDF Turtle file for the functional analyses results, and each
+of the taxonomic analyses (i.e. LSU and SSU), uploads all payload files to an S3
+store using DVC, writes the rocrate-metadata.json file, and renames and
+moves the ro-crate to the EMO BON cluster repository.
 
-This script expects to be pointed to directory of MetaGOflow output.
+By default will not upload the files to S3, but will add the sequence data files.
+To upload the files to S3 use the -u flag.
+To revmove sequence data files use the -w flag.
+To debug use the -d flag.
 
-When invoked, the MetaGOflow run_wf.sh script writes all output to a directory specified by
-the "-d" parameter:
-
-    $ run_wf.sh -n green -d  HWLTKDRXY-UDI210 -f input_data/${DATA_FORWARD} -r input_data/${DATA_REVERSE}
-
-    $ tree -1
-    HWLTKDRXY-UDI210
-    ├── prov
-    ├── results
-    ├── green.yml
-    └── tmp
-
-    3 directories, 1 file
+./create-ro-crate.py -d <target_directory> -y <yaml_configuration>
 
 """
 
@@ -262,6 +256,7 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
     # Just the file names as @ids changed later
     seq_cat_files = [sq.name for sq in seq_cat_paths]
     log.debug(f"Seq_cat_files: {seq_cat_files}")
+    log.info(f"Adding {len(seq_cat_files)} sequence categorisation files to graph")
     # Add the sequence categorisation files to the list of mandatory files
     # So that they can be used to build the upload script later
     qualified_paths = [
@@ -320,6 +315,7 @@ def add_sequence_data_stanzas(target_directory, template, conf):
     DBH.merged.unfiltered_fasta.bz2
 
     """
+    log.info("Adding 11 mandatory sequence data stanzas to graph")
     data = {
         r"^{prefix}_[A-Za-z0-9]+_[1,2]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.fasta\.bz2$": (
             "Trimmed forward reads",
@@ -558,8 +554,70 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
     return conf
 
 
-def get_creator_and_mgf_version_information(conf, overide_error=False):
-    """Get the creator and mgf version information."""
+def get_metadata_from_observatory_logsheets(conf):
+    """
+    Parse sample logsheet data from the Observatories logsheet
+
+    sampling_org = Observatory_combined_logsheets_validated.csv:organization
+    sampling_org_country = Observatory_combined_logsheets_validated.csv:geo_loc_name
+    sampling_org_latlong = Observatory_combined_logsheets_validated.csv:latitude:longidude
+    sampling_org_ena_number = Observatory_combined_logsheets_validated.csv:ENA_accession_number_project
+    sampling_org_contact_name = Observatory_combined_logsheets_validated.csv: contact_name
+    sampling_org_contact_orcid = Observatory_combined_logsheets_validated.csv contact_orcid
+
+    """
+
+    # Get the observatory data
+    df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
+    # Get the observatory data using the obs_id and env_package variables
+    row_obs = df_obs.loc[
+        (df_obs["obs_id"] == conf["obs_id"])
+        & (df_obs["env_package"] == conf["env_package_id"])
+    ].to_dict()
+
+    # Sampling organisation
+    conf["sampling_org"] = list(row_obs["organization"].values())[0]
+    # Sampling organisation country
+    conf["sampling_org_country"] = list(row_obs["geo_loc_name"].values())[0]
+    # Sampling organisation lat/long
+    lat = list(row_obs["latitude"].values())[0]
+    long = list(row_obs["longitude"].values())[0]
+    conf["sampling_org_latlong"] = f"{lat}:{long}"
+    # Sampling person affiliation
+    conf["sampling_org_ena_number"] = list(
+        row_obs["ENA_accession_number_project"].values()
+    )[0]
+    # Sampling person contact name
+    conf["sampling_org_contact_name"] = list(row_obs["contact_name"].values())[0]
+    conf["sampling_org_contact_orcid"] = list(row_obs["contact_orcid"].values())[0]
+
+    log.debug("Row in observatory sheet: %s" % row_obs)
+    log.debug("conf = {conf}")
+
+    return conf
+
+
+def get_metadata_from_sample_logsheets(conf, overide_error=False):
+    """
+    Parse sample logsheet data from the combined logsheet on Github
+    and add to the configuration dictionary.
+
+    env_package_id
+    obs_id
+    #sampling_person_name
+    #sampling_person_identifier
+    #sampling_person_station_edmoid
+    #sampling_person_station_name
+    #sampling_person_station_country
+    creator_person_name
+    creator_person_identifier
+    #creator_person_station_edmoid
+    #creator_person_station_name
+    #creator_person_station_country
+    metagoflow_version_id
+    metagoflow_version
+
+    """
 
     # Read the relevant row in sample sheet
     try:
@@ -569,6 +627,7 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
         sys.exit()
     row_samp = df_samp.loc[df_samp["ref_code"] == conf["ref_code"]].to_dict()
     log.debug("Row in sample sheet: %s" % row_samp)
+
     # Get the env_package either water_column or soft_sediments
     try:
         env_package = list(row_samp["env_package"].values())[0]
@@ -580,8 +639,10 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
         "env_package must be either 'water_column' or 'soft_sediment'"
         "Found: %s" % env_package
     )
+    conf["env_package_id"] = env_package
+
     # Get the observatory ID
-    # obs_id = list(row_samp["obs_id"].values())[0]
+    conf["obs_id"] = list(row_samp["obs_id"].values())[0]
 
     # Get the observatory data
     # df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
@@ -675,8 +736,8 @@ def get_creator_and_mgf_version_information(conf, overide_error=False):
     return conf
 
 
-def get_ena_accession_data(conf):
-    """Get the ENA accession data for a given ref_code."""
+def get_ena_accession_number(conf):
+    """Get the ENA accession number for a given ref_code."""
     # Read the relevant row in sample sheet
     if conf["batch_number"] == 1:
         df_ena = pd.read_csv(BATCH1_ENA_ACCESSION_INFO_PATH)
@@ -688,8 +749,18 @@ def get_ena_accession_data(conf):
     row_ena = df_ena.loc[df_ena["ref_code"] == conf["ref_code"]].to_dict()
     # Get the ENA accession data
     conf["ena_accession_number"] = list(
-        row_ena["ena_accession_number_run_metag"].values()
+        row_ena["ena_accession_number_sample"].values()
     )[0]
+    # If the ENA accession number is a NaN, exit
+    if pd.isna(conf["ena_accession_number"]):
+        log.error(
+            f"Cannot find the ENA accession number for ref_code {conf['ref_code']}\n"
+            "This should mean that the sample was not part of Batch 1 or 2\n"
+            "Please check the ENA accession number in the sample sheet\n"
+            f"Source mat ID: {conf['source_mat_id']}\n"
+            f"Batch number: {conf['batch_number']}\n"
+        )
+        sys.exit()
     conf["ena_accession_number_url"] = (
         f"https://www.ebi.ac.uk/ena/browser/view/{conf['ena_accession_number']}"
     )
@@ -705,8 +776,8 @@ def add_sequence_data_links(conf, override_error=False):
     )
     log.debug(f"ENA filereport URL: {filereport_url.format(**conf)}")
     filereport = requests.get(filereport_url.format(**conf))
-    if filereport.status_code == requests.codes.ok:
-        filereport_json = filereport.json()
+    filereport_json = filereport.json()
+    if filereport.status_code == requests.codes.ok and filereport_json:
         log.debug(f"ENA filereport: {filereport_json}")
         # Get the FTP links to the raw sequence data
         links = filereport_json[0]["submitted_ftp"].split(";")
@@ -719,7 +790,10 @@ def add_sequence_data_links(conf, override_error=False):
         log.info("ENA raw sequence data links added to conf")
     else:
         if not override_error:
-            log.error("Cannot get the ENA filereport")
+            log.error(
+                "Cannot get the ENA filereport: exit code %s" % filereport.status_code
+            )
+            log.error("Filereport: %s" % filereport_json)
             log.error("Raw sequence data are not available from ENA")
             log.error("Use override_error flag to bypass this error")
             sys.exit()
@@ -750,12 +824,6 @@ def write_metadata_json(
             log.error(f"Check {TEMPLATE_URL}")
             log.error("Exiting...")
             sys.exit()
-
-    # Build the conf dictionary
-    conf = get_creator_and_mgf_version_information(conf, override_error)
-    conf = get_ena_accession_data(conf)
-    conf = add_sequence_data_links(conf, override_error)
-    log.debug("Conf dict: %s" % conf)
 
     log.info("Writing ro-crate-metadata.json...")
 
@@ -867,7 +935,7 @@ def write_metadata_json(
     if not without_sequence_data:
         template = add_sequence_data_stanzas(target_directory, template, conf)
 
-    log.info("Metadata (first part) JSON written...")
+    log.info("Metadata (first part) JSON written")
     return template
 
 
@@ -1154,6 +1222,52 @@ def format_file_ids_and_add_download_links(
     return json.dumps(metadata_json, indent=4)
 
 
+def run_arup(target_directory, conf):
+    """
+    Run the ARUP and build the 3 turtle files
+    """
+    arup_config = {
+        # PREFIX is the GENOSCOPE Project Code that prefixes the sequence result files
+        # "DBH_AAAVOSDA_1_1_HCFCYDSX5.UDI141_clean.fastq.gz is DBH"
+        # This varies
+        "PREFIX": conf["prefix"],
+        # CLUSTER_ID is name of the Github respository where the RO-Crates for the
+        # 'cluster' (effectively just several batches) are going to be stored
+        # e.g. https://github.com/emo-bon/analysis-results-cluster-01-crate
+        # will store Batch 1 and Batch 2 RO-Crates
+        "CLUSTER_ID": RO_CRATE_REPO_PATH,
+        # This is in fact the Flowcell id (e.g. HCFCYDSX5) and Index id (e.g. UDI141)
+        # of the sequencing machine where the sample was processed
+        # e.g. HCFCYDSX5.UDI141
+        # It is unique and used to name the MGF result archives
+        # e.g. HJWK3DSX7.UDI074.tar.bz2
+        "GENOSCOPE_ID": target_directory,
+        # This is the EMBL ENA Accesion number
+        "ENA_NR": conf["ena_accession_number"],
+        # This is the source material id
+        # This is the unique identifier created by the Observarory sample sheets
+        "SOURCE_MAT_ID": conf["source_mat_id"],
+        # This is the abbreviated Observatory id
+        "OBS_ID": conf["obs_id"],
+        # This is the shortened version of the environment package id
+        # id's are "water_column" or "soft_sediment", here abrreviated to
+        # "Wa" and "Ss"
+        "ENVPACKAGE_ID": "Wa" if conf["env_package_id"] == "water_column" else "Ss",
+        # This is the domain URI of the EMO BON data repository
+        "DOMAIN": "https://data.emobon.embrc.eu",
+    }
+    log.debug("ARUP config: %s" % arup_config)
+    arup_main(arup_config, Path(target_directory))
+    # Add the turtle files to the MANDATORY_FILES list
+    MANDATORY_FILES.extend(
+        [
+            "./functional-annotation/functional-annotation.ttl",
+            "./taxonomy-summary/LSU/LSU-taxonomy-summary.ttl",
+            "./taxonomy-summary/SSU/SSU-taxonomy-summary.ttl",
+        ]
+    )
+
+
 def main(
     target_directory,
     yaml_config,
@@ -1203,8 +1317,18 @@ def main(
     # filepaths includes the seq_cat files
     check_and_format_data_file_paths(target_directory, conf, check_exists=True)
 
+    # Build the conf dictionary
+    conf = get_metadata_from_sample_logsheets(conf, override_error)
+    conf = get_metadata_from_observatory_logsheets(conf)
+    conf = get_ena_accession_number(conf)
+    conf = add_sequence_data_links(conf, override_error)
+    log.debug("Conf dict: %s" % conf)
+
+    # Run ARUP
+    log.info("Running ARUP...")
+    run_arup(target_directory, conf)
+
     # Create the metadata.json file but dont write yet, need to add links later
-    log.info("Formatting metadata.json...")
     metadata_json = write_metadata_json(
         target_directory, conf, without_sequence_data, override_error
     )
@@ -1215,8 +1339,8 @@ def main(
     # the md5 to use a links, so this order looks weird but is necessary
     # TODO: Could probably just move the writing of the metadata.json to the end
 
-    log.debug("Renaming and moving target directory...")
     new_archive_path = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"])
+    log.info(f"Moving archive to {new_archive_path}...")
     try:
         Path(target_directory).rename(new_archive_path)
     except OSError as e:
@@ -1229,21 +1353,19 @@ def main(
             )
             log.error(f"Error: {e}")
             sys.exit()
-    log.info(f"Renamed and moved {target_directory} to {new_archive_path}")
 
     # Move all files out of the results directory into top level
     # and remove the results directory and files not in the RO-Crate
-    log.debug("Moving all files out of the results directory...")
+    log.info("Reconfiguring the results directory...")
     move_files_out_of_results(
         new_archive_path, without_sequence_data=without_sequence_data
     )
 
     # Write the S3 and Github upload script
-    log.debug("Writing S3 and Github upload script...")
     upload_script_path = write_dvc_upload_script(conf)
     log.debug(f"Written upload script to {upload_script_path}")
     if upload_dvc:
-        log.info("Running upload script...")
+        log.info("Running DVC upload script...")
         run_dvc_upload_script(upload_script_path)
         log.info("DVC upload script completed without error")
         os.remove(upload_script_path)
@@ -1260,7 +1382,7 @@ def main(
         format_download_links=format_download_links,
     )
     metadata_path = Path(new_archive_path, "ro-crate-metadata.json")
-    log.info(f"Writing metadata.json to {metadata_path}")
+    log.info(f"Writing {metadata_path}")
     with open(metadata_path, "w") as outfile:
         outfile.write(metadata_json_formatted)
 
@@ -1273,6 +1395,7 @@ def main(
     if upload_dvc:
         remove_data_files_from_ro_crate(ro_crate_name)
     log.info(f"{ro_crate_name} written without error")
+    log.info("Done.")
 
 
 if __name__ == "__main__":

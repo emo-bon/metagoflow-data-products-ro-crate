@@ -18,7 +18,7 @@
         "@id": "./", 
         "@type": ["Dataset", "dcat:Dataset"],
         "name" : "MetaGoFlow metagenomics data products {ref_code} for Sampling Event {source_mat_id}",                       
-        "description" : "EMO BON project RO-Crate for the data products from the MetaGOflow analysis of molecular data derived from sampling event {source_mat_id}",
+        "description" : "\nThis is a Research Object Crate containing results data from a MetaGOflow\nworkflow analysis of metagenomic data derived from European Marine Omics\nBiodiversity Observation Network (EMO BON) project operated by the European\nMarine Biological Research Centre (EMBRC).\n\nSampling station: {sampling_org}\nSampling country: {sampling_org_country}\nSampling station lat/long: {sampling_org_latlong}\nSampling environment: {env_package_id}\nSampling station contact name: {sampling_org_contact_name}\nSampling station contact ORCID id: {sampling_org_contact_orcid}\nSampling station ENA project number: {sampling_org_ena_number}\n\nEMO BON reference code: {ref_code}\nEMO BON source material id: {source_mat_id}\n",
         "datePublished": "{datePublished}",                                              
         "license": {"@id": "https://creativecommons.org/licenses/by/4.0/"},
 
@@ -161,7 +161,8 @@
             {"@id": "./functional-annotation/{prefix}.merged.summary.go_slim"},
             {"@id": "./functional-annotation/{prefix}.merged.summary.ips"},
             {"@id": "./functional-annotation/{prefix}.merged.summary.ko"},
-            {"@id": "./functional-annotation/{prefix}.merged.summary.pfam"}
+            {"@id": "./functional-annotation/{prefix}.merged.summary.pfam"},
+            {"@id": "./functional-annotation/functional-annotation.ttl"}
         ]
     },
     {
@@ -260,6 +261,16 @@
                 "downloadUrl": "",
                 "encodingFormat": "text/plain"
             },
+            {
+                "@id": "./functional-annotation/functional-annotation.ttl",
+                "@type": "File",
+                "name": "RDF 1.2 Turtle triples of the functional analyses results",
+                "downloadUrl": "",
+                "encodingFormat": "text/turtle",
+                "conformsTo": {
+                    "@id": "https://data.emobon.embrc.eu/ns/profile#graph-harvestable-partition"
+                }
+            },     
     {
         "@id": "./sequence-categorisation/",
         "@type": "Dataset",
@@ -294,7 +305,8 @@
                             {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_hdf5.biom"},
                             {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom"},
                             {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.tsv"},
-                            {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt"}
+                            {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt"},
+                            {"@id": "./taxonomy-summary/LSU/LSU-taxonomy-summary.ttl"}
                             ]
             },
                 {
@@ -339,7 +351,17 @@
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
                 },
-            {
+                {
+                    "@id": "./taxonomy-summary/LSU/LSU-taxonomy-summary.ttl",
+                    "@type": "File",
+                    "name": "RDF 1.2 Turtle triples of the LSU taxonomic analyses results",
+                    "downloadUrl": "",
+                    "encodingFormat": "text/turtle",
+                    "conformsTo": {
+                        "@id": "https://data.emobon.embrc.eu/ns/profile#graph-harvestable-partition"
+                    }
+                },
+                {
                 "@id": "./taxonomy-summary/SSU/",
                 "@type": "Dataset",
                 "name": "Summary of SSU taxonomic indentification results",
@@ -349,7 +371,8 @@
                             {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_hdf5.biom"},
                             {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom"},
                             {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.tsv"},
-                            {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt"}
+                            {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt"},
+                            {"@id": "./taxonomy-summary/SSU/SSU-taxonomy-summary.ttl"}
                             ]
             },
                 {
@@ -393,6 +416,16 @@
                     "name": "Text-based formatted taxon counts for SSU sequences",
                     "downloadUrl": "",
                     "encodingFormat": "application/json-ld"
+                },
+                {
+                    "@id": "./taxonomy-summary/SSU/SSU-taxonomy-summary.ttl",
+                    "@type": "File",
+                    "name": "RDF 1.2 Turtle triples of the SSU taxonomic analyses results",
+                    "downloadUrl": "",
+                    "encodingFormat": "text/turtle",
+                    "conformsTo": {
+                        "@id": "https://data.emobon.embrc.eu/ns/profile#graph-harvestable-partition"
+                    }
                 },
     {
         "@id": "http://semanticscience.org/resource/SIO_001050",
