@@ -554,6 +554,49 @@ def check_and_format_data_file_paths(target_directory, conf, check_exists=True):
     return conf
 
 
+def get_metadata_from_observatory_logsheets(conf):
+    """
+    Parse sample logsheet data from the Observatories logsheet
+
+    sampling_org = Observatory_combined_logsheets_validated.csv:organization
+    sampling_org_country = Observatory_combined_logsheets_validated.csv:geo_loc_name
+    sampling_org_latlong = Observatory_combined_logsheets_validated.csv:latitude:longidude
+    sampling_org_ena_number = Observatory_combined_logsheets_validated.csv:ENA_accession_number_project
+    sampling_org_contact_name = Observatory_combined_logsheets_validated.csv: contact_name
+    sampling_org_contact_orcid = Observatory_combined_logsheets_validated.csv contact_orcid
+
+    """
+
+    # Get the observatory data
+    df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
+    # Get the observatory data using the obs_id and env_package variables
+    row_obs = df_obs.loc[
+        (df_obs["obs_id"] == conf["obs_id"])
+        & (df_obs["env_package"] == conf["env_package_id"])
+    ].to_dict()
+
+    # Sampling organisation
+    conf["sampling_org"] = list(row_obs["organization"].values())[0]
+    # Sampling organisation country
+    conf["sampling_org_country"] = list(row_obs["geo_loc_name"].values())[0]
+    # Sampling organisation lat/long
+    lat = list(row_obs["latitude"].values())[0]
+    long = list(row_obs["longitude"].values())[0]
+    conf["sampling_org_latlong"] = f"{lat}:{long}"
+    # Sampling person affiliation
+    conf["sampling_org_ena_number"] = list(
+        row_obs["ENA_accession_number_project"].values()
+    )[0]
+    # Sampling person contact name
+    conf["sampling_org_contact_name"] = list(row_obs["contact_name"].values())[0]
+    conf["sampling_org_contact_orcid"] = list(row_obs["contact_orcid"].values())[0]
+
+    log.debug("Row in observatory sheet: %s" % row_obs)
+    log.debug("conf = {conf}")
+
+    return conf
+
+
 def get_metadata_from_sample_logsheets(conf, overide_error=False):
     """
     Parse sample logsheet data from the combined logsheet on Github
@@ -1276,6 +1319,7 @@ def main(
 
     # Build the conf dictionary
     conf = get_metadata_from_sample_logsheets(conf, override_error)
+    conf = get_metadata_from_observatory_logsheets(conf)
     conf = get_ena_accession_number(conf)
     conf = add_sequence_data_links(conf, override_error)
     log.debug("Conf dict: %s" % conf)

@@ -18,7 +18,7 @@
         "@id": "./", 
         "@type": ["Dataset", "dcat:Dataset"],
         "name" : "MetaGoFlow metagenomics data products {ref_code} for Sampling Event {source_mat_id}",                       
-        "description" : "EMO BON project RO-Crate for the data products from the MetaGOflow analysis of molecular data derived from sampling event {source_mat_id}",
+        "description" : "\nThis is a Research Object Crate containing results data from a MetaGOflow\nworkflow analysis of metagenomic data derived from European Marine Omics\nBiodiversity Observation Network (EMO BON) project operated by the European\nMarine Biological Research Centre (EMBRC).\n\nSampling station: {sampling_org}\nSampling country: {sampling_org_country}\nSampling station lat/long: {sampling_org_latlong}\nSampling environment: {env_package_id}\nSampling station contact name: {sampling_org_contact_name}\nSampling station contact ORCID id: {sampling_org_contact_orcid}\nSampling station ENA project number: {sampling_org_ena_number}\n\nEMO BON reference code: {ref_code}\nEMO BON source material id: {source_mat_id}\n",
         "datePublished": "{datePublished}",                                              
         "license": {"@id": "https://creativecommons.org/licenses/by/4.0/"},
 
