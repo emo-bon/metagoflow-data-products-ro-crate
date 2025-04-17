@@ -41,7 +41,7 @@ moves the ro-crate to the EMO BON cluster repository.
 
 By default will not upload the files to S3, but will add the sequence data files.
 To upload the files to S3 use the -u flag.
-To revmove sequence data files use the -w flag.
+To remove sequence data files use the -w flag.
 To debug use the -d flag.
 
 ./create-ro-crate.py -d <target_directory> -y <yaml_configuration>
@@ -1338,6 +1338,7 @@ def main(
     # also need to add the files to DVC before using the DVC yaml files to grab
     # the md5 to use a links, so this order looks weird but is necessary
     # TODO: Could probably just move the writing of the metadata.json to the end
+    # because I'm no longer using s5cmd sync
 
     new_archive_path = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"])
     log.info(f"Moving archive to {new_archive_path}...")
