@@ -385,7 +385,7 @@
                 {
                     "@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz",
                     "@type": "File",
-                    "name": "LSU sequences used for indentification",
+                    "name": "SSU sequences used for indentification",
                     "downloadUrl": "",
                     "encodingFormat": "application/zip"
                 },
