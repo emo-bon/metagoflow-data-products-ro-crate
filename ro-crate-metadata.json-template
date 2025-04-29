@@ -298,7 +298,7 @@
             {
                 "@id": "./taxonomy-summary/LSU/",
                 "@type": "Dataset",
-                "name": "Summary of LSU taxonomic indentification results",
+                "name": "Summary of LSU taxonomic identification results",
                 "hasPart": [
                             {"@id": "./taxonomy-summary/LSU/krona.html"},
                             {"@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.gz"},
@@ -319,7 +319,7 @@
                 {
                     "@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.gz",
                     "@type": "File",
-                    "name": "LSU sequences used for indentification",
+                    "name": "LSU sequences used for identification",
                     "downloadUrl": "",
                     "encodingFormat": "application/zip"
                 },
@@ -364,7 +364,7 @@
                 {
                 "@id": "./taxonomy-summary/SSU/",
                 "@type": "Dataset",
-                "name": "Summary of SSU taxonomic indentification results",
+                "name": "Summary of SSU taxonomic identification results",
                 "hasPart": [
                             {"@id": "./taxonomy-summary/SSU/krona.html"},
                             {"@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz"},
@@ -385,7 +385,7 @@
                 {
                     "@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.gz",
                     "@type": "File",
-                    "name": "SSU sequences used for indentification",
+                    "name": "SSU sequences used for identification",
                     "downloadUrl": "",
                     "encodingFormat": "application/zip"
                 },
