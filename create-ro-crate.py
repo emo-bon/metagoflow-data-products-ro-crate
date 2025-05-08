@@ -106,7 +106,8 @@ CONFIG_YAML_PARAMETERS = [
 
 # This is a submodule of the current repository
 # https://github.com/emo-bon/metaGOflow-rocrates-dvc
-RO_CRATE_REPO_PATH = "metaGOflow-rocrates-dvc"
+# RO_CRATE_REPO_PATH = "metaGOflow-rocrates-dvc"
+RO_CRATE_REPO_PATH = "analysis-results-cluster-01-crate"
 
 MANDATORY_FILES = [
     "./fastp.html",
