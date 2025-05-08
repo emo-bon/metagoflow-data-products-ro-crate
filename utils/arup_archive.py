@@ -72,7 +72,7 @@ subyt:
       comment: "#"
       header: "OTU_ID\\tLSU_rRNA\\ttaxonomy\\ttaxid"
     sink: ./results/taxonomy-summary/LSU/LSU-taxonomy-summary.ttl
-    template_name: taxon-info.ldt.ttl
+    template_name: taxon-info-LSU.ldt.ttl
   - source: 
       path: ./results/taxonomy-summary/SSU/{PREFIX}.merged_SSU.fasta.mseq.tsv
       mime: text/csv
@@ -80,7 +80,7 @@ subyt:
       comment: "#"
       header: "OTU_ID\\tLSU_rRNA\\ttaxonomy\\ttaxid"
     sink: ./results/taxonomy-summary/SSU/SSU-taxonomy-summary.ttl
-    template_name: taxon-info.ldt.ttl
+    template_name: taxon-info-SSU.ldt.ttl
 """
 
 
