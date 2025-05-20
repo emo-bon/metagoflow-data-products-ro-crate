@@ -65,22 +65,22 @@ subyt:
     sink: ./results/functional-annotation/functional-annotation.ttl
     template_name: functional-annotation.ldt.ttl
     mode: no-it
-  - source: 
+  - source:
       path: ./results/taxonomy-summary/LSU/{PREFIX}.merged_LSU.fasta.mseq.tsv
       mime: text/csv
-      delimiter: "\\t"
+      delimiter: "\t"
+      header: "OTU_ID\tSU_rRNA\ttaxonomy\ttaxid"
       comment: "#"
-      header: "OTU_ID\\tLSU_rRNA\\ttaxonomy\\ttaxid"
     sink: ./results/taxonomy-summary/LSU/LSU-taxonomy-summary.ttl
-    template_name: taxon-info.ldt.ttl
-  - source: 
+    template_name: taxon-info-LSU.ldt.ttl
+  - source:
       path: ./results/taxonomy-summary/SSU/{PREFIX}.merged_SSU.fasta.mseq.tsv
       mime: text/csv
-      delimiter: "\\t"
+      delimiter: "\t"
+      header: "OTU_ID\tSU_rRNA\ttaxonomy\ttaxid"
       comment: "#"
-      header: "OTU_ID\\tLSU_rRNA\\ttaxonomy\\ttaxid"
     sink: ./results/taxonomy-summary/SSU/SSU-taxonomy-summary.ttl
-    template_name: taxon-info.ldt.ttl
+    template_name: taxon-info-SSU.ldt.ttl
 """
 
 
@@ -101,6 +101,7 @@ def run_apptainer(config, path_to_data):
         f"--bind {path_to_data}:/rocrateroot "
         "utils/emobon_arup.sif"
     )
+    log.debug(f"Running command: {cmd}")
     output = subprocess.run(cmd, shell=True, capture_output=True)
     if output.returncode != 0:
         raise RuntimeError(f"Apptainer command failed: {output.stderr.decode()}")
