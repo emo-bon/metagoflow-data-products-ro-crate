@@ -228,11 +228,11 @@ if __name__ == "__main__":
         # This is the unique identifier created by the Observarory sample sheets
         "SOURCE_MAT_ID": "EMOBON_EMT21_Wa_22",  # conf["source_material_id"]
         # This is the abbreviated Observatory id
-        "OBS_ID": "EMT21",  # conf["obs_id"]
+        "OBS_ID": "emt21",  # conf["obs_id"].lower
         # This is the shortened version of the environment package id
         # id's are "water_column" or "soft_sediment", here abrreviated to
         # "Wa" and "Ss"
-        "ENVPACKAGE_ID": "Wa",  # conf["env_package_id"]
+        "ENVPACKAGE_ID": "water",  # "ENVPACKAGE_ID": "water" if conf["env_package_id"] == "water_column" else "sediment"
         # This is the domain URI of the EMO BON data repository
         "DOMAIN": "https://data.emobon.embrc.eu",
     }

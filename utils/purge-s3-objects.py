@@ -24,7 +24,7 @@ def extract_filenames_from_rocrate(rocrate_path, bucket, endpoint):
     filenames = []
 
     if not os.path.exists(rocrate_path):
-        log.error(f"File {rocrate_path} does not exist.")
+        log.error(f"File {rocrate_path} is not a ro-crate-metadata.json file.")
         sys.exit(1)
     with open(rocrate_path, "r") as f:
         data = f.read()

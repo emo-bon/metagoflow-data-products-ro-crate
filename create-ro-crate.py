@@ -1249,11 +1249,13 @@ def run_arup(target_directory, conf):
         # This is the unique identifier created by the Observarory sample sheets
         "SOURCE_MAT_ID": conf["source_mat_id"],
         # This is the abbreviated Observatory id
-        "OBS_ID": conf["obs_id"],
+        "OBS_ID": conf["obs_id"].lower(),
         # This is the shortened version of the environment package id
         # id's are "water_column" or "soft_sediment", here abrreviated to
         # "Wa" and "Ss"
-        "ENVPACKAGE_ID": "Wa" if conf["env_package_id"] == "water_column" else "Ss",
+        "ENVPACKAGE_ID": "water"
+        if conf["env_package_id"] == "water_column"
+        else "sediment",
         # This is the domain URI of the EMO BON data repository
         "DOMAIN": "https://data.emobon.embrc.eu",
     }
