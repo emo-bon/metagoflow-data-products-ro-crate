@@ -1,12 +1,13 @@
+import math
 import os
 import sys
 import subprocess
 import logging
 from pathlib import Path
 import shutil
+import pandas as pd
 
 log = logging.getLogger(__name__)
-
 
 """
 Utilities for dealing with MGF data archives
@@ -129,3 +130,96 @@ def fix_all_archives(target_directory, fix_archive, debug):
         open_archive(tarball_file, bzip2_program)
 
     os.chdir(home_dir)
+
+
+def get_refcode_and_source_mat_id_from_run_id(run_id):
+    """
+    Extract the EMO BON ref_code and source_mat_id from the run_id.
+
+    ref_code is assigned to the sample when it is sent for seqeuencing.
+    e.g. EMOBON00084
+
+    run_id is the last part of the reads_name in the run information file
+    e.g. HWLTKDRXY.UDI235
+
+    """
+
+    # "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
+    # "batch-001/run-information-batch-001.csv"
+    BATCH1_RUN_INFO_PATH = (
+        "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
+        "batch-001/run-information-batch-001.csv"
+    )
+    # "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
+    # "batch-002/run-information-batch-002.csv"
+    BATCH2_RUN_INFO_PATH = (
+        "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
+        "batch-002/run-information-batch-002.csv"
+    )
+    # BATCH3_RUN_INFO_PATH = (
+    #    "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
+    #    "batch-003-0/run-information-batch-003-0.csv"
+    # )
+
+    # for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]):
+    for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]:
+        df = pd.read_csv(batch)
+        for row in df[["reads_name", "ref_code", "source_mat_id"]].values.tolist():
+            if isinstance(row[0], str):
+                # print(row)
+                if row[0].split("_")[-1] == run_id:
+                    return (row[1], row[2])
+            elif math.isnan(row[0]):
+                # Not all samples with an EMO BON code were sent to sequencing
+                continue
+    else:
+        print(f"Cannot find run_id {run_id} in any of the run information files")
+        return (None, None)
+
+
+def get_run_id_and_ref_code_from_source_mat_id(source_mat_id):
+    """
+    Extract the EMO BON reads_name and ref_code from the source_mat_id.
+
+    ref_code is assigned to the sample when it is sent for seqeuencing.
+    e.g. EMOBON00084
+
+    run_id is the last part of the reads_name in the run information file
+    e.g. HWLTKDRXY.UDI235
+
+    source_mat_id is the EMO BON code assigned to the sample
+    e.g. EMOBON_NRMCB_Wa_44
+
+    """
+
+    # "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
+    # "batch-001/run-information-batch-001.csv"
+    BATCH1_RUN_INFO_PATH = (
+        "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
+        "batch-001/run-information-batch-001.csv"
+    )
+    # "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
+    # "batch-002/run-information-batch-002.csv"
+    BATCH2_RUN_INFO_PATH = (
+        "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
+        "batch-002/run-information-batch-002.csv"
+    )
+    # BATCH3_RUN_INFO_PATH = (
+    #    "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
+    #    "batch-003-0/run-information-batch-003-0.csv"
+    # )
+
+    # for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]):
+    for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]:
+        df = pd.read_csv(batch)
+        for row in df[["reads_name", "ref_code", "source_mat_id"]].values.tolist():
+            if isinstance(row[0], str):
+                # print(row)
+                if row[2] == source_mat_id:
+                    return (row[0].split("_")[-1], row[1])
+            elif math.isnan(row[0]):
+                # Not all samples with an EMO BON code were sent to sequencing
+                continue
+    else:
+        print(f"Cannot find run_id {source_mat_id} in any of the run information files")
+        return (None, None)
