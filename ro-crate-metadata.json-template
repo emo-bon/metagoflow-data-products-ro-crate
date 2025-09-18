@@ -89,7 +89,7 @@
         "name": "EMBL ENA Run Accession Number {ena_accession_number}",
         "description": "ENA Run Accession Number and associated metadata",
         "downloadUrl": "{ena_accession_number_url}",
-        "encodingFormat": "text/xml"
+        "encodingFormat": "text/html"
     },
     {
         "@id": "{forward_reads_link}", 
@@ -97,7 +97,7 @@
         "name": "EMBL ENA cleaned sequence data (forward reads)",
         "description": "Cleaned forward reads sequence data for EMBL ENA Run Accession {ena_accession_number}",
         "downloadUrl": "{forward_reads_link}",
-        "encodingFormat": "text/xml"
+        "encodingFormat": "text/x-fastq"
     },  
     {
         "@id": "{reverse_reads_link}", 
@@ -105,7 +105,7 @@
         "name": "EMBL ENA cleaned sequence data (reverse reads)",
         "description": "Cleaned reverse reads sequence data for EMBL ENA Run Accession {ena_accession_number}",
         "downloadUrl": "{reverse_reads_link}",
-        "encodingFormat": "text/xml"
+        "encodingFormat": "text/x-fastq"
     },  
     {
         "@id": "{metagoflow_version}", 
