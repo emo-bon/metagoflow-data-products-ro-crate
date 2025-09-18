@@ -97,7 +97,7 @@
         "name": "EMBL ENA cleaned sequence data (forward reads)",
         "description": "Cleaned forward reads sequence data for EMBL ENA Run Accession {ena_accession_number}",
         "downloadUrl": "{forward_reads_link}",
-        "encodingFormat": "text/x-fastq"
+        "encodingFormat": "application/zip"
     },  
     {
         "@id": "{reverse_reads_link}", 
@@ -105,7 +105,7 @@
         "name": "EMBL ENA cleaned sequence data (reverse reads)",
         "description": "Cleaned reverse reads sequence data for EMBL ENA Run Accession {ena_accession_number}",
         "downloadUrl": "{reverse_reads_link}",
-        "encodingFormat": "text/x-fastq"
+        "encodingFormat": "application/zip"
     },  
     {
         "@id": "{metagoflow_version}", 
