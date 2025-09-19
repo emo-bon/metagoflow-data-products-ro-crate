@@ -285,7 +285,7 @@
         "hasPart": [
             {"@id": "./taxonomy-summary/RNA-counts"},
             {"@id": "./taxonomy-summary/LSU/"},
-            {"@id": "./taxonomyc-summary/SSU/"}
+            {"@id": "./taxonomy-summary/SSU/"}
         ]
     },
             {
