@@ -9,6 +9,7 @@ import textwrap
 import shutil
 import subprocess
 import psutil
+import uuid
 
 from utils import find_bzip2, open_archive
 
@@ -71,11 +72,12 @@ def main(
         sys.exit()
 
     # Where the open archives will go
-    outpath = "prepared_archives"
+    uuid_name = uuid.uuid4().hex
+    outpath = "prepared_archives-" / uuid_name
     if Path(outpath).exists():
-        log.debug("'prepared_archives' directory already exists")
+        log.debug(f"'prepared_archives-{uuid_name}' directory already exists")
     else:
-        log.debug("Creating 'prepared_archives' directory")
+        log.debug(f"Creating 'prepared_archives-{uuid_name}' directory")
         Path(outpath).mkdir()
 
     bzip2_program = find_bzip2()
