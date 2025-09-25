@@ -1,5 +1,6 @@
 # poetry
 .venv
+poetry.lock
 
 # VScode
 .vscode
