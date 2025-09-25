@@ -81,7 +81,14 @@ def main(
     bzip2_program = find_bzip2()
 
     # Loop through the tarball files
+    count = 0
     for tarball_file in tarball_files:
+        if count == 10:
+            log.info("10 samples have been opened - quiting")
+            break
+        else:
+            count += 1
+
         run_id = Path(str(tarball_file).rsplit(".", 2)[0])
 
         oca_dir = Path(outpath, f"{run_id}")
