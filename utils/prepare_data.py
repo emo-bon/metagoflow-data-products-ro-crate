@@ -6,6 +6,7 @@ import os
 import logging as log
 import argparse
 import textwrap
+import shutil
 import subprocess
 import psutil
 
@@ -13,7 +14,8 @@ from utils import find_bzip2, open_archive
 
 desc = """
 Prepare the MGF data archives for the ro-crate building. All files in the target
-directory will be opened and the sequence files compressed.
+directory will be opened and the sequence files compressed, and moved to the
+current working directory.
 
 This script opens the MGF results archive and compresses the individual data
 files from building the ro-crate.
@@ -45,6 +47,11 @@ def main(
         log.error(f"Cannot find the target directory {target_directory}")
         sys.exit()
     log.debug(f"Found target directory {target_directory}")
+
+    # Check that it is a directory:
+    if not target_directory.is_dir():
+        log.error(f"Target directory {target_directory} is not a directory")
+        sys.exit()
 
     # CD to target directory
     log.info(f"Changing directory to {target_directory}")
@@ -128,8 +135,12 @@ def main(
         Path(run_id).rename(oca_dir)
 
     # CD back to home directory
-    log.info(f"Changing directory to {home_dir}")
+    log.debug(f"Changing directory to {home_dir}")
     os.chdir(home_dir)
+    # Copy to home_dir
+    src = target_directory / outpath
+    shutil.move(src, home_dir)
+    log.info(f"Moved {src} to {home_dir}")
 
     log.info("Done")
 
