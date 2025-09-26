@@ -135,6 +135,17 @@ def main(
         log.debug(f"Path to results: {path_to_results}")
         os.chdir(path_to_results)
         log.debug(f"CWD: {os.getcwd()}")
+
+        #Deal with MOTUS - sometimes it's empty and has the name empty.motus.tsv
+        if Path("./empty.motus.tsv").exists():
+            # Get prefix
+            sf = Path("./").glob("*.merged.fasta.bz2")
+            prefix = sf.split(".")[0]
+            # Change file name
+            src = Path("./empty.motus.tsv")
+            dest = src.with_name(f"{prefix}.merged.motus.tsv")
+            src.rename(dest)
+
         for fp in FILE_PATTERNS:
             sf = Path("./").glob(fp)
             for f in sf:
