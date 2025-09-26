@@ -53,11 +53,11 @@ def open_archive(tarball_file, bzip2_program):
             "--use-compress-program",
             f"{bzip2_program}",
             "-xf",
-            f"../{tarball_file}",
+            f"{tarball_file}",
         ]
     )
-    # Check archive
-    run_id = Path(str(tarball_file).rsplit(".", 2)[0])
+    # Check archive has a top-level directory called run_id
+    run_id = Path(str(tarball_file.name).rsplit(".", 2)[0])
     log.debug(f"run_id = {run_id}")
     if run_id.exists():
         os.chdir("..")
@@ -144,6 +144,8 @@ def get_refcode_and_source_mat_id_from_run_id(run_id):
 
     """
 
+    assert isinstance(run_id, str), "run_id must be a string"
+
     # "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
     # "batch-001/run-information-batch-001.csv"
     BATCH1_RUN_INFO_PATH = (
@@ -166,8 +168,8 @@ def get_refcode_and_source_mat_id_from_run_id(run_id):
         df = pd.read_csv(batch)
         for row in df[["reads_name", "ref_code", "source_mat_id"]].values.tolist():
             if isinstance(row[0], str):
-                # print(row)
-                if row[0].split("_")[-1] == run_id:
+                id_in_row = str(row[0].split("_")[-1])
+                if id_in_row == run_id:
                     return (row[1], row[2])
             elif math.isnan(row[0]):
                 # Not all samples with an EMO BON code were sent to sequencing
