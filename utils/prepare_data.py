@@ -104,8 +104,10 @@ def main(
         ref_code, source_mat_id = get_refcode_and_source_mat_id_from_run_id(str(run_id)) # Need str(run_id) because its a Path()
         if not ref_code:
             log.error(f"ref_code for {run_id} not found")
+            sys.exit()
         if not source_mat_id:
             log.error(f"source_mat_id for {run_id} not found")
+            sys.exit()
         log.info(f"Source_mat_id for {run_id} = {source_mat_id}")
         rocrate_name = source_mat_id + "-ro-crate"
         if rocrate_name in existing_rocrates:
