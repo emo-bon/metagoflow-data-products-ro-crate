@@ -6,10 +6,8 @@ import os
 import logging as log
 import argparse
 import textwrap
-import shutil
 import subprocess
 import psutil
-import uuid
 
 from utils import find_bzip2, open_archive
 
@@ -54,14 +52,8 @@ def main(
         log.error(f"Target directory {target_directory} is not a directory")
         sys.exit()
 
-    # CD to target directory
-    log.info(f"Changing directory to {target_directory}")
-    home_dir = Path.cwd()
-    target_directory = Path(home_dir, target_directory)
-    os.chdir(target_directory)
-
     # Get list of tarball files
-    tarball_files = list(Path.cwd().glob("*.tar.bz2"))
+    tarball_files = list(Path(target_directory).glob("*.tar.bz2"))
 
     log.debug(f"Found {len(tarball_files)} tarball files")
     for tarball in tarball_files:
@@ -72,19 +64,24 @@ def main(
         sys.exit()
 
     # Where the open archives will go
-    uuid_name = uuid.uuid4().hex
-    outpath = "prepared_archives-" / uuid_name
-    if Path(outpath).exists():
-        log.debug(f"'prepared_archives-{uuid_name}' directory already exists")
+    outpath = Path("prepared_archives")
+    if outpath.exists():
+        log.debug("'prepared_archives' directory already exists")
     else:
-        log.debug(f"Creating 'prepared_archives-{uuid_name}' directory")
-        Path(outpath).mkdir()
+        log.debug("Creating 'prepared_archive' directory")
+        outpath.mkdir()
+    # Change to output directory
+    log.info(f"Changing directory to {outpath}")
+    home_dir = Path.cwd()
+    os.chdir(outpath)
 
     bzip2_program = find_bzip2()
 
     # Loop through the tarball files
     count = 0
     for tarball_file in tarball_files:
+        log.debug(f"Preparing tarball_file: {tarball_file}")
+
         if count == 10:
             log.info("10 samples have been opened - quiting")
             break
@@ -93,13 +90,13 @@ def main(
 
         run_id = Path(str(tarball_file).rsplit(".", 2)[0])
 
-        oca_dir = Path(outpath, f"{run_id}")
-        if oca_dir.exists():
-            log.info(f"An prepared archive already exists for {run_id}")
-            continue
+        # oca_dir = Path(run_id})
+        # if oca_dir.exists():
+        #    log.info(f"An prepared archive already exists for {run_id}")
+        #    continue
 
         if run_id.exists():
-            log.debug("Found open archive")
+            log.error(f"Found existing archive {run_id}... aborting")
         else:
             # Open the archive
             log.info(f"Opening archive {tarball_file}")
@@ -137,19 +134,19 @@ def main(
                     )
 
         # Move the compressed files to the open-compressed-samples directory
-        log.debug(f"Moving to {target_directory}")
-        os.chdir(target_directory)
-        log.info(f"Moving compressed files to '{outpath}'")
-        log.debug(f"Moving {run_id} to {oca_dir}")
-        Path(run_id).rename(oca_dir)
+        # log.debug(f"Moving to {target_directory}")
+        # os.chdir(target_directory)
+        # log.info(f"Moving compressed files to '{outpath}'")
+        # log.debug(f"Moving {run_id} to {oca_dir}")
+        # Path(run_id).rename(oca_dir)
 
     # CD back to home directory
     log.debug(f"Changing directory to {home_dir}")
     os.chdir(home_dir)
     # Copy to home_dir
-    src = target_directory / outpath
-    shutil.move(src, home_dir)
-    log.info(f"Moved {src} to {home_dir}")
+    # src = target_directory / outpath
+    # shutil.move(src, home_dir)
+    # log.info(f"Moved {src} to {home_dir}")
 
     log.info("Done")
 
