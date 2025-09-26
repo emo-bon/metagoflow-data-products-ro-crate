@@ -1287,8 +1287,10 @@ def main(
         log_level = log.INFO
     log.basicConfig(format="\t%(levelname)s: %(message)s", level=log_level)
 
+    log.info("\n\n")
+
     # Read the YAML configuration
-    log.info("Reading YAML configuration...")
+    log.debug("Reading YAML configuration...")
     conf = read_yaml(yaml_config)
 
     # Check the target_directory name
@@ -1297,7 +1299,7 @@ def main(
         sys.exit()
     log.debug("Found target directory %s" % target_directory)
     run_id = Path(target_directory).name
-    log.debug("run_id = %s" % run_id)
+    log.info("run_id = %s" % run_id)
     if "UDI" not in run_id.split(".")[-1]:
         log.error("Target directory name does appear to be correct format")
         log.error("It needs to match the format HWLTKDRXY.UDI210")
