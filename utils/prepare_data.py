@@ -9,7 +9,7 @@ import textwrap
 import subprocess
 import psutil
 
-from utils import find_bzip2, open_archive
+from utils import find_bzip2, open_archive, get_refcode_and_source_mat_id_from_run_id
 
 desc = """
 Prepare the MGF data archives for the ro-crate building. All files in the target
@@ -31,14 +31,27 @@ FILE_PATTERNS = [
     "final.contigs.fa",
 ]
 
+def get_existing_rorates():
+    """Return a list of existing ro-crates"""
+    utils_path = Path(__file__).resolve()
+    utils_dir = utils_path.parent
+    path_to_rocrates = Path(utils_dir, "../analysis-results-cluster-01-crate")
+    existing_rocrates = list(Path(path_to_rocrates).glob("*.ro-crate"))
+    for rc in existing_rocrates:
+        log.debug(f"Existing rocrate: {rc}")
+    return existing_rocrates
+
 
 def main(
     target_directory,
-    debug=False,
+    max_num,
+    debug = False,
 ):
     log.basicConfig(
         format="\t%(levelname)s: %(message)s", level=log.DEBUG if debug else log.INFO
     )
+
+    home_dir = Path.cwd()
 
     # Check the target_directory name
     target_directory = Path(target_directory)
@@ -58,7 +71,6 @@ def main(
     log.debug(f"Found {len(tarball_files)} tarball files")
     for tarball in tarball_files:
         log.debug(f"Tarball name: {tarball.name}")
-    tarball_files = [f.name for f in tarball_files]
     if len(tarball_files) == 0:
         log.error(f"Cannot find any tarball files in {target_directory}")
         sys.exit()
@@ -68,35 +80,48 @@ def main(
     if outpath.exists():
         log.debug("'prepared_archives' directory already exists")
     else:
-        log.debug("Creating 'prepared_archive' directory")
+        log.debug("Creating 'prepared_archives' directory")
         outpath.mkdir()
     # Change to output directory
-    log.info(f"Changing directory to {outpath}")
-    home_dir = Path.cwd()
+    log.debug(f"Changing directory to {outpath}")
     os.chdir(outpath)
+    working_dir = Path.cwd()
+
+    existing_rocrates = get_existing_rorates()
 
     bzip2_program = find_bzip2()
 
     # Loop through the tarball files
     count = 0
     for tarball_file in tarball_files:
-        log.debug(f"Preparing tarball_file: {tarball_file}")
 
-        if count == 10:
-            log.info("10 samples have been opened - quiting")
-            break
+        log.debug(f"Preparing tarball_file: {tarball_file}") 
+
+        run_id = Path(str(tarball_file.name).rsplit(".", 2)[0].strip())
+
+        #First check to see if a ro-crate already exists
+        log.debug(f"Looking for ref_code and source_mat_id of {run_id}")
+        ref_code, source_mat_id = get_refcode_and_source_mat_id_from_run_id(str(run_id)) # Need str(run_id) because its a Path()
+        if not ref_code:
+            log.error(f"ref_code for {run_id} not found")
+        if not source_mat_id:
+            log.error(f"source_mat_id for {run_id} not found")
+        log.info(f"Source_mat_id for {run_id} = {source_mat_id}")
+        rocrate_name = source_mat_id + "-ro-crate"
+        if rocrate_name in existing_rocrates:
+            log.debug(f"RO-Crate already exists: {rocrate_name}")
+            continue
         else:
-            count += 1
-
-        run_id = Path(str(tarball_file).rsplit(".", 2)[0])
-
-        # oca_dir = Path(run_id})
-        # if oca_dir.exists():
-        #    log.info(f"An prepared archive already exists for {run_id}")
-        #    continue
+            if count == max_num:
+                log.info(f"{max_num} samples have been opened - stopping")
+                break
+            else:
+                count += 1
+            
+        log.info(f"RO-Crate {rocrate_name} does not exist: preparting archive...")
 
         if run_id.exists():
-            log.error(f"Found existing archive {run_id}... aborting")
+            log.error(f"Found existing prepared archive {run_id}... aborting")
         else:
             # Open the archive
             log.info(f"Opening archive {tarball_file}")
@@ -104,7 +129,9 @@ def main(
 
         # Compress the sequence archive files
         log.info(f"Compressing sequence files for {run_id}")
-        os.chdir(Path(run_id, "results"))
+        path_to_results = Path(str(run_id), "results")
+        log.debug(f"Path to results: {path_to_results}")
+        os.chdir(path_to_results)
         log.debug(f"CWD: {os.getcwd()}")
         for fp in FILE_PATTERNS:
             sf = Path("./").glob(fp)
@@ -132,22 +159,11 @@ def main(
                             f"./{f}",
                         ]
                     )
-
-        # Move the compressed files to the open-compressed-samples directory
-        # log.debug(f"Moving to {target_directory}")
-        # os.chdir(target_directory)
-        # log.info(f"Moving compressed files to '{outpath}'")
-        # log.debug(f"Moving {run_id} to {oca_dir}")
-        # Path(run_id).rename(oca_dir)
+        os.chdir(working_dir)
 
     # CD back to home directory
     log.debug(f"Changing directory to {home_dir}")
     os.chdir(home_dir)
-    # Copy to home_dir
-    # src = target_directory / outpath
-    # shutil.move(src, home_dir)
-    # log.info(f"Moved {src} to {home_dir}")
-
     log.info("Done")
 
 
@@ -163,9 +179,14 @@ if __name__ == "__main__":
             " archives to prepare relative to the current working directory"
         ),
     )
+    parser.add_argument("-n", "--max_num",
+                         help="Maximum number of runs to process",
+                         default=10,
+                         type=int)
     parser.add_argument("-d", "--debug", action="store_true", help="DEBUG logging")
     args = parser.parse_args()
     main(
         args.target_directory,
+        args.max_num,
         args.debug,
     )
