@@ -10,7 +10,7 @@
     {
         "@id": "ro-crate-metadata.json",
         "@type": "CreativeWork",
-        "conformsTo": [{"@id": "https://w3id.org/ro/crate/1.1"},
+        "conformsTo": [{"@id": "https://w3id.org/ro/crate/1.2"},
                     {"@id":"https://data.emobon.embrc.eu/analysis-results-profile/latest/"}],
         "about": {"@id": "./"}
     },
