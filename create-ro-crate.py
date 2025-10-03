@@ -318,22 +318,22 @@ def add_sequence_data_stanzas(target_directory, template, conf):
     """
     log.info("Adding 11 mandatory sequence data stanzas to graph")
     data = {
-        r"^{prefix}_[A-Za-z0-9]+_[1,2]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.fasta\.bz2$": (
+        r"^{prefix}_[A-Za-z0-9]+_[0-9]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.fasta\.bz2$": (
             "Trimmed forward reads",
             "All forward reads after trimming in fasta format",
             "application/x-bzip2",
         ),
-        r"^{prefix}_[A-Za-z0-9]+_[1,2]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.qc_summary$": (
+        r"^{prefix}_[A-Za-z0-9]+_[0-9]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.qc_summary$": (
             "Trimmed forward reads QC summary",
             "Quality control summary of trimmed forward reads",
             "text/plain",
         ),
-        r"^{prefix}_[A-Za-z0-9]+_[1,2]_2_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.fasta\.bz2$": (
+        r"^{prefix}_[A-Za-z0-9]+_[0-9]_2_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.fasta\.bz2$": (
             "Trimmed reverse reads",
             "All reverse reads after trimming in fasta format",
             "application/x-bzip2",
         ),
-        r"^{prefix}_[A-Za-z0-9]+_[1,2]_2_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.qc_summary$": (
+        r"^{prefix}_[A-Za-z0-9]+_[0-9]_2_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.qc_summary$": (
             "Trimmed reverse reads QC summary",
             "Quality control summary of trimmed reverse reads",
             "text/plain",

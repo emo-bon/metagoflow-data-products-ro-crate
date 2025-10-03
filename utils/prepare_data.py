@@ -36,10 +36,11 @@ def get_existing_rorates():
     utils_path = Path(__file__).resolve()
     utils_dir = utils_path.parent
     path_to_rocrates = Path(utils_dir, "../analysis-results-cluster-01-crate")
-    existing_rocrates = list(Path(path_to_rocrates).glob("*.ro-crate"))
-    for rc in existing_rocrates:
-        log.debug(f"Existing rocrate: {rc}")
-    return existing_rocrates
+    log.debug(f"path_to_rocrates: {path_to_rocrates}")
+    existing_rocrates_paths = list(Path(path_to_rocrates).glob("*-ro-crate"))
+    existing_rocrates_names = [p.name for p in existing_rocrates_paths]
+    log.debug(f"Existing rocrate names: {existing_rocrates_names}")
+    return existing_rocrates_names
 
 
 def main(
@@ -84,10 +85,11 @@ def main(
         outpath.mkdir()
     # Change to output directory
     log.debug(f"Changing directory to {outpath}")
+    
     os.chdir(outpath)
     working_dir = Path.cwd()
 
-    existing_rocrates = get_existing_rorates()
+    existing_rocrates_names = get_existing_rorates()
 
     bzip2_program = find_bzip2()
 
@@ -110,7 +112,7 @@ def main(
             sys.exit()
         log.info(f"Source_mat_id for {run_id} = {source_mat_id}")
         rocrate_name = source_mat_id + "-ro-crate"
-        if rocrate_name in existing_rocrates:
+        if rocrate_name in existing_rocrates_names:
             log.debug(f"RO-Crate already exists: {rocrate_name}")
             continue
         else:
@@ -139,8 +141,8 @@ def main(
         #Deal with MOTUS - sometimes it's empty and has the name empty.motus.tsv
         if Path("./empty.motus.tsv").exists():
             # Get prefix
-            sf = Path("./").glob("*.merged.fasta.bz2")
-            prefix = sf.split(".")[0]
+            sf = list(Path("./").glob("*.merged.fasta"))
+            prefix = sf[0].parts[0].split(".")[0]
             # Change file name
             src = Path("./empty.motus.tsv")
             dest = src.with_name(f"{prefix}.merged.motus.tsv")
@@ -173,6 +175,7 @@ def main(
                         ]
                     )
         os.chdir(working_dir)
+        log.info(f"Finished writing {rocrate_name}")
 
     # CD back to home directory
     log.debug(f"Changing directory to {home_dir}")
