@@ -63,5 +63,6 @@ for rocrate in rocrates:
 
 lines.sort()
 print("| RO-Crate name | Observatory location | Country | Sample type | Sampling date|")
+print("| ------------- | --------------- | -------- | ----------- | --------|")
 for line in lines:
     print(line)
