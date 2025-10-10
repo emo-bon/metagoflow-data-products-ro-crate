@@ -954,7 +954,12 @@ def write_dvc_upload_script(conf):
     with open(upload_script_path, "w") as f:
         f.write("#!/bin/bash\n")
         f.write("set -e\n")
-        f.write("set -x\n")
+        f.write("set -x\n\n")
+
+        # For some reason this is now require: Oct '25
+        f.write("export AWS_REQUEST_CHECKSUM_CALCULATION=when_required\n")
+        f.write("export AWS_RESPONSE_CHECKSUM_VALIDATION=when_required\n")
+
         f.write("\n")
 
         # Add the DVC commands

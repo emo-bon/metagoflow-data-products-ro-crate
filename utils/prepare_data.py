@@ -113,7 +113,10 @@ def main(
         log.info(f"Source_mat_id for {run_id} = {source_mat_id}")
         rocrate_name = source_mat_id + "-ro-crate"
         if rocrate_name in existing_rocrates_names:
-            log.debug(f"RO-Crate already exists: {rocrate_name}")
+            log.info(f"RO-Crate already exists: {rocrate_name}... continuing")
+            continue
+        elif run_id.exists():
+            log.info(f"Found existing prepared archive {run_id}... continuing")
             continue
         else:
             if count == max_num:
@@ -121,15 +124,10 @@ def main(
                 break
             else:
                 count += 1
-            
-        log.info(f"RO-Crate {rocrate_name} does not exist: preparting archive...")
-
-        if run_id.exists():
-            log.error(f"Found existing prepared archive {run_id}... aborting")
-        else:
-            # Open the archive
-            log.info(f"Opening archive {tarball_file}")
-            open_archive(tarball_file, bzip2_program)
+        
+        # Open the archive
+        log.info(f"Opening archive {tarball_file}")
+        open_archive(tarball_file, bzip2_program)
 
         # Compress the sequence archive files
         log.info(f"Compressing sequence files for {run_id}")
