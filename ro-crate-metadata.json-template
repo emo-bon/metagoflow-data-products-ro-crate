@@ -328,7 +328,7 @@
                     "@type": "File",
                     "name": "BIOM formatted hdf5 taxon counts for LSU sequences",
                     "downloadUrl": "",
-                    "encodingFormat": "application/json-ld"
+                    "encodingFormat": "application/x-hdf5"
                 },
                 {
                     "@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom",
@@ -394,7 +394,7 @@
                     "@type": "File",
                     "name": "BIOM formatted hdf5 taxon counts for SSU sequences",
                     "downloadUrl": "",
-                    "encodingFormat": "application/json-ld"
+                    "encodingFormat": "application/x-hdf5"
                 },
                 {
                     "@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom",
