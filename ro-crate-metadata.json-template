@@ -328,7 +328,7 @@
                     "@type": "File",
                     "name": "BIOM formatted hdf5 taxon counts for LSU sequences",
                     "downloadUrl": "",
-                    "encodingFormat": "application/x-hdf5"
+                    "encodingFormat": "application/json-ld"
                 },
                 {
                     "@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq_json.biom",
@@ -342,14 +342,14 @@
                     "@type": "File",
                     "name": "Tab-separated formatted taxon counts for LSU sequences",
                     "downloadUrl": "",
-                    "encodingFormat": "application/json-ld"
+                    "encodingFormat": "text/tab-separated-values"
                 },
                 {
                     "@id": "./taxonomy-summary/LSU/{prefix}.merged_LSU.fasta.mseq.txt",
                     "@type": "File",
                     "name": "Text-based taxon counts for LSU sequences",
                     "downloadUrl": "",
-                    "encodingFormat": "application/json-ld"
+                    "encodingFormat": "text/plain"
                 },
                 {
                     "@id": "./taxonomy-summary/LSU/LSU-taxonomy-summary.ttl",
@@ -394,7 +394,7 @@
                     "@type": "File",
                     "name": "BIOM formatted hdf5 taxon counts for SSU sequences",
                     "downloadUrl": "",
-                    "encodingFormat": "application/x-hdf5"
+                    "encodingFormat": "application/json-ld"
                 },
                 {
                     "@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq_json.biom",
@@ -408,14 +408,14 @@
                     "@type": "File",
                     "name": "Tab-separated formatted taxon counts for SSU sequences",
                     "downloadUrl": "",
-                    "encodingFormat": "application/json-ld"
+                    "encodingFormat": "text/tab-separated-values"
                 },
                 {
                     "@id": "./taxonomy-summary/SSU/{prefix}.merged_SSU.fasta.mseq.txt",
                     "@type": "File",
                     "name": "Text-based formatted taxon counts for SSU sequences",
                     "downloadUrl": "",
-                    "encodingFormat": "application/json-ld"
+                    "encodingFormat": "text/plain"
                 },
                 {
                     "@id": "./taxonomy-summary/SSU/SSU-taxonomy-summary.ttl",
