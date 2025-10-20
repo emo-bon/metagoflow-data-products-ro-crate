@@ -109,7 +109,7 @@
         "name": "EMBL ENA cleaned sequence data (forward reads)",
         "description": "Cleaned forward reads sequence data for EMBL ENA Run Accession {ena_accession_number}",
         "downloadUrl": "{forward_reads_link}",
-        "dct:format": { "@id": "edam:format_1931" },
+        "dct:format": { "@id": "edam:format_1930" },
         "encodingFormat": "application/zip"
     },  
     {
@@ -118,7 +118,7 @@
         "name": "EMBL ENA cleaned sequence data (reverse reads)",
         "description": "Cleaned reverse reads sequence data for EMBL ENA Run Accession {ena_accession_number}",
         "downloadUrl": "{reverse_reads_link}",
-        "dct:format": { "@id": "edam:format_1931" },
+        "dct:format": { "@id": "edam:format_1930" },
         "encodingFormat": "application/zip"
     },  
     {

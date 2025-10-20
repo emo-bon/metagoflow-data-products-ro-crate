@@ -324,7 +324,7 @@ def add_sequence_data_stanzas(target_directory, template, conf):
             "Trimmed forward reads",
             "All forward reads after trimming in fasta format",
             "application/x-bzip2",
-            "edam:data_2977",  # dct:format
+            "edam:format_1929",  # dct:format
         ),
         r"^{prefix}_[A-Za-z0-9]+_[0-9]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.qc_summary$": (
             "File",  # @type
@@ -338,7 +338,7 @@ def add_sequence_data_stanzas(target_directory, template, conf):
             "Trimmed reverse reads",
             "All reverse reads after trimming in fasta format",
             "application/x-bzip2",
-            "edam:data_2977",  # dct:format
+            "edam:format_1929",  # dct:format
         ),
         r"^{prefix}_[A-Za-z0-9]+_[0-9]_2_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.qc_summary$": (
             "File",  # @type
@@ -440,7 +440,7 @@ def add_sequence_data_stanzas(target_directory, template, conf):
                     ]
                 )
                 # Insert dct:format if it has one
-                if value[4] is not None:
+                if value[4]:
                     d["dct:format"] = {"@id": value[4]}
                 template["@graph"].insert(sq_index + 1, d)
                 found = True
