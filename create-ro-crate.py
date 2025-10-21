@@ -1228,9 +1228,15 @@ def format_file_ids_and_add_download_links(
         # If run_dvc_upload is False, do not add download links
         # Get the md5 sum from the DVC files and use as the download link
         if format_download_links:
-            if stanza["@type"] and stanza["@type"] == "File":
+            # Check for files
+            stype = stanza.get("@type")
+            if stype and (
+                stype == "File" or (
+                    isinstance(stype, list) 
+                    and "File" in stype
+                    )
+                ):
                 log.debug("In @type File stanza")
-
                 if stanza["@id"] == "./taxonomy-summary/RNA-counts":
                     fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
                 else:
