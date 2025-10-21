@@ -944,7 +944,7 @@ def write_metadata_json(
         )
         for stanza in template["@graph"]:
             if stanza["@id"] == "./functional-annotation/":
-                fn = f"./{conf['prefix']}.merged.emapper.summary.eggnog"
+                fn = f"./functional-annotation/{conf['prefix']}.merged.emapper.summary.eggnog"
                 stanza["hasPart"].append(dict([("@id", fn)]))
                 break
         else:
