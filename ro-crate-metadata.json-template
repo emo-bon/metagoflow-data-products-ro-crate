@@ -97,7 +97,7 @@
     },
     {
         "@id": "{ena_accession_number_url}", 
-        "@type": "Dataset",
+        "@type": "WebSite",
         "name": "EMBL ENA Run Accession Number {ena_accession_number}",
         "description": "ENA Run Accession Number and associated metadata",
         "downloadUrl": "{ena_accession_number_url}",
