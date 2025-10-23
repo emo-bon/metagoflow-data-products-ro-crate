@@ -906,6 +906,7 @@ def write_metadata_json(
             stanza["@id"] = stanza["@id"].format(**conf)
             stanza["description"] = stanza["description"].format(**conf)
             stanza["downloadUrl"] = stanza["downloadUrl"].format(**conf)
+            stanza["subjectOf"] = stanza["subjectOf"]["@id"].format(**conf)
 
     # creator  - the MGF data creator and institution
     # "creator": {}
@@ -1231,11 +1232,8 @@ def format_file_ids_and_add_download_links(
             # Check for files
             stype = stanza.get("@type")
             if stype and (
-                stype == "File" or (
-                    isinstance(stype, list) 
-                    and "File" in stype
-                    )
-                ):
+                stype == "File" or (isinstance(stype, list) and "File" in stype)
+            ):
                 log.debug("In @type File stanza")
                 if stanza["@id"] == "./taxonomy-summary/RNA-counts":
                     fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
