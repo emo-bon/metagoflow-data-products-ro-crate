@@ -57,7 +57,7 @@
             {"@id": "{forward_reads_link}"},
             {"@id": "{reverse_reads_link}"},
             {"@id": "https://data.emobon.embrc.eu/sampling/{source_mat_id}"},
-            {"@id": "https://data.embon.embrc.eu/sequence/{ref_code}"},
+            {"@id": "https://data.emobon.embrc.eu/sequence/{ref_code}"},
             {"@id": "./functional-annotation/"},
             {"@id": "./sequence-categorisation/"},
             {"@id": "./taxonomy-summary/"},
