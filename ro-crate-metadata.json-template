@@ -93,7 +93,7 @@
     },
     {
         "@id": "{forward_reads_link}", 
-        "@type": "Dataset",
+        "@type": "File",
         "name": "EMBL ENA cleaned sequence data (forward reads)",
         "description": "Cleaned forward reads sequence data for EMBL ENA Run Accession {ena_accession_number}",
         "downloadUrl": "{forward_reads_link}",
@@ -101,7 +101,7 @@
     },  
     {
         "@id": "{reverse_reads_link}", 
-        "@type": "Dataset",
+        "@type": "File",
         "name": "EMBL ENA cleaned sequence data (reverse reads)",
         "description": "Cleaned reverse reads sequence data for EMBL ENA Run Accession {ena_accession_number}",
         "downloadUrl": "{reverse_reads_link}",
