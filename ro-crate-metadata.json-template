@@ -68,10 +68,10 @@
         "@id": "https://ror.org/0038zss60",
         "name": "European Marine Biological Resource Centre",
         "@type": "Organization",
-        "contactPoint": {"@id": "#help@embrc.org"}
+        "contactPoint": {"@id": "_help@embrc.org"}
     },
     {
-        "@id": "#help@embrc.org",
+        "@id": "_help@embrc.org",
         "@type": "ContactPoint",
         "contactType": "Help Desk",
         "email": "mailto:help@embrc.org",
