@@ -1240,7 +1240,8 @@ def format_file_ids_and_add_download_links(
                 log.debug("In @type File stanza")
                 if stanza["@id"] == "./taxonomy-summary/RNA-counts":
                     fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
-                elif stanza["@id"] == (conf["forward_reads_link"] or conf["reverse_reads_link"]):
+                #Ignore the links to the raw seq data in ENA
+                elif "_clean.fastq.gz" in stanza["@id"]:
                     continue
                 else:
                     # Remove the ./ from the @id
