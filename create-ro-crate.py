@@ -902,11 +902,14 @@ def write_metadata_json(
             stanza["downloadUrl"] = stanza["downloadUrl"].format(**conf)
             continue
         # Add the raw sequence data links
-        if stanza["@id"] in ["{forward_reads_link}", "{reverse_reads_link}"]:
+        elif stanza["@id"] in ["{forward_reads_link}", "{reverse_reads_link}"]:
             stanza["@id"] = stanza["@id"].format(**conf)
             stanza["description"] = stanza["description"].format(**conf)
             stanza["downloadUrl"] = stanza["downloadUrl"].format(**conf)
             stanza["subjectOf"] = stanza["subjectOf"]["@id"].format(**conf)
+        # Format external ro-crate stanzas
+        elif stanza["@id"].startswith("https://data.emobon.embrc.eu"):
+            stanza["name"] = stanza["name"].format(**conf)
 
     # creator  - the MGF data creator and institution
     # "creator": {}
@@ -1237,6 +1240,8 @@ def format_file_ids_and_add_download_links(
                 log.debug("In @type File stanza")
                 if stanza["@id"] == "./taxonomy-summary/RNA-counts":
                     fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
+                elif stanza["@id"] == (conf["forward_reads_link"] or conf["reverse_reads_link"]):
+                    continue
                 else:
                     # Remove the ./ from the @id
                     key = Path(stanza["@id"]).name

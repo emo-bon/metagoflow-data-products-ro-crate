@@ -46,7 +46,7 @@
                 "benthic-communities"
         ],
 
-        "comment": "efo:EFO_0004982 - Microbiome: a collection or collectivity of microorganisms;\n efo:EFO_0004602 - Metagenomic data;\n efo:EFO_0007882 - Microbiome measurement: quantification of some aspect of an individual's microbiome;\n efo:EFO_0007884 - Functional microbiome measurement: quantification of the functional variation in a microbiome;\n efo:EFO_0007883 - Quantification of the taxonomic variation in a microbiome sample;\n edam:format_1929 - FASTA format;\n edam:format_1931 - FASTQ Illumina short read format;\n edam:format_3746 - BIOM format;\n edam:data_2977 - One or more nucleic acid sequences;\n edam:data_2976 - One or more protein sequences\n",
+        "comment": "efo:EFO_0004982 - Microbiome: a collection or collectivity of microorganisms;\n efo:EFO_0004602 - Metagenomic data;\n efo:EFO_0007882 - Microbiome measurement: quantification of some aspect of an individual's microbiome;\n efo:EFO_0007884 - Functional microbiome measurement: quantification of the functional variation in a microbiome;\n efo:EFO_0007883 - Quantification of the taxonomic variation in a microbiome sample;\n edam:format_1929 - FASTA format;\n edam:format_1931 - FASTQ Illumina short read format;\n edam:format_3746 - BIOM format;\n edam:data_2977 - One or more nucleic acid sequences;\n edam:data_2976 - One or more protein sequences\n edam:format_3749 - JSON-LD",
         "dcat:theme":[
                 {"@id":"http://semanticscience.org/resource/SIO_001050"},
                 {"@id":"http://purl.obolibrary.org/obo/ExO_0000067"},
@@ -122,7 +122,23 @@
         "dct:format": { "@id": "edam:format_1930" },
         "encodingFormat": "application/zip",
         "subjectOf": {"@id": "{ena_accession_number_url}"}
-    },  
+    },
+    {
+        "@id": "https://data.emobon.embrc.eu/sampling/{source_mat_id}",
+        "@type": "Dataset",
+        "name": "EMO BON RO-Crate of the sample metadata for {source_mat_id}",
+	"description": "EMO BON project RO-Crate of the metadata of the sequenced sample used in the current metagenomic analysis",
+	"dct:format": { "@id": "edam:format_3749" },
+        "conformsTo": { "@id": "https://w3id.org/ro/crate" }
+    },
+    {
+        "@id": "https://data.emobon.embrc.eu/sequence/{ref_code}",
+        "@type": "Dataset",
+        "name": "EMO BON RO-Crate of the sequencing metadata for {ref_code}",
+	"description": "EMO BON project RO-Crate of the sequencing procress metadata for the sample used in the current metagenomic analysis",
+	"dct:format": { "@id": "edam:format_3749" },
+        "conformsTo": { "@id": "https://w3id.org/ro/crate" }
+    },
     {
         "@id": "{metagoflow_version}", 
         "@type": "SoftwareApplication",
