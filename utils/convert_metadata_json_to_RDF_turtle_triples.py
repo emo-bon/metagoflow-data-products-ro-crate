@@ -11,6 +11,7 @@ import rdflib
 import logging as log
 import textwrap
 from pathlib import Path
+from rdflib.namespace import RDFS
 
 GITHUB_PREFIX_ADDRESS = "https://github.com/emo-bon/analysis-results-cluster-01-crate"
 LOCAL_PREFIX_PATH = "file:///home/cymon/work/git-repos/metagoflow-data-products-ro-crate/analysis-results-cluster-01-crate" 
@@ -29,6 +30,11 @@ def main(path_to_crate, debug=False):
 
     graph = rdflib.Graph()
     graph.parse(Path(ro_path, "ro-crate-metadata.json"))
+    graph.bind("rdfs", RDFS)
+    # Manually bind "http://schema.org" because the SDO in the defined
+    # rdflib.namespace is to "http_s_://schema.org"
+    SCHEMA_ORG = rdflib.Namespace("http://schema.org/")
+    graph.bind("sdo", SCHEMA_ORG)
 
     for triple in graph:
 
@@ -52,10 +58,27 @@ def main(path_to_crate, debug=False):
             new_triple[2] = tobject
             log.debug(f"New triple[2] = {new_triple}")
             found = True
+
+        #Duplicate the name schema.org properties into rdfs
+        if new_triple[1] == SCHEMA_ORG.name: #rdflib.URIRef("http://schema.org/name"):
+            log.debug("Found /name adding new triple")
+            new_name_triple = (
+                new_triple[0],
+                RDFS.label,
+                new_triple[2])
+            graph.add(new_name_triple)
+        if triple[1] == SCHEMA_ORG.description: #rdflib.URIRef("http://schema.org/description"):
+            log.debug("Found /description adding new triple")
+            new_comment_triple = (
+                new_triple[0],
+                RDFS.comment,
+                new_triple[2])
+            graph.add(new_comment_triple)
+
         if found:
             graph.remove(triple)
             graph.add(tuple(new_triple))
-
+    
     graph.serialize(destination=outfile, format="turtle")
 
 
