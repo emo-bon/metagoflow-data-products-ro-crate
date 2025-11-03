@@ -96,6 +96,19 @@ def run_apptainer(config, path_to_data):
         raise FileNotFoundError(f"work.yml file does not exist: {work_yml_path}")
     log.debug(f"Found work.yml file: {work_yml_path}")
 
+    # Check for updated container
+    log.debug("Checking for new arup container...")
+    cmd = (
+        "apptainer pull --force emobon_arup.sif "
+        "docker://ghcr.io/emo-bon/emobon_arup:latest"
+    )
+    output = subprocess.run(cmd, shell=True, capture_output=True)
+    if output.returncode != 0:
+        raise RuntimeError(f"Updating arup container failed: {output.stderr.decode()}")
+    else:
+        log.debug(f"Updated arup container: {output.stdout.decode()}")
+
+    # Run ARUP
     cmd = (
         f'export ARUP_WORK="./work.yml" && apptainer run '
         f"--bind {path_to_data}:/rocrateroot "
