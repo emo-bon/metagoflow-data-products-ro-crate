@@ -99,7 +99,7 @@ def run_apptainer(config, path_to_data):
     # Check for updated container
     log.debug("Checking for new arup container...")
     cmd = (
-        "apptainer pull --force emobon_arup.sif "
+        "apptainer pull --force utils/emobon_arup.sif "
         "docker://ghcr.io/emo-bon/emobon_arup:latest"
     )
     output = subprocess.run(cmd, shell=True, capture_output=True)
