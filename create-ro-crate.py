@@ -289,9 +289,10 @@ def sequence_categorisation_stanzas(target_directory, template, conf):
         d = dict(
             [
                 ("@id", f"{fn}"),
-                ("@type", "File"),
+                ("@type", ["File", "edam:data_3495"]),
                 ("name", name_string),
                 ("downloadUrl", ""),
+                ("dct:format", {"@id": "edam:format_1929"}),
                 ("encodingFormat", "application/zip"),
             ]
         )
@@ -319,59 +320,81 @@ def add_sequence_data_stanzas(target_directory, template, conf):
     log.info("Adding 11 mandatory sequence data stanzas to graph")
     data = {
         r"^{prefix}_[A-Za-z0-9]+_[0-9]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.fasta\.bz2$": (
+            ["File", "edam:data_2977"],  # @type
             "Trimmed forward reads",
             "All forward reads after trimming in fasta format",
             "application/x-bzip2",
+            "edam:format_1929",  # dct:format
         ),
         r"^{prefix}_[A-Za-z0-9]+_[0-9]_1_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.qc_summary$": (
+            "File",  # @type
             "Trimmed forward reads QC summary",
             "Quality control summary of trimmed forward reads",
             "text/plain",
+            None,
         ),
         r"^{prefix}_[A-Za-z0-9]+_[0-9]_2_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.fasta\.bz2$": (
+            ["File", "edam:data_2977"],
             "Trimmed reverse reads",
             "All reverse reads after trimming in fasta format",
             "application/x-bzip2",
+            "edam:format_1929",  # dct:format
         ),
         r"^{prefix}_[A-Za-z0-9]+_[0-9]_2_[A-Za-z0-9]+\.[A-Za-z0-9]+_clean\.fastq\.trimmed\.qc_summary$": (
+            "File",  # @type
             "Trimmed reverse reads QC summary",
             "Quality control summary of trimmed reverse reads",
             "text/plain",
+            None,
         ),
         "{prefix}.merged_CDS.faa.bz2": (
+            ["File", "edam:data_2976"],
             "Protein coding amino acid sequences",
             "Coding sequences of merged reads in amino acid format",
             "application/x-bzip2",
+            "edam:format_1929",
         ),
         "{prefix}.merged_CDS.ffn.bz2": (
+            ["File", "edam:data_2977"],
             "Protein coding nucleotide sequences",
             "Coding sequences of merged reads in nucleotide format",
             "application/x-bzip2",
+            "edam:format_1929",
         ),
         "{prefix}.merged.cmsearch.all.tblout.deoverlapped.bz2": (
+            "File",
             "Overlapped coding sequences",
             "Overlapped coding sequences (intermediate file)",
             "application/x-bzip2",
+            None,
         ),
         "{prefix}.merged.fasta.bz2": (
+            ["File", "edam:data_2977"],
             "Merged reads",
             "Merged forward and reverse reads in fasta format",
             "application/x-bzip2",
+            "edam:format_1929",
         ),
         "{prefix}.merged.motus.tsv.bz2": (
+            "File",
             "MOTUs",
             "Metagenomic Operational Taxonomic Units (MOTUs) in tab-separated format",
             "application/x-bzip2",
+            None,
         ),
         "{prefix}.merged.qc_summary": (
+            "File",
             "QC summary of merged reads",
             "Quality control analysis summary of merged reads",
             "text/plain",
+            None,
         ),
         "{prefix}.merged.unfiltered_fasta.bz2": (
+            ["File", "edam:data_2977"],
             "Unfiltered merged reads",
             "All merged reads before fileting in fasta format",
             "application/x-bzip2",
+            "edam:format_1929",
         ),
     }
     seq_data_paths = Path(target_directory, "results").glob(f"{conf['prefix']}*")
@@ -409,13 +432,16 @@ def add_sequence_data_stanzas(target_directory, template, conf):
                 d = dict(
                     [
                         ("@id", f"./{seq_file}"),
-                        ("@type", "File"),
-                        ("name", value[0]),
-                        ("description", value[1]),
+                        ("@type", value[0]),
+                        ("name", value[1]),
+                        ("description", value[2]),
                         ("downloadUrl", ""),
-                        ("encodingFormat", value[2]),
+                        ("encodingFormat", value[3]),
                     ]
                 )
+                # Insert dct:format if it has one
+                if value[4]:
+                    d["dct:format"] = {"@id": value[4]}
                 template["@graph"].insert(sq_index + 1, d)
                 found = True
                 log.debug(f"Added stanza for {seq_file}")
@@ -876,10 +902,14 @@ def write_metadata_json(
             stanza["downloadUrl"] = stanza["downloadUrl"].format(**conf)
             continue
         # Add the raw sequence data links
-        if stanza["@id"] in ["{forward_reads_link}", "{reverse_reads_link}"]:
+        elif stanza["@id"] in ["{forward_reads_link}", "{reverse_reads_link}"]:
             stanza["@id"] = stanza["@id"].format(**conf)
             stanza["description"] = stanza["description"].format(**conf)
             stanza["downloadUrl"] = stanza["downloadUrl"].format(**conf)
+            stanza["subjectOf"] = stanza["subjectOf"]["@id"].format(**conf)
+        # Format external ro-crate stanzas
+        elif stanza["@id"].startswith("https://data.emobon.embrc.eu"):
+            stanza["name"] = stanza["name"].format(**conf)
 
     # creator  - the MGF data creator and institution
     # "creator": {}
@@ -918,7 +948,7 @@ def write_metadata_json(
         )
         for stanza in template["@graph"]:
             if stanza["@id"] == "./functional-annotation/":
-                fn = f"./{conf['prefix']}.merged.emapper.summary.eggnog"
+                fn = f"./functional-annotation/{conf['prefix']}.merged.emapper.summary.eggnog"
                 stanza["hasPart"].append(dict([("@id", fn)]))
                 break
         else:
@@ -1202,11 +1232,17 @@ def format_file_ids_and_add_download_links(
         # If run_dvc_upload is False, do not add download links
         # Get the md5 sum from the DVC files and use as the download link
         if format_download_links:
-            if stanza["@type"] and stanza["@type"] == "File":
+            # Check for files
+            stype = stanza.get("@type")
+            if stype and (
+                stype == "File" or (isinstance(stype, list) and "File" in stype)
+            ):
                 log.debug("In @type File stanza")
-
                 if stanza["@id"] == "./taxonomy-summary/RNA-counts":
                     fn = Path(new_archive_path, "taxonomy-summary", "RNA-counts.dvc")
+                #Ignore the links to the raw seq data in ENA
+                elif "_clean.fastq.gz" in stanza["@id"]:
+                    continue
                 else:
                     # Remove the ./ from the @id
                     key = Path(stanza["@id"]).name
