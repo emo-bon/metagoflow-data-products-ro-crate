@@ -25,25 +25,49 @@ COMBINED_LOGSHEETS_PATH = (
     "refs/heads/main/validated-data/Batch1and2_combined_logsheets_2024-11-12.csv"
 )
 
-# Extract the wc and ss samples for the combined sheet
-df = pd.read_csv(COMBINED_LOGSHEETS_PATH)
-#wc = df[df["env_package"] == "water_column"]
-#ss = df[df["env_package"] == "soft_sediment"]
+def find_wc_grouped_replicates(samples):
+    duplicates_mask = samples.duplicated(
+        subset=["sampling_event", "collection_date", "size_frac"],
+        keep=False
+        )
+    all_duplicates = samples[duplicates_mask]
 
-duplicates_mask = df.duplicated(subset=["sampling_event", "collection_date", "size_frac"], keep=False)
-all_duplicates = df[duplicates_mask]
+    #Filter out 'blank_1'
+    duplicates = all_duplicates[all_duplicates['replicate'] != 'blank_1']
 
-#Filter out 'blank_1'
-duplicates = all_duplicates[all_duplicates['replicate'] != 'blank_1']
-
-groups = duplicates.groupby(
+    groups = duplicates.groupby(
         ["sampling_event", "collection_date", "size_frac"]
         )
+    return groups
+
+def find_ss_grouped_replicates(samples):
+    duplicates_mask = samples.duplicated(
+        subset=["sampling_event", "collection_date"], # No size_frac
+        keep=False
+        )
+    all_duplicates = samples[duplicates_mask]
+
+    #Filter out 'blank_1'
+    duplicates = all_duplicates[all_duplicates['replicate'] != 'blank_1']
+
+    groups = duplicates.groupby(
+        ["sampling_event", "collection_date"]
+        )
+    return groups
 
 def iterate_replicates(groups):
     """Generator that yields pairs of biological repliates"""
     for _, group in groups:
         yield [row['source_mat_id'] for index, row in group.iterrows()]
 
-REPLICATES = iterate_replicates(groups)
+
+# Extract the wc and ss samples for the combined sheet
+df = pd.read_csv(COMBINED_LOGSHEETS_PATH)
+wc_samples = df[df["env_package"] == "water_column"]
+ss_samples = df[df["env_package"] == "soft_sediment"]
+wc_groups = find_wc_grouped_replicates(wc_samples)
+ss_groups = find_ss_grouped_replicates(ss_samples)
+
+WATER_COLUMN_REPLICATES = iterate_replicates(wc_groups)
+SOFT_SEDIMENT_REPLICATES = iterate_replicates(ss_groups)
 
