@@ -1,27 +1,35 @@
 #!/usr/bin/env python3
 
 import dvc.api
-import os
+from pathlib import Path
 
-# Path to the file in the DVC repository (relative to the repo root)
-dvc_path = "EMOBON_HCMR-1_Wa_6-ro-crate/taxonomy-summary/SSU/SSU-taxonomy-summary.ttl"
+def return_data_file_from_dvc(path_to_data_file):
+    """
+    Retrieve a data file from the S3 store.
 
-# Read the file content
-content = dvc.api.read(
-    dvc_path,
-    repo="/home/cymon/vscode/git-repos/metagoflow-data-products-ro-crate/analysis-results-cluster-01-crate",
-    remote="myremote"  # Use the remote name you configured
-)
+    path_to_data_file should be a string relative to the DVC repository,
+    e.g. EMOBON_HCMR-1_Wa_6-ro-crate/taxonomy-summary/SSU/SSU-taxonomy-summary.ttl
+    (without the ".dvc" suffix)
 
-print(f"{content}")
+    where the repository is
+    "metagoflow-data-products-ro-crate/analysis-results-cluster-01-crate"
 
-## Try to write as text (for YAML, CSV, TXT, etc.)
-#try:
-#    with open(local_output_path, "w", encoding="utf-8") as f:
-#        f.write(file_content)
-## If it fails, write as binary (for images, PDFs, etc.)
-#except TypeError:
-#    with open(local_output_path, "wb") as f:
-#        f.write(file_content)
+    """
+
+    path_to_dvc_repo = Path("../analysis-results-cluster-01-crate")
+
+    #Check that file exists
+    file_path = path_to_dvc_repo / path_to_data_file
+    dvc_path = file_path.with_suffix(file_path.suffix + ".dvc")
+    if not dvc_path.exists():
+        print(f"ERROR: {dvc_path} does not exist")
+
+
+    # Read the file content
+    return dvc.api.read(
+        path_to_data_file,
+        repo=path_to_dvc_repo,
+        remote="myremote"
+    )
 
 
