@@ -197,7 +197,7 @@ def get_ref_code_and_prefix(conf):
     e.g. 'DBH_AAAAOSDA_1_HWLTKDRXY.UDI235' and is the name used to label the target_directory.
     """
     for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]):
-        df = pd.read_csv(batch)
+        df = pd.read_csv(batch, encoding='iso-8859-1')
         for row in df[["reads_name", "ref_code", "source_mat_id"]].values.tolist():
             if isinstance(row[0], str):
                 # print(row)
@@ -595,7 +595,7 @@ def get_metadata_from_observatory_logsheets(conf):
     """
 
     # Get the observatory data
-    df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
+    df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH, encoding='iso-8859-1')
     # Get the observatory data using the obs_id and env_package variables
     row_obs = df_obs.loc[
         (df_obs["obs_id"] == conf["obs_id"])
@@ -648,7 +648,7 @@ def get_metadata_from_sample_logsheets(conf, overide_error=False):
 
     # Read the relevant row in sample sheet
     try:
-        df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH)
+        df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH, encoding='iso-8859-1')
     except urllib.error.HTTPError:
         log.error("Cannot find the combined logsheets at %s" % COMBINED_LOGSHEETS_PATH)
         sys.exit()
@@ -692,7 +692,7 @@ def get_metadata_from_sample_logsheets(conf, overide_error=False):
 
     # Add MGF analysis creator_person
     mgf_path = FILTERS_MGF_PATH if env_package == "water_column" else SEDIMENTS_MGF_PATH
-    data = pd.read_csv(mgf_path).to_dict(orient="records")
+    data = pd.read_csv(mgf_path, encoding='iso-8859-1').to_dict(orient="records")
     for row in data:
         if row["ref_code"] == conf["ref_code"]:
             log.debug("Row in %s: %s" % (mgf_path, row))
@@ -767,9 +767,9 @@ def get_ena_accession_number(conf):
     """Get the ENA accession number for a given ref_code."""
     # Read the relevant row in sample sheet
     if conf["batch_number"] == 1:
-        df_ena = pd.read_csv(BATCH1_ENA_ACCESSION_INFO_PATH)
+        df_ena = pd.read_csv(BATCH1_ENA_ACCESSION_INFO_PATH, encoding='iso-8859-1')
     elif conf["batch_number"] == 2:
-        df_ena = pd.read_csv(BATCH2_ENA_ACCESSION_INFO_PATH)
+        df_ena = pd.read_csv(BATCH2_ENA_ACCESSION_INFO_PATH, encoding='iso-8859-1')
     else:
         log.error(f"Batch number not recognised {conf['batch_number']}")
         sys.exit()
@@ -1328,8 +1328,6 @@ def main(
         log_level = log.INFO
     log.basicConfig(format="\t%(levelname)s: %(message)s", level=log_level)
 
-    log.info("\n\n")
-
     # Read the YAML configuration
     log.debug("Reading YAML configuration...")
     conf = read_yaml(yaml_config)
@@ -1442,7 +1440,7 @@ def main(
     if upload_dvc:
         remove_data_files_from_ro_crate(ro_crate_name)
     log.info(f"{ro_crate_name} written without error")
-    log.info("Done.")
+    log.info("Done.\n\n")
 
 
 if __name__ == "__main__":
