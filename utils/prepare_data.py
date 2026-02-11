@@ -31,6 +31,7 @@ FILE_PATTERNS = [
     "final.contigs.fa",
 ]
 
+
 def get_existing_rorates():
     """Return a list of existing ro-crates"""
     utils_path = Path(__file__).resolve()
@@ -46,7 +47,7 @@ def get_existing_rorates():
 def main(
     target_directory,
     max_num,
-    debug = False,
+    debug=False,
 ):
     log.basicConfig(
         format="\t%(levelname)s: %(message)s", level=log.DEBUG if debug else log.INFO
@@ -85,7 +86,7 @@ def main(
         outpath.mkdir()
     # Change to output directory
     log.debug(f"Changing directory to {outpath}")
-    
+
     os.chdir(outpath)
     working_dir = Path.cwd()
 
@@ -96,14 +97,15 @@ def main(
     # Loop through the tarball files
     count = 0
     for tarball_file in tarball_files:
-
-        log.debug(f"Preparing tarball_file: {tarball_file}") 
+        log.debug(f"Preparing tarball_file: {tarball_file}")
 
         run_id = Path(str(tarball_file.name).rsplit(".", 2)[0].strip())
 
-        #First check to see if a ro-crate already exists
+        # First check to see if a ro-crate already exists
         log.debug(f"Looking for ref_code and source_mat_id of {run_id}")
-        ref_code, source_mat_id = get_refcode_and_source_mat_id_from_run_id(str(run_id)) # Need str(run_id) because its a Path()
+        ref_code, source_mat_id = get_refcode_and_source_mat_id_from_run_id(
+            str(run_id)
+        )  # Need str(run_id) because its a Path()
         if not ref_code:
             log.error(f"ref_code for {run_id} not found")
             sys.exit()
@@ -124,19 +126,22 @@ def main(
                 break
             else:
                 count += 1
-        
+
         # Open the archive
         log.info(f"Opening archive {tarball_file}")
         open_archive(tarball_file, bzip2_program)
-
-        # Compress the sequence archive files
-        log.info(f"Compressing sequence files for {run_id}")
         path_to_results = Path(str(run_id), "results")
+        if not path_to_results.exists():
+            log.error("Unable to open {tarball_file}")
+            continue
+
         log.debug(f"Path to results: {path_to_results}")
         os.chdir(path_to_results)
         log.debug(f"CWD: {os.getcwd()}")
+        # Compress the sequence archive files
+        log.info(f"Compressing sequence files for {run_id}")
 
-        #Deal with MOTUS - sometimes it's empty and has the name empty.motus.tsv
+        # Deal with MOTUS - sometimes it's empty and has the name empty.motus.tsv
         if Path("./empty.motus.tsv").exists():
             # Get prefix
             sf = list(Path("./").glob("*.merged.fasta"))
@@ -193,10 +198,13 @@ if __name__ == "__main__":
             " archives to prepare relative to the current working directory"
         ),
     )
-    parser.add_argument("-n", "--max_num",
-                         help="Maximum number of runs to process",
-                         default=10,
-                         type=int)
+    parser.add_argument(
+        "-n",
+        "--max_num",
+        help="Maximum number of runs to process",
+        default=10,
+        type=int,
+    )
     parser.add_argument("-d", "--debug", action="store_true", help="DEBUG logging")
     args = parser.parse_args()
     main(
