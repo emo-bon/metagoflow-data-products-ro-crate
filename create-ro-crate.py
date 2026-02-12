@@ -1,5 +1,20 @@
 #! /usr/bin/env python3
 
+"""
+Instead of using the combined logsheets, were going to parse the station name
+from the sources_mat_id (e.g. RFormosa), then use the governance logsheet
+https://github.com/emo-bon/governance-crate/blob/main/logsheets.csv
+to find the WA or SS sheet address, and parse the information directly from the
+station sampling sheet and the observatory data from the observatory tab of
+the same sheet.
+
+This means I'll no longer have to make the combined files but also that there is
+no pydantic validation done by me on the data; probably doesnt matter in QC is
+working.
+
+"""
+
+
 import os
 import math
 import argparse
@@ -68,12 +83,12 @@ BATCH2_ENA_ACCESSION_INFO_PATH = (
     "https://raw.githubusercontent.com/emo-bon/sequencing-data/refs/heads/main/"
     "shipment/batch-002/ena-accession-numbers-batch-002.csv"
 )
-# The combined sampling event logsheets for batch 1 and 2
+# The combined table of logsheet URLs from the governance crate
 COMBINED_LOGSHEETS_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
-    "refs/heads/main/validated-data/Batch1and2_combined_logsheets_2024-11-12.csv"
+    "https://raw.githubusercontent.com/emo-bon/governance-crate/"
+    "refs/heads/main/logsheets.csv"
 )
-OBSERVATORY_LOGSHEETS_PATH = (
+#OBSERVATORY_LOGSHEETS_PATH = (
     "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
     "refs/heads/main/validated-data/Observatory_combined_logsheets_validated.csv"
 )
@@ -624,11 +639,16 @@ def get_metadata_from_observatory_logsheets(conf):
     return conf
 
 
-def get_metadata_from_sample_logsheets(conf, overide_error=False):
+def get_metadata_from_station_logsheets(conf, overide_error=False):
     """
-    Parse sample logsheet data from the combined logsheet on Github
-    and add to the configuration dictionary.
-
+    Use the source_mat_id to get the station name and env_package
+    Use the govername-crate/logsheets.csv to get the address of the sampling
+        logsheet
+    Get the following metadata from the env_package sampling logsheet
+        e.g. https://docs.google.com/spreadsheets/d/1zc0bZdpl-Eoi35lI_5BGkElbscplyQRyNPLkSgeEyEQ
+        a) "sampling" sheet tab
+        b) "observatory" sheet tab
+    
     env_package_id
     obs_id
     #sampling_person_name
@@ -646,14 +666,41 @@ def get_metadata_from_sample_logsheets(conf, overide_error=False):
 
     """
 
+    station_abbreviation = conf["source_mat_id"].split("_")[1]
+    env_package = conf"source_mat_id"].split("_")[2]
+
     # Read the relevant row in sample sheet
     try:
-        df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH, encoding='iso-8859-1')
+        df_logsheets = pd.read_csv(COMBINED_LOGSHEETS_PATH, encoding='iso-8859-1')
     except urllib.error.HTTPError:
         log.error("Cannot find the combined logsheets at %s" % COMBINED_LOGSHEETS_PATH)
         sys.exit()
-    row_samp = df_samp.loc[df_samp["ref_code"] == conf["ref_code"]].to_dict()
+    if env_package == "Wa":
+        URL = df_logsheets.loc[
+            df.logsheets["Water Column"],
+            df_logsheets["EMOBON_observatory_id"] == station_abbreviation
+            ].todict()
+    elif env_package == "So":
+        URL = df_logsheets.loc[
+            df.logsheets["Soft sediment"],
+            df_logsheets["EMOBON_observatory_id"] == station_abbreviation
+            ].todict()
+    else:
+        log.error(f"Unknown env_package {env_package} in {conf['source_mat_id']}")
+        sys.exit()
+
+    URL_base = URL.split("/edit")[0]
+    URL_full = URL_base + "/gviz/tq?tqx=out:csv&sheet=sampling"
+    try:
+        df_sampling = pd.read_csv(URL, encoding='iso-8859-1')
+    except urllib.error.HTTPError:
+        log.error("Cannot find the combined logsheets at %s" % URL_full)
+        sys.exit()
+    
+    row_samp = df_sampling.loc[df_sampling["source_mat_id"] == conf["source_mat_id"]].to_dict()
     log.debug("Row in sample sheet: %s" % row_samp)
+
+    #Tada =============================
 
     # Get the env_package either water_column or soft_sediments
     try:
@@ -1362,8 +1409,8 @@ def main(
     check_and_format_data_file_paths(target_directory, conf, check_exists=True)
 
     # Build the conf dictionary
-    conf = get_metadata_from_sample_logsheets(conf, override_error)
-    conf = get_metadata_from_observatory_logsheets(conf)
+    conf = get_metadata_from_station_logsheets(conf, override_error)
+    #conf = get_metadata_from_observatory_logsheets(conf) do in above function
     conf = get_ena_accession_number(conf)
     conf = add_sequence_data_links(conf, override_error)
     log.debug("Conf dict: %s" % conf)

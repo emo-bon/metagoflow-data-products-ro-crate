@@ -132,7 +132,7 @@ def main(
         open_archive(tarball_file, bzip2_program)
         path_to_results = Path(str(run_id), "results")
         if not path_to_results.exists():
-            log.error("Unable to open {tarball_file}")
+            log.error(f"Unable to open {tarball_file}")
             continue
 
         log.debug(f"Path to results: {path_to_results}")
