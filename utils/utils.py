@@ -158,14 +158,14 @@ def get_refcode_and_source_mat_id_from_run_id(run_id):
         "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
         "batch-002/run-information-batch-002.csv"
     )
-    # BATCH3_RUN_INFO_PATH = (
-    #    "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
-    #    "batch-003-0/run-information-batch-003-0.csv"
-    # )
+    BATCH3_RUN_INFO_PATH = (
+        "https://raw.githubusercontent.com/emo-bon/sequencing-logistics-crate/refs/heads/main/"
+        "shipment/batch-003-0/run-information-batch-003.csv"
+    )
 
     # for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]):
-    for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]:
-        #print(f"Reading {batch}")
+    for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]:
+        print(f"Reading {batch}")
         df = pd.read_csv(batch, encoding='iso-8859-1')
         for row in df[["reads_name", "ref_code", "source_mat_id"]].values.tolist():
             if isinstance(row[0], str):

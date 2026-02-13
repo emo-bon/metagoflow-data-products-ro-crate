@@ -74,6 +74,10 @@ BATCH2_RUN_INFO_PATH = (
     "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
     "batch-002/run-information-batch-002.csv"
 )
+BATCH3_RUN_INFO_PATH = (
+    "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
+    "batch-003-0/run-information-batch-003.csv"
+)
 # ENA ACCESSSION INFO for each batch
 BATCH1_ENA_ACCESSION_INFO_PATH = (
     "https://raw.githubusercontent.com/emo-bon/sequencing-data/refs/heads/main/"
@@ -82,15 +86,6 @@ BATCH1_ENA_ACCESSION_INFO_PATH = (
 BATCH2_ENA_ACCESSION_INFO_PATH = (
     "https://raw.githubusercontent.com/emo-bon/sequencing-data/refs/heads/main/"
     "shipment/batch-002/ena-accession-numbers-batch-002.csv"
-)
-# The combined table of logsheet URLs from the governance crate
-COMBINED_LOGSHEETS_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/governance-crate/"
-    "refs/heads/main/logsheets.csv"
-)
-#OBSERVATORY_LOGSHEETS_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
-    "refs/heads/main/validated-data/Observatory_combined_logsheets_validated.csv"
 )
 # The ro-crate metadata template from Github
 TEMPLATE_URL = (
@@ -211,7 +206,7 @@ def get_ref_code_and_prefix(conf):
     run_id is the last part of the reads_name in the run information file.
     e.g. 'DBH_AAAAOSDA_1_HWLTKDRXY.UDI235' and is the name used to label the target_directory.
     """
-    for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]):
+    for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]):
         df = pd.read_csv(batch, encoding='iso-8859-1')
         for row in df[["reads_name", "ref_code", "source_mat_id"]].values.tolist():
             if isinstance(row[0], str):
@@ -641,14 +636,6 @@ def get_metadata_from_observatory_logsheets(conf):
 
 def get_metadata_from_station_logsheets(conf, overide_error=False):
     """
-    Use the source_mat_id to get the station name and env_package
-    Use the govername-crate/logsheets.csv to get the address of the sampling
-        logsheet
-    Get the following metadata from the env_package sampling logsheet
-        e.g. https://docs.google.com/spreadsheets/d/1zc0bZdpl-Eoi35lI_5BGkElbscplyQRyNPLkSgeEyEQ
-        a) "sampling" sheet tab
-        b) "observatory" sheet tab
-    
     env_package_id
     obs_id
     #sampling_person_name
@@ -666,57 +653,55 @@ def get_metadata_from_station_logsheets(conf, overide_error=False):
 
     """
 
-    station_abbreviation = conf["source_mat_id"].split("_")[1]
-    env_package = conf"source_mat_id"].split("_")[2]
+    # Parse the source_mat_id to get station name (obs_id) and env_package
+    obs_id = conf["source_mat_id"].split("_")[1]
+    log.debug(f"obs_id = {obs_id}")
+    ep = conf["source_mat_id"].split("_")[2]
+    if ep == "Wa":
+        env_package  = "water_column"
+        env_package_short = "water"
+    elif ep == "So":
+        env_package  = "soft_sediment"
+        env_package_short = "sediment"
+    else:
+        log.error(f"Unknown env_package {ep} in {conf['source_mat_id']}")
+        sys.exit()
+    conf["env_package_id"] = env_package
+    log.debug(
+            f"env_package = {env_package}; env_package_short = "
+            f"{env_package_short}"
+        )
 
+    # Pull the sheets from the observatory crates on github
+    # We are looking for the transformed sheets "water" or "sediment"
+    # https://raw.githubusercontent.com/emo-bon/observatory-bpns-crate/refs/heads/main/logsheets/transformed/water_sampling.csv
+    transformed_sheet_url = (
+        f"https://raw.githubusercontent.com/emo-bon/"
+        f"observatory-{obs_id.lower()}-crate/"
+        f"refs/heads/main/logsheets/transformed/{env_package_short}_sampling.csv"
+        )
+    log.debug(f"Address of transformed sheet: {transformed_sheet_url}")
     # Read the relevant row in sample sheet
     try:
-        df_logsheets = pd.read_csv(COMBINED_LOGSHEETS_PATH, encoding='iso-8859-1')
+        df_logsheets = pd.read_csv(transformed_sheet_url) #, encoding='iso-8859-1')
     except urllib.error.HTTPError:
-        log.error("Cannot find the combined logsheets at %s" % COMBINED_LOGSHEETS_PATH)
-        sys.exit()
-    if env_package == "Wa":
-        URL = df_logsheets.loc[
-            df.logsheets["Water Column"],
-            df_logsheets["EMOBON_observatory_id"] == station_abbreviation
-            ].todict()
-    elif env_package == "So":
-        URL = df_logsheets.loc[
-            df.logsheets["Soft sediment"],
-            df_logsheets["EMOBON_observatory_id"] == station_abbreviation
-            ].todict()
-    else:
-        log.error(f"Unknown env_package {env_package} in {conf['source_mat_id']}")
-        sys.exit()
+        log.error(f"Cannot find the combined logsheets at {transformed_sheet_url}")
 
-    URL_base = URL.split("/edit")[0]
-    URL_full = URL_base + "/gviz/tq?tqx=out:csv&sheet=sampling"
-    try:
-        df_sampling = pd.read_csv(URL, encoding='iso-8859-1')
-    except urllib.error.HTTPError:
-        log.error("Cannot find the combined logsheets at %s" % URL_full)
-        sys.exit()
-    
-    row_samp = df_sampling.loc[df_sampling["source_mat_id"] == conf["source_mat_id"]].to_dict()
+    row_samp = df_logsheets.loc[df_logsheets["source_mat_id"] == conf["source_mat_id"]].to_dict()
     log.debug("Row in sample sheet: %s" % row_samp)
 
-    #Tada =============================
-
     # Get the env_package either water_column or soft_sediments
-    try:
-        env_package = list(row_samp["env_package"].values())[0]
-    except IndexError:
-        log.error("Cannot find the env_package for ref_code %s" % conf["ref_code"])
-        sys.exit()
-    log.debug("env_package: %s" % env_package)
-    assert env_package in ["water_column", "soft_sediment"], (
-        "env_package must be either 'water_column' or 'soft_sediment'"
-        "Found: %s" % env_package
-    )
-    conf["env_package_id"] = env_package
-
-    # Get the observatory ID
-    conf["obs_id"] = list(row_samp["obs_id"].values())[0]
+    #try:
+    #    env_package = list(row_samp["env_package"].values())[0]
+    #except IndexError:
+    #    log.error("Cannot find the env_package for ref_code %s" % conf["ref_code"])
+    #    sys.exit()
+    #log.debug("env_package: %s" % env_package)
+    #assert env_package in ["water_column", "soft_sediment"], (
+    #    "env_package must be either 'water_column' or 'soft_sediment'"
+    #    "Found: %s" % env_package
+    #)
+    #conf["env_package_id"] = env_package
 
     # Get the observatory data
     # df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
@@ -740,6 +725,7 @@ def get_metadata_from_station_logsheets(conf, overide_error=False):
     # Add MGF analysis creator_person
     mgf_path = FILTERS_MGF_PATH if env_package == "water_column" else SEDIMENTS_MGF_PATH
     data = pd.read_csv(mgf_path, encoding='iso-8859-1').to_dict(orient="records")
+    log.debug(f"Looking for ref_code: {conf['ref_code']}")
     for row in data:
         if row["ref_code"] == conf["ref_code"]:
             log.debug("Row in %s: %s" % (mgf_path, row))
@@ -807,6 +793,10 @@ def get_metadata_from_station_logsheets(conf, overide_error=False):
                 "https://github.com/emo-bon/MetaGOflow/commit/3cf3a7d39fabc6e75a8cb2971a711c2d781c84d0"
             )
 
+    if 1:
+        for k,v in conf.items():
+            print(f"{k} = {v}")
+    sys.exit()
     return conf
 
 
