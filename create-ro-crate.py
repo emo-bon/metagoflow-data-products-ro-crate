@@ -655,6 +655,7 @@ def get_metadata_from_station_logsheets(conf, overide_error=False):
 
     # Parse the source_mat_id to get station name (obs_id) and env_package
     obs_id = conf["source_mat_id"].split("_")[1]
+    conf["obs_id"] = obs_id
     log.debug(f"obs_id = {obs_id}")
     ep = conf["source_mat_id"].split("_")[2]
     if ep == "Wa":
@@ -796,17 +797,30 @@ def get_metadata_from_station_logsheets(conf, overide_error=False):
     if 1:
         for k,v in conf.items():
             print(f"{k} = {v}")
-    sys.exit()
     return conf
 
 
 def get_ena_accession_number(conf):
     """Get the ENA accession number for a given ref_code."""
+    
+    #Batch 3 ENA accession's not available as of Feb 2026
+    if conf["batch_number"] == 3:
+        conf["ena_accession_number"] = "UNKNOWN"
+        conf["ena_accession_number_url"] = (
+            f"https://www.ebi.ac.uk/ena/browser/view/<unknown>"
+            )
+        log.debug("ena_accession_number = UNKNOWN")
+        log.debug(
+                "ena_accession_number_url = "
+                "https://www.ebi.ac.uk/ena/browser/view/<unknown>"
+            )
+        return conf
+
     # Read the relevant row in sample sheet
     if conf["batch_number"] == 1:
         df_ena = pd.read_csv(BATCH1_ENA_ACCESSION_INFO_PATH, encoding='iso-8859-1')
     elif conf["batch_number"] == 2:
-        df_ena = pd.read_csv(BATCH2_ENA_ACCESSION_INFO_PATH, encoding='iso-8859-1')
+        df_ena = pd.read_csv(BATCH2_ENA_ACCESSION_INFO_PATH, encoding='iso-8859-1')    
     else:
         log.error(f"Batch number not recognised {conf['batch_number']}")
         sys.exit()
@@ -833,6 +847,14 @@ def get_ena_accession_number(conf):
 
 def add_sequence_data_links(conf, override_error=False):
     """Add the links to the raw sequence data files in ENA"""
+
+    # Batch3 ENA accession numbers not available;
+    if conf["ena_accession_number"] == "UNKNOWN":
+        conf["forward_reads_link"] = f"https://<unknown>"
+        conf["reverse_reads_link"] = f"https://<unknown>"
+        log.debug(f"forward and reverse_reads_links = '<unknown>'")
+        return conf
+
     # ENA ACCESSION filereport for sample
     filereport_url = (
         "https://www.ebi.ac.uk/ena/portal/api/filereport?accession={ena_accession_number}"
