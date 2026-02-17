@@ -115,9 +115,8 @@ CONFIG_YAML_PARAMETERS = [
 ]
 
 # This is a submodule of the current repository
-# https://github.com/emo-bon/metaGOflow-rocrates-dvc
-# RO_CRATE_REPO_PATH = "metaGOflow-rocrates-dvc"
-RO_CRATE_REPO_PATH = "analysis-results-cluster-01-crate"
+#RO_CRATE_REPO_PATH = "analysis-results-cluster-01-crate" # Batch 1 and 2
+RO_CRATE_REPO_PATH = "analysis-results-cluster-02-crate" # Batch 3
 
 MANDATORY_FILES = [
     "./fastp.html",
@@ -604,13 +603,27 @@ def get_metadata_from_observatory_logsheets(conf):
 
     """
 
+    # Observatory sheet:
+    # https://github.com/emo-bon/observatory-rformosa-crate/blob/main/logsheets/transformed/sediment_observatory.csv
+    transformed_observatory_sheet_url = (
+        f"https://raw.githubusercontent.com/emo-bon/"
+        f"observatory-{conf['obs_id'].lower()}-crate/"
+        f"refs/heads/main/logsheets/transformed/"
+        f"{conf['env_package_short']}_observatory.csv"
+        )
+    log.debug(f"Transformed_observatory_url = {transformed_observatory_sheet_url}")
     # Get the observatory data
-    df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH, encoding='iso-8859-1')
+    df_obs = pd.read_csv(transformed_observatory_sheet_url, encoding='iso-8859-1')
+
     # Get the observatory data using the obs_id and env_package variables
+    # There is only one row, but...
     row_obs = df_obs.loc[
         (df_obs["obs_id"] == conf["obs_id"])
-        & (df_obs["env_package"] == conf["env_package_id"])
+        &
+        (df_obs["env_package"] == conf["env_package_short"])
     ].to_dict()
+
+    log.debug("Row in observatory sheet: %s" % row_obs)
 
     # Sampling organisation
     conf["sampling_org"] = list(row_obs["organization"].values())[0]
@@ -620,15 +633,22 @@ def get_metadata_from_observatory_logsheets(conf):
     lat = list(row_obs["latitude"].values())[0]
     long = list(row_obs["longitude"].values())[0]
     conf["sampling_org_latlong"] = f"{lat}:{long}"
+
+    # https://github.com/emo-bon/observatory-bergen-crate/issues/13
     # Sampling person affiliation
-    conf["sampling_org_ena_number"] = list(
-        row_obs["ENA_accession_number_project"].values()
-    )[0]
+    try:
+        conf["sampling_org_ena_number"] = list(
+            row_obs["ENA_accession_number_project"].values()
+        )[0]
+    except KeyError:
+        conf["sampling_org_ena_number"] = list(
+            row_obs["ENA_accesion_number_project"].values()
+        )[0]
+
     # Sampling person contact name
     conf["sampling_org_contact_name"] = list(row_obs["contact_name"].values())[0]
     conf["sampling_org_contact_orcid"] = list(row_obs["contact_orcid"].values())[0]
 
-    log.debug("Row in observatory sheet: %s" % row_obs)
     log.debug("conf = {conf}")
 
     return conf
@@ -668,6 +688,7 @@ def get_metadata_from_station_logsheets(conf, overide_error=False):
         log.error(f"Unknown env_package {ep} in {conf['source_mat_id']}")
         sys.exit()
     conf["env_package_id"] = env_package
+    conf["env_package_short"] = env_package_short
     log.debug(
             f"env_package = {env_package}; env_package_short = "
             f"{env_package_short}"
@@ -850,9 +871,9 @@ def add_sequence_data_links(conf, override_error=False):
 
     # Batch3 ENA accession numbers not available;
     if conf["ena_accession_number"] == "UNKNOWN":
-        conf["forward_reads_link"] = f"https://<unknown>"
-        conf["reverse_reads_link"] = f"https://<unknown>"
-        log.debug(f"forward and reverse_reads_links = '<unknown>'")
+        conf["forward_reads_link"] = f"https://<forward reads URL unknown>"
+        conf["reverse_reads_link"] = f"https://<reverse reads URL unknown>"
+        log.debug(f"forward and reverse_reads_links = UNKNOWN")
         return conf
 
     # ENA ACCESSION filereport for sample
@@ -1422,7 +1443,7 @@ def main(
 
     # Build the conf dictionary
     conf = get_metadata_from_station_logsheets(conf, override_error)
-    #conf = get_metadata_from_observatory_logsheets(conf) do in above function
+    conf = get_metadata_from_observatory_logsheets(conf)
     conf = get_ena_accession_number(conf)
     conf = add_sequence_data_links(conf, override_error)
     log.debug("Conf dict: %s" % conf)
