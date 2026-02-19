@@ -1,20 +1,5 @@
 #! /usr/bin/env python3
 
-"""
-Instead of using the combined logsheets, were going to parse the station name
-from the sources_mat_id (e.g. RFormosa), then use the governance logsheet
-https://github.com/emo-bon/governance-crate/blob/main/logsheets.csv
-to find the WA or SS sheet address, and parse the information directly from the
-station sampling sheet and the observatory data from the observatory tab of
-the same sheet.
-
-This means I'll no longer have to make the combined files but also that there is
-no pydantic validation done by me on the data; probably doesnt matter in QC is
-working.
-
-"""
-
-
 import os
 import math
 import argparse
@@ -29,9 +14,9 @@ import shutil
 import urllib
 import glob
 import subprocess
+import configparser
 import logging as log
 from pathlib import Path
-
 import pandas as pd
 from utils.arup_archive import main as arup_main  # noqa: F401
 
@@ -59,24 +44,23 @@ To upload the files to S3 use the -u flag.
 To remove sequence data files use the -w flag.
 To debug use the -d flag.
 
-./create-ro-crate.py -d <target_directory> -y <yaml_configuration>
+./create-ro-crate.py <target_directory> <yaml_configuration>
 
 """
 
 #########################################################################################
-# These are the paths to the external data files that are used to build the RO-Crate
-# run-information files for each batch - these return the ref_code for a given MGF run_id
+# run-information files for each batch set to sequencing facility
 BATCH1_RUN_INFO_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
-    "batch-001/run-information-batch-001.csv"
+    "https://raw.githubusercontent.com/emo-bon/sequencing-logistics-crate/main/"
+    "shipment/batch-001/run-information-batch-001.csv"
 )
 BATCH2_RUN_INFO_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
-    "batch-002/run-information-batch-002.csv"
+    "https://raw.githubusercontent.com/emo-bon/sequencing-logistics-crate/main/"
+    "shipment/batch-002/run-information-batch-002.csv"
 )
 BATCH3_RUN_INFO_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
-    "batch-003-0/run-information-batch-003.csv"
+    "https://raw.githubusercontent.com/emo-bon/sequencing-logistics-crate/main/"
+    "shipment/batch-003-0/run-information-batch-003.csv"
 )
 # ENA ACCESSSION INFO for each batch
 BATCH1_ENA_ACCESSION_INFO_PATH = (
@@ -87,6 +71,13 @@ BATCH2_ENA_ACCESSION_INFO_PATH = (
     "https://raw.githubusercontent.com/emo-bon/sequencing-data/refs/heads/main/"
     "shipment/batch-002/ena-accession-numbers-batch-002.csv"
 )
+
+# Currently missing
+#BATCH3_ENA_ACCESSION_INFO_PATH = (
+#    "https://raw.githubusercontent.com/emo-bon/sequencing-data/refs/heads/main/"
+#    "shipment/batch-003-0/ena-accession-numbers-batch-003.csv"
+#)
+
 # The ro-crate metadata template from Github
 TEMPLATE_URL = (
     "https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate"
@@ -101,22 +92,22 @@ SEDIMENTS_MGF_PATH = (
     "https://docs.google.com/spreadsheets/d/"
     "1j9tRRsRCcyViDMTB1X7lx8POY1P5bV7UijxKKSebZAM/gviz/tq?tqx=out:csv&sheet=SEDIMENTS"
 )
-
 # S3 store path
-S3_STORE_URL = "https://s3.mesocentre.uca.fr/mgf-data-products/files/md5"
+#S3_STORE_URL_TEMPLATE = "https://s3.mesocentre.uca.fr/{bucket_name}/files/md5"
 
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
 # "run_wf.sh" script:
 WORKFLOW_YAML_FILENAME = "./{run_parameter}.yml"
 CONFIG_YAML_PARAMETERS = [
-    "datePublished",
     "run_parameter",
+    "ro_crate_repository",
+    "date_published",
     "missing_files",
 ]
 
 # This is a submodule of the current repository
 #RO_CRATE_REPO_PATH = "analysis-results-cluster-01-crate" # Batch 1 and 2
-RO_CRATE_REPO_PATH = "analysis-results-cluster-02-crate" # Batch 3
+#RO_CRATE_REPO_PATH = "analysis-results-cluster-02-crate" # Batch 3
 
 MANDATORY_FILES = [
     "./fastp.html",
@@ -472,7 +463,7 @@ def read_yaml(yaml_config):
     # Check yaml parameters are formated correctly, but not necessarily sane
     for param in CONFIG_YAML_PARAMETERS:
         log.debug(f"Config paramater {param}: {conf[param]}")
-        if param == "datePublished":
+        if param == "date_published":
             if conf[param] == "None":
                 # No specified date, delete from conf
                 # Its absence will trigger formatting
@@ -482,14 +473,17 @@ def read_yaml(yaml_config):
             else:
                 if not isinstance(conf[param], str):
                     log.error(
-                        "'dataPublished' should either be a string or 'None'. Bailing..."
+                        "YAML 'dataPublished' parameter should be"
+                        " either a string or 'None'"
                     )
                     sys.exit()
                 try:
                     datetime.datetime.fromisoformat(conf[param])
                 except ValueError:
-                    log.error(f"'datePublished' must conform to ISO 8601: {param}")
-                    log.error("Bailing...")
+                    log.error(
+                        f"YAML 'date_published' parameter must"
+                        f" conform to ISO 8601: {param}"
+                        )
                     sys.exit()
         elif param == "missing_files":
             if param not in conf:
@@ -498,14 +492,20 @@ def read_yaml(yaml_config):
                 for filename in conf[param]:
                     if not isinstance(filename, str):
                         log.error(
-                            f"Parameter '{filename}' in 'missing_files' list in YAML file must be a string."
+                            f"YAML 'missing_files' parameter {filename} is"
+                            f" not a string."
                         )
-                        log.error("Bailing...")
                         sys.exit()
+        elif param == "ro_crate_repository":
+            log.debug(f"YAML ro_crate_repository: {conf[param]}")
+            if not Path(conf[param]).exists():
+                log.error(
+                    f"YAML 'ro_crate_reopository' parameter {conf[param]} does not exist."
+                )
+                sys.exit()
         else:
             if not conf[param] or not isinstance(conf[param], str):
                 log.error(f"Parameter '{param}' in YAML file must be a string.")
-                log.error("Bailing...")
                 sys.exit()
     log.info("YAML configuration looks good...")
     return conf
@@ -815,9 +815,9 @@ def get_metadata_from_station_logsheets(conf, overide_error=False):
                 "https://github.com/emo-bon/MetaGOflow/commit/3cf3a7d39fabc6e75a8cb2971a711c2d781c84d0"
             )
 
-    if 1:
-        for k,v in conf.items():
-            print(f"{k} = {v}")
+    for k,v in conf.items():
+        log.debug(f"{k} = {v}")
+
     return conf
 
 
@@ -942,9 +942,9 @@ def write_metadata_json(
     )
 
     # Add date to "datePublished"
-    if "datePublished" in conf:
+    if "date_published" in conf:
         template["@graph"][1]["datePublished"] = template["@graph"][1][
-            "datePublished"
+            "date_published"
         ].format(**conf)
     else:
         template["@graph"][1]["datePublished"] = datetime.datetime.now().strftime(
@@ -1060,7 +1060,7 @@ def write_dvc_upload_script(conf):
     and later git commit
     """
     log.debug(f"MANDATORY_FILES = {MANDATORY_FILES}")
-    upload_script_path = Path(RO_CRATE_REPO_PATH, f"{conf['source_mat_id']}_upload.sh")
+    upload_script_path = Path(conf["ro_crate_repository"], f"{conf['source_mat_id']}_upload.sh")
     with open(upload_script_path, "w") as f:
         f.write("#!/bin/bash\n")
         f.write("set -e\n")
@@ -1092,57 +1092,12 @@ def write_dvc_upload_script(conf):
     return upload_script_path
 
 
-# def initialise_dvc_repo(warn=True):
-#     """Initialise the DVC repository in RO_CRATE_REPO_PATH
-
-#     dvc remote add -d myremote s3://mgf-data-products
-#     dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr
-#     dvc remote modify myremote profile "eosc-fairease1"
-
-#     The issue here is that ./RO_CRATE_REPO_PATH is not a git repository
-#     so cannot initialise DVC with git.
-
-#     A solution might be to have the repo as a submodule of a git repo
-#     https://git-scm.com/book/en/v2/Git-Tools-Submodules
-
-#     """
-#     msg = ("The ro-crate DVC repository should be cloned as a submodule this repository. "
-#            "https://github.com/emo-bon/metaGOflow-rocrates-dvc"
-#     )
-#     if warn:
-#         log.warning(msg)
-#         sys.exit()
-
-#     # This code should not run - just leaving it here for reference
-#     cwd_dir = Path.cwd()
-#     os.chdir(RO_CRATE_REPO_PATH)
-#     cmds = [
-#         "dvc init"  # --no-scm " - now using submodule
-#         "dvc remote add -d myremote s3://mgf-data-products",
-#         "dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr",
-#         "dvc remote modify myremote profile 'eosc-fairease1'",
-#     ]
-#     for cmd in cmds:
-#         child = subprocess.Popen(
-#             str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-#         )
-#         stdoutdata, stderrdata = child.communicate()
-#         return_code = child.returncode
-#         if return_code != 0:
-#             log.error(f"Error whilst trying to run command: {cmd}")
-#             log.error("Stderr: %s " % stderrdata)
-#             log.error("Return code: %s" % return_code)
-#             log.error("Exiting...")
-#             sys.exit()
-#     os.chdir(cwd_dir)
-
-
-def run_dvc_upload_script(upload_script_path):
+def run_dvc_upload_script(upload_script_path, conf):
     """Run the DVC upload script"""
     # First move to the ro-crate directory
     cwd_dir = Path.cwd()
     upload_script = Path(upload_script_path).name
-    os.chdir(RO_CRATE_REPO_PATH)
+    os.chdir(conf["ro_crate_repository"])
     cmd = f"bash {upload_script}"
     child = subprocess.Popen(
         str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
@@ -1216,44 +1171,44 @@ def move_files_out_of_results(new_archive_path, without_sequence_data=False):
 
 
 # No longer used
-def sync_to_s3(conf):
-    """
-    s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync ./{source_mat_id} s3://mgf-data-products
-    """
-    # We need to be in the RO_CRATE_REPO_PATH to run the s5cmd command
-    # ie the dir above the ro-crate directory
-    cwd = Path.cwd()
-    os.chdir(RO_CRATE_REPO_PATH)
-
-    # Move the ro-crate-metadata.json and ro-crate-preview.html to the parent directory
-    # so that they are not included in the sync
-    ro_crate_metatadata_path = Path(conf["source_mat_id"], "ro-crate-metadata.json")
-    temp_ro_crate_metadata_path = Path.cwd() / "ro-crate-metadata.json"
-    ro_crate_metatadata_path.rename(temp_ro_crate_metadata_path)
-
-    ro_crate_preview_path = Path(conf["source_mat_id"], "ro-crate-preview.html")
-    temp_ro_crate_preview_path = Path.cwd() / "ro-crate-preview.html"
-    ro_crate_preview_path.rename(temp_ro_crate_preview_path)
-
-    cmd = f"s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync {conf['source_mat_id']} s3://mgf-data-products"
-    child = subprocess.Popen(
-        str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-    )
-    stdoutdata, stderrdata = child.communicate()
-    return_code = child.returncode
-    if return_code != 0:
-        log.error("Error whilst trying to sync to S3")
-        log.error("Stderr: %s " % stderrdata)
-        log.error("Command: %s" % cmd)
-        log.error("Return code: %s" % return_code)
-        log.error("Exiting...")
-        sys.exit()
-    log.info("Synced to S3")
-
-    # Move the ro-crate-metadata.json and ro-crate-preview.html back to the ro-crate directory
-    temp_ro_crate_metadata_path.rename(ro_crate_metatadata_path)
-    temp_ro_crate_preview_path.rename(ro_crate_preview_path)
-    os.chdir(cwd)
+#def sync_to_s3(conf):
+#    """
+#    s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync ./{source_mat_id} s3://mgf-data-products
+#    """
+#    # We need to be in the RO_CRATE_REPO_PATH to run the s5cmd command
+#    # ie the dir above the ro-crate directory
+#    cwd = Path.cwd()
+#    os.chdir(RO_CRATE_REPO_PATH)
+#
+#    # Move the ro-crate-metadata.json and ro-crate-preview.html to the parent directory
+#    # so that they are not included in the sync
+#    ro_crate_metatadata_path = Path(conf["source_mat_id"], "ro-crate-metadata.json")
+#    temp_ro_crate_metadata_path = Path.cwd() / "ro-crate-metadata.json"
+#    ro_crate_metatadata_path.rename(temp_ro_crate_metadata_path)
+#
+#    ro_crate_preview_path = Path(conf["source_mat_id"], "ro-crate-preview.html")
+#    temp_ro_crate_preview_path = Path.cwd() / "ro-crate-preview.html"
+#    ro_crate_preview_path.rename(temp_ro_crate_preview_path)
+#
+#    cmd = f"s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync {conf['source_mat_id']} s3://mgf-data-products"
+#    child = subprocess.Popen(
+#        str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+#    )
+#    stdoutdata, stderrdata = child.communicate()
+#    return_code = child.returncode
+#    if return_code != 0:
+#        log.error("Error whilst trying to sync to S3")
+#        log.error("Stderr: %s " % stderrdata)
+#        log.error("Command: %s" % cmd)
+#        log.error("Return code: %s" % return_code)
+#        log.error("Exiting...")
+#        sys.exit()
+#    log.info("Synced to S3")
+#
+#    # Move the ro-crate-metadata.json and ro-crate-preview.html back to the ro-crate directory
+#    temp_ro_crate_metadata_path.rename(ro_crate_metatadata_path)
+#    temp_ro_crate_preview_path.rename(ro_crate_preview_path)
+#    os.chdir(cwd)
 
 
 def remove_data_files_from_ro_crate(ro_crate_name):
@@ -1284,6 +1239,7 @@ def format_file_ids_and_add_download_links(
     for f in MANDATORY_FILES:
         pd[Path(f).name.format(**conf)] = f.format(**conf)
     log.debug(f"pd = {pd}")
+
 
     # Note that the @ids in the stanza and hasParts are qualified
     for stanza in metadata_json["@graph"]:
@@ -1323,6 +1279,9 @@ def format_file_ids_and_add_download_links(
                 #Ignore the links to the raw seq data in ENA
                 elif "_clean.fastq.gz" in stanza["@id"]:
                     continue
+                # ENA Accessions numbers unknown
+                elif "URL unknown" in stanza["@id"]:
+                    continue
                 else:
                     # Remove the ./ from the @id
                     key = Path(stanza["@id"]).name
@@ -1332,7 +1291,15 @@ def format_file_ids_and_add_download_links(
                     log.error(f"Cannot find the file {fn}")
                     sys.exit()
                 md5 = yaml.safe_load(open(fn))["outs"][0]["md5"]
-                md5_link = os.path.join(S3_STORE_URL, md5[:2], md5[2:])
+                link_template = "{s3_endpoint}/{bucket_name}/files/md5"
+                md5_link = os.path.join(
+                    link_template.format(
+                        s3_endpoint = conf["s3_endpoint"],
+                        bucket_name = conf["bucket_name"]
+                        ),
+                    md5[:2],
+                    md5[2:]
+                    )
                 stanza["downloadUrl"] = f"{md5_link}"
 
                 # Add contentSize
@@ -1357,7 +1324,7 @@ def run_arup(target_directory, conf):
         # 'cluster' (effectively just several batches) are going to be stored
         # e.g. https://github.com/emo-bon/analysis-results-cluster-01-crate
         # will store Batch 1 and Batch 2 RO-Crates
-        "CLUSTER_ID": RO_CRATE_REPO_PATH,
+        "CLUSTER_ID": conf["ro_crate_repository"],
         # This is in fact the Flowcell id (e.g. HCFCYDSX5) and Index id (e.g. UDI141)
         # of the sequencing machine where the sample was processed
         # e.g. HCFCYDSX5.UDI141
@@ -1418,7 +1385,7 @@ def main(
         sys.exit()
     log.debug("Found target directory %s" % target_directory)
     run_id = Path(target_directory).name
-    log.info("run_id = %s" % run_id)
+    log.info("run_id:  %s" % run_id)
     if "UDI" not in run_id.split(".")[-1]:
         log.error("Target directory name does appear to be correct format")
         log.error("It needs to match the format HWLTKDRXY.UDI210")
@@ -1429,11 +1396,19 @@ def main(
     # Get the emo bon ref_code, batch number, and prefix
     conf = get_ref_code_and_prefix(conf)
 
+    # Get the bucket name
+    dvc_conf = configparser.ConfigParser()
+    dvc_conf.read(Path(conf["ro_crate_repository"], ".dvc/config"))
+    conf["bucket_name"] = dvc_conf['\'remote "myremote"\'']['url'].split("//")[1]
+    conf["s3_endpoint"] = dvc_conf['\'remote "myremote"\'']['endpointurl'] 
+    log.info(f"RO-Crate repository: {conf['ro_crate_repository']}")
+    log.info(f"S3 endpoint: {conf['s3_endpoint']}")
+    log.info(f"Bucket name: {conf['bucket_name']}")
+    
     # Check that an archive with the same name does not already exist
-    ro_crate_name = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"] + "-ro-crate")
+    ro_crate_name = Path(conf["ro_crate_repository"], conf["source_mat_id"] + "-ro-crate")
     if os.path.exists(ro_crate_name):
         log.error(f"An archive with the name {ro_crate_name} already exists")
-        log.error("Exiting...")
         sys.exit()
 
     # Check all files are present
@@ -1464,7 +1439,7 @@ def main(
     # TODO: Could probably just move the writing of the metadata.json to the end
     # because I'm no longer using s5cmd sync
 
-    new_archive_path = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"])
+    new_archive_path = Path(conf["ro_crate_repository"], conf["source_mat_id"])
     log.info(f"Moving archive to {new_archive_path}...")
     try:
         Path(target_directory).rename(new_archive_path)
@@ -1491,7 +1466,7 @@ def main(
     log.debug(f"Written upload script to {upload_script_path}")
     if upload_dvc:
         log.info("Running DVC upload script...")
-        run_dvc_upload_script(upload_script_path)
+        run_dvc_upload_script(upload_script_path, conf)
         log.info("DVC upload script completed without error")
         os.remove(upload_script_path)
     else:
@@ -1512,7 +1487,7 @@ def main(
         outfile.write(metadata_json_formatted)
 
     # Rename new ro-crate
-    Path(RO_CRATE_REPO_PATH, conf["source_mat_id"]).rename(ro_crate_name)
+    Path(conf["ro_crate_repository"], conf["source_mat_id"]).rename(ro_crate_name)
     log.info("Renamed ro-crate directory")
 
     # If we are uploading to dvc we need to remove the data files from the ro-crate
