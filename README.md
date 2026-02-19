@@ -1,13 +1,14 @@
 # MetaGOflow-Data-Products-RO-Crate
-This code builds the RO-Crates of the [MetaGOflow](https://github.com/emo-bon/MetaGOflow) workflow analyses results of EMO BON sampling events.
+This code builds the RO-Crates of the [MetaGOflow](https://github.com/emo-bon/MetaGOflow) workflow analyses results of EMO BON metagenomic sampling events.
 
 This code uses [Data Version Control (dvc)](https://dvc.org/) to store files in a LFS S3 store and uses the .dvc stub files as the RO-Crate payload. The RO-Crate holding repositories are [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) of this repository and contains the dvc root.
 
 There are currently 2 repositories:
-(public) [analysis-results-cluster-01-crate](https://github.com/emo-bon/analysis-results-cluster-01-crate) contains RO-Crates from EMOBON Batches 1 & 2.
-(private) [analysis-results-cluster-02-crate](https://github.com/emo-bon/analysis-results-cluster-02-crate) contains RO-Crates from EMOBON Batch 3 (these do not yet contain links to ENA Accession numbers).
 
-# How to create a RO-Crate:
+- (public) [analysis-results-cluster-01-crate](https://github.com/emo-bon/analysis-results-cluster-01-crate) contains RO-Crates from EMOBON Batches 1 & 2.
+ - (private) [analysis-results-cluster-02-crate](https://github.com/emo-bon/analysis-results-cluster-02-crate) contains RO-Crates from EMOBON Batch 3 (these do not yet contain links to ENA Accession numbers).
+
+# How to build a RO-Crate:
 
 Prior to building the ro-crates, the data need to be prepared. This effectively means uncompressing the results archive, and then compressing the individual sequence data files. The new archvies are placed in a subdirectory of the *target_directory* called *prepared_archives*:
 
@@ -32,7 +33,7 @@ where:
 - -o Override creator person missing error (default: False)
 
 
-# Test example of Data Products RO-Crate
+# MetaGOflow execution and results files
 
 ```
 Workflow execution:
