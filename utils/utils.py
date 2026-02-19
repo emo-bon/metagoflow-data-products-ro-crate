@@ -158,14 +158,14 @@ def get_refcode_and_source_mat_id_from_run_id(run_id):
         "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
         "batch-002/run-information-batch-002.csv"
     )
-    # BATCH3_RUN_INFO_PATH = (
-    #    "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
-    #    "batch-003-0/run-information-batch-003-0.csv"
-    # )
+    BATCH3_RUN_INFO_PATH = (
+        "https://raw.githubusercontent.com/emo-bon/sequencing-logistics-crate/refs/heads/main/"
+        "shipment/batch-003-0/run-information-batch-003.csv"
+    )
 
     # for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]):
-    for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]:
-        #print(f"Reading {batch}")
+    for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]:
+        log.debug(f"Reading {batch}")
         df = pd.read_csv(batch, encoding='iso-8859-1')
         for row in df[["reads_name", "ref_code", "source_mat_id"]].values.tolist():
             if isinstance(row[0], str):
@@ -176,7 +176,7 @@ def get_refcode_and_source_mat_id_from_run_id(run_id):
                 # Not all samples with an EMO BON code were sent to sequencing
                 continue
     else:
-        print(f"Cannot find run_id {run_id} in any of the run information files")
+        log.info(f"Cannot find run_id {run_id} in any of the run information files")
         return (None, None)
 
 
@@ -207,14 +207,14 @@ def get_run_id_and_ref_code_from_source_mat_id(source_mat_id):
         "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
         "batch-002/run-information-batch-002.csv"
     )
-    # BATCH3_RUN_INFO_PATH = (
-    #    "https://raw.githubusercontent.com/emo-bon/sequencing-crate/refs/heads/main/shipment/"
-    #    "batch-003-0/run-information-batch-003-0.csv"
-    # )
+    BATCH3_RUN_INFO_PATH = (
+        "https://raw.githubusercontent.com/emo-bon/sequencing-logistics-crate/refs/heads/main/"
+        "shipment/batch-003-0/run-information-batch-003.csv"
+    )
 
     # for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]):
-    for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]:
-        #print(f"Reading {batch}")
+    for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]:
+        log.debug(f"Reading {batch}")
         df = pd.read_csv(batch, encoding='iso-8859-1')
         for row in df[["reads_name", "ref_code", "source_mat_id"]].values.tolist():
             if isinstance(row[0], str):
@@ -225,5 +225,5 @@ def get_run_id_and_ref_code_from_source_mat_id(source_mat_id):
                 # Not all samples with an EMO BON code were sent to sequencing
                 continue
     else:
-        print(f"Cannot find run_id {source_mat_id} in any of the run information files")
+        log.info(f"Cannot find run_id {source_mat_id} in any of the run information files")
         return (None, None)

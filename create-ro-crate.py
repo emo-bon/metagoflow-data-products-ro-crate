@@ -14,9 +14,9 @@ import shutil
 import urllib
 import glob
 import subprocess
+import configparser
 import logging as log
 from pathlib import Path
-
 import pandas as pd
 from utils.arup_archive import main as arup_main  # noqa: F401
 
@@ -44,20 +44,23 @@ To upload the files to S3 use the -u flag.
 To remove sequence data files use the -w flag.
 To debug use the -d flag.
 
-./create-ro-crate.py -d <target_directory> -y <yaml_configuration>
+./create-ro-crate.py <target_directory> <yaml_configuration>
 
 """
 
 #########################################################################################
-# These are the paths to the external data files that are used to build the RO-Crate
-# run-information files for each batch - these return the ref_code for a given MGF run_id
+# run-information files for each batch set to sequencing facility
 BATCH1_RUN_INFO_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
-    "batch-001/run-information-batch-001.csv"
+    "https://raw.githubusercontent.com/emo-bon/sequencing-logistics-crate/main/"
+    "shipment/batch-001/run-information-batch-001.csv"
 )
 BATCH2_RUN_INFO_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/sequencing-data/main/shipment/"
-    "batch-002/run-information-batch-002.csv"
+    "https://raw.githubusercontent.com/emo-bon/sequencing-logistics-crate/main/"
+    "shipment/batch-002/run-information-batch-002.csv"
+)
+BATCH3_RUN_INFO_PATH = (
+    "https://raw.githubusercontent.com/emo-bon/sequencing-logistics-crate/main/"
+    "shipment/batch-003-0/run-information-batch-003.csv"
 )
 # ENA ACCESSSION INFO for each batch
 BATCH1_ENA_ACCESSION_INFO_PATH = (
@@ -68,15 +71,13 @@ BATCH2_ENA_ACCESSION_INFO_PATH = (
     "https://raw.githubusercontent.com/emo-bon/sequencing-data/refs/heads/main/"
     "shipment/batch-002/ena-accession-numbers-batch-002.csv"
 )
-# The combined sampling event logsheets for batch 1 and 2
-COMBINED_LOGSHEETS_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
-    "refs/heads/main/validated-data/Batch1and2_combined_logsheets_2024-11-12.csv"
-)
-OBSERVATORY_LOGSHEETS_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
-    "refs/heads/main/validated-data/Observatory_combined_logsheets_validated.csv"
-)
+
+# Currently missing
+#BATCH3_ENA_ACCESSION_INFO_PATH = (
+#    "https://raw.githubusercontent.com/emo-bon/sequencing-data/refs/heads/main/"
+#    "shipment/batch-003-0/ena-accession-numbers-batch-003.csv"
+#)
+
 # The ro-crate metadata template from Github
 TEMPLATE_URL = (
     "https://raw.githubusercontent.com/emo-bon/MetaGOflow-Data-Products-RO-Crate"
@@ -91,23 +92,22 @@ SEDIMENTS_MGF_PATH = (
     "https://docs.google.com/spreadsheets/d/"
     "1j9tRRsRCcyViDMTB1X7lx8POY1P5bV7UijxKKSebZAM/gviz/tq?tqx=out:csv&sheet=SEDIMENTS"
 )
-
 # S3 store path
-S3_STORE_URL = "https://s3.mesocentre.uca.fr/mgf-data-products/files/md5"
+#S3_STORE_URL_TEMPLATE = "https://s3.mesocentre.uca.fr/{bucket_name}/files/md5"
 
 # This is the workflow YAML file, the prefix is the "-n" parameter of the
 # "run_wf.sh" script:
 WORKFLOW_YAML_FILENAME = "./{run_parameter}.yml"
 CONFIG_YAML_PARAMETERS = [
-    "datePublished",
     "run_parameter",
+    "ro_crate_repository",
+    "date_published",
     "missing_files",
 ]
 
 # This is a submodule of the current repository
-# https://github.com/emo-bon/metaGOflow-rocrates-dvc
-# RO_CRATE_REPO_PATH = "metaGOflow-rocrates-dvc"
-RO_CRATE_REPO_PATH = "analysis-results-cluster-01-crate"
+#RO_CRATE_REPO_PATH = "analysis-results-cluster-01-crate" # Batch 1 and 2
+#RO_CRATE_REPO_PATH = "analysis-results-cluster-02-crate" # Batch 3
 
 MANDATORY_FILES = [
     "./fastp.html",
@@ -196,7 +196,7 @@ def get_ref_code_and_prefix(conf):
     run_id is the last part of the reads_name in the run information file.
     e.g. 'DBH_AAAAOSDA_1_HWLTKDRXY.UDI235' and is the name used to label the target_directory.
     """
-    for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH]):
+    for i, batch in enumerate([BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]):
         df = pd.read_csv(batch, encoding='iso-8859-1')
         for row in df[["reads_name", "ref_code", "source_mat_id"]].values.tolist():
             if isinstance(row[0], str):
@@ -463,7 +463,7 @@ def read_yaml(yaml_config):
     # Check yaml parameters are formated correctly, but not necessarily sane
     for param in CONFIG_YAML_PARAMETERS:
         log.debug(f"Config paramater {param}: {conf[param]}")
-        if param == "datePublished":
+        if param == "date_published":
             if conf[param] == "None":
                 # No specified date, delete from conf
                 # Its absence will trigger formatting
@@ -473,14 +473,17 @@ def read_yaml(yaml_config):
             else:
                 if not isinstance(conf[param], str):
                     log.error(
-                        "'dataPublished' should either be a string or 'None'. Bailing..."
+                        "YAML 'dataPublished' parameter should be"
+                        " either a string or 'None'"
                     )
                     sys.exit()
                 try:
                     datetime.datetime.fromisoformat(conf[param])
                 except ValueError:
-                    log.error(f"'datePublished' must conform to ISO 8601: {param}")
-                    log.error("Bailing...")
+                    log.error(
+                        f"YAML 'date_published' parameter must"
+                        f" conform to ISO 8601: {param}"
+                        )
                     sys.exit()
         elif param == "missing_files":
             if param not in conf:
@@ -489,14 +492,20 @@ def read_yaml(yaml_config):
                 for filename in conf[param]:
                     if not isinstance(filename, str):
                         log.error(
-                            f"Parameter '{filename}' in 'missing_files' list in YAML file must be a string."
+                            f"YAML 'missing_files' parameter {filename} is"
+                            f" not a string."
                         )
-                        log.error("Bailing...")
                         sys.exit()
+        elif param == "ro_crate_repository":
+            log.debug(f"YAML ro_crate_repository: {conf[param]}")
+            if not Path(conf[param]).exists():
+                log.error(
+                    f"YAML 'ro_crate_reopository' parameter {conf[param]} does not exist."
+                )
+                sys.exit()
         else:
             if not conf[param] or not isinstance(conf[param], str):
                 log.error(f"Parameter '{param}' in YAML file must be a string.")
-                log.error("Bailing...")
                 sys.exit()
     log.info("YAML configuration looks good...")
     return conf
@@ -594,13 +603,27 @@ def get_metadata_from_observatory_logsheets(conf):
 
     """
 
+    # Observatory sheet:
+    # https://github.com/emo-bon/observatory-rformosa-crate/blob/main/logsheets/transformed/sediment_observatory.csv
+    transformed_observatory_sheet_url = (
+        f"https://raw.githubusercontent.com/emo-bon/"
+        f"observatory-{conf['obs_id'].lower()}-crate/"
+        f"refs/heads/main/logsheets/transformed/"
+        f"{conf['env_package_short']}_observatory.csv"
+        )
+    log.debug(f"Transformed_observatory_url = {transformed_observatory_sheet_url}")
     # Get the observatory data
-    df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH, encoding='iso-8859-1')
+    df_obs = pd.read_csv(transformed_observatory_sheet_url, encoding='iso-8859-1')
+
     # Get the observatory data using the obs_id and env_package variables
+    # There is only one row, but...
     row_obs = df_obs.loc[
         (df_obs["obs_id"] == conf["obs_id"])
-        & (df_obs["env_package"] == conf["env_package_id"])
+        &
+        (df_obs["env_package"] == conf["env_package_short"])
     ].to_dict()
+
+    log.debug("Row in observatory sheet: %s" % row_obs)
 
     # Sampling organisation
     conf["sampling_org"] = list(row_obs["organization"].values())[0]
@@ -610,25 +633,29 @@ def get_metadata_from_observatory_logsheets(conf):
     lat = list(row_obs["latitude"].values())[0]
     long = list(row_obs["longitude"].values())[0]
     conf["sampling_org_latlong"] = f"{lat}:{long}"
+
+    # https://github.com/emo-bon/observatory-bergen-crate/issues/13
     # Sampling person affiliation
-    conf["sampling_org_ena_number"] = list(
-        row_obs["ENA_accession_number_project"].values()
-    )[0]
+    try:
+        conf["sampling_org_ena_number"] = list(
+            row_obs["ENA_accession_number_project"].values()
+        )[0]
+    except KeyError:
+        conf["sampling_org_ena_number"] = list(
+            row_obs["ENA_accesion_number_project"].values()
+        )[0]
+
     # Sampling person contact name
     conf["sampling_org_contact_name"] = list(row_obs["contact_name"].values())[0]
     conf["sampling_org_contact_orcid"] = list(row_obs["contact_orcid"].values())[0]
 
-    log.debug("Row in observatory sheet: %s" % row_obs)
     log.debug("conf = {conf}")
 
     return conf
 
 
-def get_metadata_from_sample_logsheets(conf, overide_error=False):
+def get_metadata_from_station_logsheets(conf, overide_error=False):
     """
-    Parse sample logsheet data from the combined logsheet on Github
-    and add to the configuration dictionary.
-
     env_package_id
     obs_id
     #sampling_person_name
@@ -646,30 +673,57 @@ def get_metadata_from_sample_logsheets(conf, overide_error=False):
 
     """
 
+    # Parse the source_mat_id to get station name (obs_id) and env_package
+    obs_id = conf["source_mat_id"].split("_")[1]
+    conf["obs_id"] = obs_id
+    log.debug(f"obs_id = {obs_id}")
+    ep = conf["source_mat_id"].split("_")[2]
+    if ep == "Wa":
+        env_package  = "water_column"
+        env_package_short = "water"
+    elif ep == "So":
+        env_package  = "soft_sediment"
+        env_package_short = "sediment"
+    else:
+        log.error(f"Unknown env_package {ep} in {conf['source_mat_id']}")
+        sys.exit()
+    conf["env_package_id"] = env_package
+    conf["env_package_short"] = env_package_short
+    log.debug(
+            f"env_package = {env_package}; env_package_short = "
+            f"{env_package_short}"
+        )
+
+    # Pull the sheets from the observatory crates on github
+    # We are looking for the transformed sheets "water" or "sediment"
+    # https://raw.githubusercontent.com/emo-bon/observatory-bpns-crate/refs/heads/main/logsheets/transformed/water_sampling.csv
+    transformed_sheet_url = (
+        f"https://raw.githubusercontent.com/emo-bon/"
+        f"observatory-{obs_id.lower()}-crate/"
+        f"refs/heads/main/logsheets/transformed/{env_package_short}_sampling.csv"
+        )
+    log.debug(f"Address of transformed sheet: {transformed_sheet_url}")
     # Read the relevant row in sample sheet
     try:
-        df_samp = pd.read_csv(COMBINED_LOGSHEETS_PATH, encoding='iso-8859-1')
+        df_logsheets = pd.read_csv(transformed_sheet_url) #, encoding='iso-8859-1')
     except urllib.error.HTTPError:
-        log.error("Cannot find the combined logsheets at %s" % COMBINED_LOGSHEETS_PATH)
-        sys.exit()
-    row_samp = df_samp.loc[df_samp["ref_code"] == conf["ref_code"]].to_dict()
+        log.error(f"Cannot find the combined logsheets at {transformed_sheet_url}")
+
+    row_samp = df_logsheets.loc[df_logsheets["source_mat_id"] == conf["source_mat_id"]].to_dict()
     log.debug("Row in sample sheet: %s" % row_samp)
 
     # Get the env_package either water_column or soft_sediments
-    try:
-        env_package = list(row_samp["env_package"].values())[0]
-    except IndexError:
-        log.error("Cannot find the env_package for ref_code %s" % conf["ref_code"])
-        sys.exit()
-    log.debug("env_package: %s" % env_package)
-    assert env_package in ["water_column", "soft_sediment"], (
-        "env_package must be either 'water_column' or 'soft_sediment'"
-        "Found: %s" % env_package
-    )
-    conf["env_package_id"] = env_package
-
-    # Get the observatory ID
-    conf["obs_id"] = list(row_samp["obs_id"].values())[0]
+    #try:
+    #    env_package = list(row_samp["env_package"].values())[0]
+    #except IndexError:
+    #    log.error("Cannot find the env_package for ref_code %s" % conf["ref_code"])
+    #    sys.exit()
+    #log.debug("env_package: %s" % env_package)
+    #assert env_package in ["water_column", "soft_sediment"], (
+    #    "env_package must be either 'water_column' or 'soft_sediment'"
+    #    "Found: %s" % env_package
+    #)
+    #conf["env_package_id"] = env_package
 
     # Get the observatory data
     # df_obs = pd.read_csv(OBSERVATORY_LOGSHEETS_PATH)
@@ -693,6 +747,7 @@ def get_metadata_from_sample_logsheets(conf, overide_error=False):
     # Add MGF analysis creator_person
     mgf_path = FILTERS_MGF_PATH if env_package == "water_column" else SEDIMENTS_MGF_PATH
     data = pd.read_csv(mgf_path, encoding='iso-8859-1').to_dict(orient="records")
+    log.debug(f"Looking for ref_code: {conf['ref_code']}")
     for row in data:
         if row["ref_code"] == conf["ref_code"]:
             log.debug("Row in %s: %s" % (mgf_path, row))
@@ -760,16 +815,33 @@ def get_metadata_from_sample_logsheets(conf, overide_error=False):
                 "https://github.com/emo-bon/MetaGOflow/commit/3cf3a7d39fabc6e75a8cb2971a711c2d781c84d0"
             )
 
+    for k,v in conf.items():
+        log.debug(f"{k} = {v}")
+
     return conf
 
 
 def get_ena_accession_number(conf):
     """Get the ENA accession number for a given ref_code."""
+    
+    #Batch 3 ENA accession's not available as of Feb 2026
+    if conf["batch_number"] == 3:
+        conf["ena_accession_number"] = "UNKNOWN"
+        conf["ena_accession_number_url"] = (
+            f"https://www.ebi.ac.uk/ena/browser/view/<unknown>"
+            )
+        log.debug("ena_accession_number = UNKNOWN")
+        log.debug(
+                "ena_accession_number_url = "
+                "https://www.ebi.ac.uk/ena/browser/view/<unknown>"
+            )
+        return conf
+
     # Read the relevant row in sample sheet
     if conf["batch_number"] == 1:
         df_ena = pd.read_csv(BATCH1_ENA_ACCESSION_INFO_PATH, encoding='iso-8859-1')
     elif conf["batch_number"] == 2:
-        df_ena = pd.read_csv(BATCH2_ENA_ACCESSION_INFO_PATH, encoding='iso-8859-1')
+        df_ena = pd.read_csv(BATCH2_ENA_ACCESSION_INFO_PATH, encoding='iso-8859-1')    
     else:
         log.error(f"Batch number not recognised {conf['batch_number']}")
         sys.exit()
@@ -796,6 +868,14 @@ def get_ena_accession_number(conf):
 
 def add_sequence_data_links(conf, override_error=False):
     """Add the links to the raw sequence data files in ENA"""
+
+    # Batch3 ENA accession numbers not available;
+    if conf["ena_accession_number"] == "UNKNOWN":
+        conf["forward_reads_link"] = f"https://<forward reads URL unknown>"
+        conf["reverse_reads_link"] = f"https://<reverse reads URL unknown>"
+        log.debug(f"forward and reverse_reads_links = UNKNOWN")
+        return conf
+
     # ENA ACCESSION filereport for sample
     filereport_url = (
         "https://www.ebi.ac.uk/ena/portal/api/filereport?accession={ena_accession_number}"
@@ -862,9 +942,9 @@ def write_metadata_json(
     )
 
     # Add date to "datePublished"
-    if "datePublished" in conf:
+    if "date_published" in conf:
         template["@graph"][1]["datePublished"] = template["@graph"][1][
-            "datePublished"
+            "date_published"
         ].format(**conf)
     else:
         template["@graph"][1]["datePublished"] = datetime.datetime.now().strftime(
@@ -980,7 +1060,7 @@ def write_dvc_upload_script(conf):
     and later git commit
     """
     log.debug(f"MANDATORY_FILES = {MANDATORY_FILES}")
-    upload_script_path = Path(RO_CRATE_REPO_PATH, f"{conf['source_mat_id']}_upload.sh")
+    upload_script_path = Path(conf["ro_crate_repository"], f"{conf['source_mat_id']}_upload.sh")
     with open(upload_script_path, "w") as f:
         f.write("#!/bin/bash\n")
         f.write("set -e\n")
@@ -1012,57 +1092,12 @@ def write_dvc_upload_script(conf):
     return upload_script_path
 
 
-# def initialise_dvc_repo(warn=True):
-#     """Initialise the DVC repository in RO_CRATE_REPO_PATH
-
-#     dvc remote add -d myremote s3://mgf-data-products
-#     dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr
-#     dvc remote modify myremote profile "eosc-fairease1"
-
-#     The issue here is that ./RO_CRATE_REPO_PATH is not a git repository
-#     so cannot initialise DVC with git.
-
-#     A solution might be to have the repo as a submodule of a git repo
-#     https://git-scm.com/book/en/v2/Git-Tools-Submodules
-
-#     """
-#     msg = ("The ro-crate DVC repository should be cloned as a submodule this repository. "
-#            "https://github.com/emo-bon/metaGOflow-rocrates-dvc"
-#     )
-#     if warn:
-#         log.warning(msg)
-#         sys.exit()
-
-#     # This code should not run - just leaving it here for reference
-#     cwd_dir = Path.cwd()
-#     os.chdir(RO_CRATE_REPO_PATH)
-#     cmds = [
-#         "dvc init"  # --no-scm " - now using submodule
-#         "dvc remote add -d myremote s3://mgf-data-products",
-#         "dvc remote modify myremote endpointurl https://s3.mesocentre.uca.fr",
-#         "dvc remote modify myremote profile 'eosc-fairease1'",
-#     ]
-#     for cmd in cmds:
-#         child = subprocess.Popen(
-#             str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-#         )
-#         stdoutdata, stderrdata = child.communicate()
-#         return_code = child.returncode
-#         if return_code != 0:
-#             log.error(f"Error whilst trying to run command: {cmd}")
-#             log.error("Stderr: %s " % stderrdata)
-#             log.error("Return code: %s" % return_code)
-#             log.error("Exiting...")
-#             sys.exit()
-#     os.chdir(cwd_dir)
-
-
-def run_dvc_upload_script(upload_script_path):
+def run_dvc_upload_script(upload_script_path, conf):
     """Run the DVC upload script"""
     # First move to the ro-crate directory
     cwd_dir = Path.cwd()
     upload_script = Path(upload_script_path).name
-    os.chdir(RO_CRATE_REPO_PATH)
+    os.chdir(conf["ro_crate_repository"])
     cmd = f"bash {upload_script}"
     child = subprocess.Popen(
         str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
@@ -1136,44 +1171,44 @@ def move_files_out_of_results(new_archive_path, without_sequence_data=False):
 
 
 # No longer used
-def sync_to_s3(conf):
-    """
-    s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync ./{source_mat_id} s3://mgf-data-products
-    """
-    # We need to be in the RO_CRATE_REPO_PATH to run the s5cmd command
-    # ie the dir above the ro-crate directory
-    cwd = Path.cwd()
-    os.chdir(RO_CRATE_REPO_PATH)
-
-    # Move the ro-crate-metadata.json and ro-crate-preview.html to the parent directory
-    # so that they are not included in the sync
-    ro_crate_metatadata_path = Path(conf["source_mat_id"], "ro-crate-metadata.json")
-    temp_ro_crate_metadata_path = Path.cwd() / "ro-crate-metadata.json"
-    ro_crate_metatadata_path.rename(temp_ro_crate_metadata_path)
-
-    ro_crate_preview_path = Path(conf["source_mat_id"], "ro-crate-preview.html")
-    temp_ro_crate_preview_path = Path.cwd() / "ro-crate-preview.html"
-    ro_crate_preview_path.rename(temp_ro_crate_preview_path)
-
-    cmd = f"s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync {conf['source_mat_id']} s3://mgf-data-products"
-    child = subprocess.Popen(
-        str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-    )
-    stdoutdata, stderrdata = child.communicate()
-    return_code = child.returncode
-    if return_code != 0:
-        log.error("Error whilst trying to sync to S3")
-        log.error("Stderr: %s " % stderrdata)
-        log.error("Command: %s" % cmd)
-        log.error("Return code: %s" % return_code)
-        log.error("Exiting...")
-        sys.exit()
-    log.info("Synced to S3")
-
-    # Move the ro-crate-metadata.json and ro-crate-preview.html back to the ro-crate directory
-    temp_ro_crate_metadata_path.rename(ro_crate_metatadata_path)
-    temp_ro_crate_preview_path.rename(ro_crate_preview_path)
-    os.chdir(cwd)
+#def sync_to_s3(conf):
+#    """
+#    s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync ./{source_mat_id} s3://mgf-data-products
+#    """
+#    # We need to be in the RO_CRATE_REPO_PATH to run the s5cmd command
+#    # ie the dir above the ro-crate directory
+#    cwd = Path.cwd()
+#    os.chdir(RO_CRATE_REPO_PATH)
+#
+#    # Move the ro-crate-metadata.json and ro-crate-preview.html to the parent directory
+#    # so that they are not included in the sync
+#    ro_crate_metatadata_path = Path(conf["source_mat_id"], "ro-crate-metadata.json")
+#    temp_ro_crate_metadata_path = Path.cwd() / "ro-crate-metadata.json"
+#    ro_crate_metatadata_path.rename(temp_ro_crate_metadata_path)
+#
+#    ro_crate_preview_path = Path(conf["source_mat_id"], "ro-crate-preview.html")
+#    temp_ro_crate_preview_path = Path.cwd() / "ro-crate-preview.html"
+#    ro_crate_preview_path.rename(temp_ro_crate_preview_path)
+#
+#    cmd = f"s5cmd --profile eosc-fairease1 --endpoint-url https://s3.mesocentre.uca.fr sync {conf['source_mat_id']} s3://mgf-data-products"
+#    child = subprocess.Popen(
+#        str(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+#    )
+#    stdoutdata, stderrdata = child.communicate()
+#    return_code = child.returncode
+#    if return_code != 0:
+#        log.error("Error whilst trying to sync to S3")
+#        log.error("Stderr: %s " % stderrdata)
+#        log.error("Command: %s" % cmd)
+#        log.error("Return code: %s" % return_code)
+#        log.error("Exiting...")
+#        sys.exit()
+#    log.info("Synced to S3")
+#
+#    # Move the ro-crate-metadata.json and ro-crate-preview.html back to the ro-crate directory
+#    temp_ro_crate_metadata_path.rename(ro_crate_metatadata_path)
+#    temp_ro_crate_preview_path.rename(ro_crate_preview_path)
+#    os.chdir(cwd)
 
 
 def remove_data_files_from_ro_crate(ro_crate_name):
@@ -1204,6 +1239,7 @@ def format_file_ids_and_add_download_links(
     for f in MANDATORY_FILES:
         pd[Path(f).name.format(**conf)] = f.format(**conf)
     log.debug(f"pd = {pd}")
+
 
     # Note that the @ids in the stanza and hasParts are qualified
     for stanza in metadata_json["@graph"]:
@@ -1243,6 +1279,9 @@ def format_file_ids_and_add_download_links(
                 #Ignore the links to the raw seq data in ENA
                 elif "_clean.fastq.gz" in stanza["@id"]:
                     continue
+                # ENA Accessions numbers unknown
+                elif "URL unknown" in stanza["@id"]:
+                    continue
                 else:
                     # Remove the ./ from the @id
                     key = Path(stanza["@id"]).name
@@ -1252,7 +1291,15 @@ def format_file_ids_and_add_download_links(
                     log.error(f"Cannot find the file {fn}")
                     sys.exit()
                 md5 = yaml.safe_load(open(fn))["outs"][0]["md5"]
-                md5_link = os.path.join(S3_STORE_URL, md5[:2], md5[2:])
+                link_template = "{s3_endpoint}/{bucket_name}/files/md5"
+                md5_link = os.path.join(
+                    link_template.format(
+                        s3_endpoint = conf["s3_endpoint"],
+                        bucket_name = conf["bucket_name"]
+                        ),
+                    md5[:2],
+                    md5[2:]
+                    )
                 stanza["downloadUrl"] = f"{md5_link}"
 
                 # Add contentSize
@@ -1277,7 +1324,7 @@ def run_arup(target_directory, conf):
         # 'cluster' (effectively just several batches) are going to be stored
         # e.g. https://github.com/emo-bon/analysis-results-cluster-01-crate
         # will store Batch 1 and Batch 2 RO-Crates
-        "CLUSTER_ID": RO_CRATE_REPO_PATH,
+        "CLUSTER_ID": conf["ro_crate_repository"],
         # This is in fact the Flowcell id (e.g. HCFCYDSX5) and Index id (e.g. UDI141)
         # of the sequencing machine where the sample was processed
         # e.g. HCFCYDSX5.UDI141
@@ -1338,7 +1385,7 @@ def main(
         sys.exit()
     log.debug("Found target directory %s" % target_directory)
     run_id = Path(target_directory).name
-    log.info("run_id = %s" % run_id)
+    log.info("run_id:  %s" % run_id)
     if "UDI" not in run_id.split(".")[-1]:
         log.error("Target directory name does appear to be correct format")
         log.error("It needs to match the format HWLTKDRXY.UDI210")
@@ -1349,11 +1396,19 @@ def main(
     # Get the emo bon ref_code, batch number, and prefix
     conf = get_ref_code_and_prefix(conf)
 
+    # Get the bucket name
+    dvc_conf = configparser.ConfigParser()
+    dvc_conf.read(Path(conf["ro_crate_repository"], ".dvc/config"))
+    conf["bucket_name"] = dvc_conf['\'remote "myremote"\'']['url'].split("//")[1]
+    conf["s3_endpoint"] = dvc_conf['\'remote "myremote"\'']['endpointurl'] 
+    log.info(f"RO-Crate repository: {conf['ro_crate_repository']}")
+    log.info(f"S3 endpoint: {conf['s3_endpoint']}")
+    log.info(f"Bucket name: {conf['bucket_name']}")
+    
     # Check that an archive with the same name does not already exist
-    ro_crate_name = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"] + "-ro-crate")
+    ro_crate_name = Path(conf["ro_crate_repository"], conf["source_mat_id"] + "-ro-crate")
     if os.path.exists(ro_crate_name):
         log.error(f"An archive with the name {ro_crate_name} already exists")
-        log.error("Exiting...")
         sys.exit()
 
     # Check all files are present
@@ -1362,7 +1417,7 @@ def main(
     check_and_format_data_file_paths(target_directory, conf, check_exists=True)
 
     # Build the conf dictionary
-    conf = get_metadata_from_sample_logsheets(conf, override_error)
+    conf = get_metadata_from_station_logsheets(conf, override_error)
     conf = get_metadata_from_observatory_logsheets(conf)
     conf = get_ena_accession_number(conf)
     conf = add_sequence_data_links(conf, override_error)
@@ -1384,7 +1439,7 @@ def main(
     # TODO: Could probably just move the writing of the metadata.json to the end
     # because I'm no longer using s5cmd sync
 
-    new_archive_path = Path(RO_CRATE_REPO_PATH, conf["source_mat_id"])
+    new_archive_path = Path(conf["ro_crate_repository"], conf["source_mat_id"])
     log.info(f"Moving archive to {new_archive_path}...")
     try:
         Path(target_directory).rename(new_archive_path)
@@ -1411,7 +1466,7 @@ def main(
     log.debug(f"Written upload script to {upload_script_path}")
     if upload_dvc:
         log.info("Running DVC upload script...")
-        run_dvc_upload_script(upload_script_path)
+        run_dvc_upload_script(upload_script_path, conf)
         log.info("DVC upload script completed without error")
         os.remove(upload_script_path)
     else:
@@ -1432,7 +1487,7 @@ def main(
         outfile.write(metadata_json_formatted)
 
     # Rename new ro-crate
-    Path(RO_CRATE_REPO_PATH, conf["source_mat_id"]).rename(ro_crate_name)
+    Path(conf["ro_crate_repository"], conf["source_mat_id"]).rename(ro_crate_name)
     log.info("Renamed ro-crate directory")
 
     # If we are uploading to dvc we need to remove the data files from the ro-crate

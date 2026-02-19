@@ -1,12 +1,16 @@
-#Optionally add your own date, else if you leave "None", today's date will be used:
-#Must conform to ISO 8601
-"datePublished": "None"
+# This is the value of "-n" parameter of he "run_wf.sh" script
+"run_parameter": "run"
 
-#Run name: this is the value of "-n" to the "run_wf.sh" script
-"run_parameter": ""
+# Path to the RO-Crate repository relative to the top directory of the
+# application - typically this would be a git submodule
+# ro_crate_repository "analysis-results-cluster-01-crate"
+"ro_crate_repository": "analysis-results-cluster-02-crate"
 
-#Missing files - if a mandatory file is missing, but you still want to build a
-#ro-crate, specify file paths here as a list of strings:
-#e.g. ["krona.html", "DBB.merged_SSU.fasta.mseq.gz"]
+# Optionally add your own date, else if you leave "None", today's date will be used:
+# Must conform to ISO 8601
+"date_published": "None"
+
+# Missing files - if a mandatory file is missing, but you still want to build a
+# ro-crate, specify file paths here as a list of strings:
+# e.g. ["krona.html", "DBB.merged_SSU.fasta.mseq.gz"]
 "missing_files" : []
-
