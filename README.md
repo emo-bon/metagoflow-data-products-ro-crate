@@ -1,9 +1,11 @@
 # MetaGOflow-Data-Products-RO-Crate
-This code builds the **metagoflow-data-products-ro-crate**'s which contain the [MetaGOflow](https://github.com/emo-bon/MetaGOflow) workflow results for the analysis of one EMO BON sampling event.
+This code builds the RO-Crates of the [MetaGOflow](https://github.com/emo-bon/MetaGOflow) workflow analyses results of EMO BON sampling events.
 
-This code uses [Data Version Control (dvc)](https://dvc.org/) to store files in a LFS S3 store and uses the .dvc stub files as the payload. The (prototype) ro-crate holding repository [metaGOflow-rocrates-dvc](https://github.com/emo-bon/metaGOflow-rocrates-dvc) is a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) of this repository and contains the dvc root.
+This code uses [Data Version Control (dvc)](https://dvc.org/) to store files in a LFS S3 store and uses the .dvc stub files as the RO-Crate payload. The RO-Crate holding repositories are [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) of this repository and contains the dvc root.
 
-This ro-crate is specifically for the [FAIR-EASE Biodiversity Use Case VRE data products](https://fairease.eu/use-cases/biodiversity-observation) - it does not include all of the MetaGOflow output.
+There are currently 2 repositories:
+(public) [analysis-results-cluster-01-crate](https://github.com/emo-bon/analysis-results-cluster-01-crate) contains RO-Crates from EMOBON Batches 1 & 2.
+(private) [analysis-results-cluster-02-crate](https://github.com/emo-bon/analysis-results-cluster-02-crate) contains RO-Crates from EMOBON Batch 3 (these do not yet contain links to ENA Accession numbers).
 
 # How to create a RO-Crate:
 
