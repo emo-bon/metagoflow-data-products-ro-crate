@@ -31,12 +31,14 @@ FILE_PATTERNS = [
     "final.contigs.fa",
 ]
 
+# RO_CRATE_REPO_PATH = "../analysis-results-cluster-01-crate"
+RO_CRATE_REPO_PATH = "../analysis-results-cluster-02-crate"
 
 def get_existing_rorates():
     """Return a list of existing ro-crates"""
     utils_path = Path(__file__).resolve()
     utils_dir = utils_path.parent
-    path_to_rocrates = Path(utils_dir, "../analysis-results-cluster-01-crate")
+    path_to_rocrates = Path(utils_dir, RO_CRATE_REPO_PATH)
     log.debug(f"path_to_rocrates: {path_to_rocrates}")
     existing_rocrates_paths = list(Path(path_to_rocrates).glob("*-ro-crate"))
     existing_rocrates_names = [p.name for p in existing_rocrates_paths]
