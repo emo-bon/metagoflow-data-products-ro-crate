@@ -132,6 +132,7 @@ def _get_raw_sequence_file_names(source_mat_id):
         log.error("Cannot identify env_package {env_package}")
         sys.exit()
 
+    found = False
     for batch in [BATCH1_RUN_INFO_PATH, BATCH2_RUN_INFO_PATH, BATCH3_RUN_INFO_PATH]:
         df = pd.read_csv(batch, encoding='iso-8859-1')
         for row in df[["source_mat_id", "run", "reads_name"]].values.tolist():
@@ -142,11 +143,13 @@ def _get_raw_sequence_file_names(source_mat_id):
                     reads_name = row[2]
                     log.info(f"Found run: {run}")
                     log.info(f"Found reads_name: {reads_name}")
+                    found = True
                     break
             elif math.isnan(row[0]):
                 # Not all samples with an EMO BON code were sent to sequencing
                 continue
-        break
+        if found:
+            break
     else:
         log.error(f"Cannot find {source_mat_id}")
         sys.exit()
@@ -167,7 +170,7 @@ def _download_data_files(paths, outpath):
     SCP in a subprocess seems easiest
     """
 
-    outpath.mkdir(exist_ok=True)
+    outpath.mkdir(parents=True, exist_ok=True)
 
     local_paths = []
     for path in paths:
@@ -184,7 +187,7 @@ def _download_data_files(paths, outpath):
     return local_paths
     
 
-def download_raw_sequences_of_replicate_pair(pair, outpath="data"):
+def download_raw_sequences_of_replicate_pair(pair, outpath):
     """
     Download the raw sequence data for a pair of technical replicates
     pair is a list of the two source_mat_id's
@@ -198,7 +201,7 @@ def download_raw_sequences_of_replicate_pair(pair, outpath="data"):
         pp.append(lps)
     return pp
 
-def main(debug=False):
+def main(test_download=False, print_reps=True, debug=True):
     """ Run test using first technical pair in SEDIMENTS
     """    
 
@@ -209,18 +212,27 @@ def main(debug=False):
         log_level = log.INFO
     log.basicConfig(format="\t%(levelname)s: %(message)s", level=log_level)
 
-    first_pair = list(SOFT_SEDIMENT_REPLICATES)[0]
-    log.info(
-        f"Running test on first pair of SEDIMENT technical replicates"
-        f"{first_pair}"
-        )
-    data_paths = download_raw_sequences_of_replicate_pair(
-        first_pair,
-        outpath = "raw_sequence_data"
-        )
-    log.info("Local paths:")
-    for path in data_paths:
-        log.info(f"\t {path}")
+    wc = list(WATER_COLUMN_REPLICATES)
+    ss = list(SOFT_SEDIMENT_REPLICATES)
+
+    if print_reps:
+        for ep in [wc, ss]:
+            for pair in ep:
+                print(pair)
+    if test_download:
+        first_pair = ss[0]
+        log.info(
+            f"Running test on first pair of SEDIMENT technical replicates"
+            f"{first_pair}"
+            )
+        data_paths = download_raw_sequences_of_replicate_pair(
+            first_pair,
+            outpath = "raw_sequence_data"
+            )
+        log.info("Local paths:")
+        for path in data_paths:
+            log.info(f"\t {path}")
 
 if __name__ == "__main__":
     main()
+
