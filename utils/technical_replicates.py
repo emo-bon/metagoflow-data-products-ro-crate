@@ -16,7 +16,11 @@ e.g. EMOBON_AAOT_Wa_1 and EMOBON_AAOT_Wa_2 are technical replicates
 WATER_COLUMN_REPLICATES and SOFT_SEDIMENT_REPLICATES are generators for
 technical replicate pairs.
 
-
+These are broken pairs and should not be combined:
+BPNS_So_5 and BPNS_So_6
+BPNS_So_17 and BPNS_So_18
+RFormosa_So_1 and RFormosa_So_2
+ROSKOGO_So_16 and ROSKOGO_So_17
 """
 
 import sys
@@ -47,6 +51,14 @@ BATCH3_RUN_INFO_PATH = (
 )
 # Path to sequence data archive
 DATA_ARCHIVE = "ceta-storage:/mnt/storage-data-pools/emo-bon-sequencing-data"
+
+BROKEN_REPLICATE_PAIRS = [
+    ("EMOBON_BPNS_So_5", "EMOBON_BPNS_So_6"),
+    ("EMOBON_BPNS_So_17", "EMOBON_BPNS_So_18"),
+    ("EMOBON_RFormosa_So_1", "EMOBON_RFormosa_So_2"),
+    ("EMOBON_ROSKOGO_So_16", "EMOBON_ROSKOGO_So_17")
+]
+
 
 def _find_wc_grouped_replicates(samples):
     duplicates_mask = samples.duplicated(
