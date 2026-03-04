@@ -13,9 +13,6 @@ Technical replicates are indicated in the "replicate" column.
 What we want is to identify replicates by their source_mat_ids
 e.g. EMOBON_AAOT_Wa_1 and EMOBON_AAOT_Wa_2 are technical replicates
 
-WATER_COLUMN_REPLICATES and SOFT_SEDIMENT_REPLICATES are generators for
-technical replicate pairs.
-
 These are broken pairs and should not be combined:
 BPNS_So_5 and BPNS_So_6
 BPNS_So_17 and BPNS_So_18
@@ -25,17 +22,23 @@ ROSKOGO_So_16 and ROSKOGO_So_17
 
 import sys
 import math
+import urllib
 import subprocess
 import logging as log
 import pandas as pd
 from pathlib import Path
 
 # The combined sampling event logsheets for batch 1 and 2
-COMBINED_LOGSHEETS_PATH = (
-    "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
-    "refs/heads/main/validated-data/Batch1and2_combined_logsheets_2024-11-12.csv"
-)
+#COMBINED_LOGSHEETS_PATH = (
+#    "https://raw.githubusercontent.com/emo-bon/emo-bon-data-validation/"
+#    "refs/heads/main/validated-data/Batch1and2_combined_logsheets_2024-11-12.csv"
+#)
 
+# 
+OBSERVATORIES_LOGSHEET = (
+    "https://raw.githubusercontent.com/emo-bon/governance-crate/"
+    "refs/heads/main/observatories.csv"
+)
 # The run-information files for each batch set to sequencing facility
 BATCH1_RUN_INFO_PATH = (
     "https://raw.githubusercontent.com/emo-bon/sequencing-logistics-crate/main/"
@@ -59,6 +62,14 @@ BROKEN_REPLICATE_PAIRS = [
     ("EMOBON_ROSKOGO_So_16", "EMOBON_ROSKOGO_So_17")
 ]
 
+def _read_observatory_names():
+    """
+    """
+    df = pd.read_csv(OBSERVATORIES_LOGSHEET, encoding='iso-8859-1')
+    all_stations = df[["EMOBON_observatory_id"]].values.tolist()
+    stations = [station for sublist in all_stations for station in sublist]
+    log.debug(f"Stations: {stations}")
+    return stations
 
 def _find_wc_grouped_replicates(samples):
     duplicates_mask = samples.duplicated(
@@ -95,20 +106,34 @@ def _iterate_replicates(groups):
     for _, group in groups:
         yield [row['source_mat_id'] for index, row in group.iterrows()]
 
-def get_technical_replicates():
-    # Extract the wc and ss samples for the combined sheet
-    df = pd.read_csv(COMBINED_LOGSHEETS_PATH)
-    wc_samples = df[df["env_package"] == "water_column"]
-    ss_samples = df[df["env_package"] == "soft_sediment"]
-    wc_groups = _find_wc_grouped_replicates(wc_samples)
-    ss_groups = _find_ss_grouped_replicates(ss_samples)
+def get_technical_replicates(observatory_name, env_package):
+    # Extract the wc and ss samples for a named observatory
+    if not env_package in ["filters", "sediments"]:
+        log.error(f"env_package must be either 'filters' or 'sediments'")
+        sys.exit()
+    sheet_type = "sediment" if env_package == "sediments" else "water"
+    observatory_sheet = (
+        f"https://raw.githubusercontent.com/emo-bon/"
+        f"observatory-{observatory_name.lower()}-crate/"
+        f"refs/heads/main/logsheets/transformed/{sheet_type}_sampling.csv"
+    )
+    log.debug(f"obs_sheet = {observatory_sheet}")
+    if env_package == "sediments":
+        sheet_env_name = "soft_sediment"
+    else:
+        sheet_env_name = "water_column"
+    try:
+        samples = pd.read_csv(observatory_sheet)
+    except urllib.error.HTTPError:
+        log.info(f"{observatory_name} {env_package} : missing - {observatory_sheet}")
+        return None
+    #samples = df.dropna(how='all')
+    if env_package == "sediments":
+        groups = _find_ss_grouped_replicates(samples)
+    else:
+        groups = _find_wc_grouped_replicates(samples)
 
-    #WATER_COLUMN_REPLICATES = iterate_replicates(wc_groups)
-    #SOFT_SEDIMENT_REPLICATES = iterate_replicates(ss_groups)
-
-    return [_iterate_replicates(wc_groups), _iterate_replicates(ss_groups)]
-
-WATER_COLUMN_REPLICATES,SOFT_SEDIMENT_REPLICATES = get_technical_replicates()
+    return _iterate_replicates(groups)
 
 def _get_raw_sequence_file_names(source_mat_id):
     """
@@ -213,7 +238,7 @@ def download_raw_sequences_of_replicate_pair(pair, outpath):
         pp.append(lps)
     return pp
 
-def main(test_download=False, print_reps=True, debug=True):
+def main(test_download=False, debug=False):
     """ Run test using first technical pair in SEDIMENTS
     """    
 
@@ -224,26 +249,19 @@ def main(test_download=False, print_reps=True, debug=True):
         log_level = log.INFO
     log.basicConfig(format="\t%(levelname)s: %(message)s", level=log_level)
 
-    wc = list(WATER_COLUMN_REPLICATES)
-    ss = list(SOFT_SEDIMENT_REPLICATES)
-
-    if print_reps:
-        for ep in [wc, ss]:
-            for pair in ep:
-                print(pair)
-    if test_download:
-        first_pair = ss[0]
-        log.info(
-            f"Running test on first pair of SEDIMENT technical replicates"
-            f"{first_pair}"
-            )
-        data_paths = download_raw_sequences_of_replicate_pair(
-            first_pair,
-            outpath = "raw_sequence_data"
-            )
-        log.info("Local paths:")
-        for path in data_paths:
-            log.info(f"\t {path}")
+    observatory_abbreviated_names = _read_observatory_names()
+    for obs_name in observatory_abbreviated_names:
+        for env_package in ["filters", "sediments"]:
+            replicate_pairs = []
+            replicate_pairs_generator = get_technical_replicates(obs_name, env_package)
+            if replicate_pairs_generator:
+                replicate_pairs = list(get_technical_replicates(obs_name, env_package))
+            lognote = f"Station {obs_name} {env_package}"
+            log.info(f"{lognote} {len(replicate_pairs)}")
+            count = 1
+            for replicate_pair in replicate_pairs:
+                log.info(f"\t\t{lognote} {count}: {replicate_pair}")
+                count += 1
 
 if __name__ == "__main__":
     main()
