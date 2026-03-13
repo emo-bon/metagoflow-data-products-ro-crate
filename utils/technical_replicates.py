@@ -205,21 +205,30 @@ def _get_raw_sequence_file_names(source_mat_id):
 def _download_data_files(paths, outpath):
     """
     SCP in a subprocess seems easiest
+    
+    outdir is a Path() to a directory named for the source_mat_id
     """
-
-    outpath.mkdir(parents=True, exist_ok=True)
+    # Check to see if the raw seq files are already present in the source_mat_id
+    # directory
+    already_exists = False
+    try:
+        outpath.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        log.info(f"Directory '{outpath}' already exists.")
+        already_exists = True
 
     local_paths = []
     for path in paths:
-        p = Path(DATA_ARCHIVE, path)
-        scp_command = ["scp", "-q", p, outpath]
-        log.debug(f"scp command: {scp_command}")
-        log.info(f"Downloading: {p.name}")
-        try:
-            subprocess.run(scp_command, check=True)
-            log.debug(f"File downloaded successfully to {outpath}")
-        except subprocess.CalledProcessError as e:
-            log.error(f"Error downloading file: {e}")
+        if not already_exists():
+            p = Path(DATA_ARCHIVE, path)
+            scp_command = ["scp", "-q", p, outpath]
+            log.debug(f"scp command: {scp_command}")
+            log.info(f"Downloading: {p.name}")
+            try:
+                subprocess.run(scp_command, check=True)
+                log.debug(f"File downloaded successfully to {outpath}")
+            except subprocess.CalledProcessError as e:
+                log.error(f"Error downloading file: {e}")
         local_paths.append(Path(outpath, path.name))
     return local_paths
     
@@ -228,6 +237,9 @@ def download_raw_sequences_of_replicate_pair(pair, outpath):
     """
     Download the raw sequence data for a pair of technical replicates
     pair is a list of the two source_mat_id's
+
+    outpath is a top_level data directory e.g. "raw_sequence_data" inside which
+    each item of a techincal replciate will have a dir named by the source_mat_id
     """
     pp = []
     for source_mat_id in pair:

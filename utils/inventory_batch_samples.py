@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import os
 import logging as log
 from pathlib import Path
 import pandas as pd
@@ -20,10 +21,14 @@ SEDIMENTS_MGF_PATH = (
     "https://docs.google.com/spreadsheets/d/"
     "1j9tRRsRCcyViDMTB1X7lx8POY1P5bV7UijxKKSebZAM/gviz/tq?tqx=out:csv&sheet=SEDIMENTS"
 )
+# Ouch needed for relative imports in other scripts
+ROCRATE_REPO_NAME = "analysis-results-cluster-01-crate"
+abs_path_of_current_script = Path(__file__).resolve().parent.parent
+def path_to_rocrate_repo(base_path):
+    return Path(base_path, ROCRATE_REPO_NAME)
+ROCRATE_REPO = path_to_rocrate_repo(abs_path_of_current_script)
 
-ROCRATE_REPO = "../analysis-results-cluster-01-crate"
-
-def parse_sheet(sheet, debug=False):
+def parse_sheet(sheet, repo_path=ROCRATE_REPO, debug=False):
     """
     Given an env_package name, e.g. either "sediments" or "filters",
     return a tuple of dictionaries for "found" or "missing" ro-crates with
@@ -44,26 +49,29 @@ def parse_sheet(sheet, debug=False):
             )
     """
 
-    # Because HCMR has another - in it
-    # >>> s.rsplit("-", 2) = ['EMOBON_HCMR-1_Wa_5', 'ro', 'crate']
-    ro_crate_names = [
-        d.name.rsplit("-", 2)[0] for d in Path(ROCRATE_REPO).iterdir()
-        if d.is_dir() and not d.name.startswith(".")
-    ]
     
-    log.debug(f"Found {len(ro_crate_names)} ro-crates in {ROCRATE_REPO}")
-    for d in ro_crate_names:
-        log.debug(d)
     if sheet == "filters":
         sheet_path = FILTERS_MGF_PATH
         # DBB_AAAOOSDA_4_1_HMGW5DSX3.UDI226
         name_index = -1
+        abbrev = "Wa"
     if sheet == "sediments":
         sheet_path = SEDIMENTS_MGF_PATH
         # DBH_AAAAOSDA_1_1_HWLTKDRXY.UDI235_clean.fastq.gz
         name_index = -2
+        abbrev = "So"
+
+    # Because HCMR has another - in it
+    # >>> s.rsplit("-", 2) = ['EMOBON_HCMR-1_Wa_5', 'ro', 'crate']
+    all_ro_crate_names = [
+        d.name.rsplit("-", 2)[0] for d in Path(ROCRATE_REPO).iterdir()
+        if d.is_dir() and not d.name.startswith(".")
+    ]
+    ro_crate_names = [n for n in all_ro_crate_names if abbrev in n]
+    log.debug(f"Found {len(ro_crate_names)} ro-crates in {ROCRATE_REPO}")
+    for d in ro_crate_names:
+        log.debug(d)
         
-    # Filters
     log.info(f"Doing {sheet}")
     data = pd.read_csv(sheet_path, encoding='iso-8859-1')
     
@@ -86,11 +94,13 @@ def parse_sheet(sheet, debug=False):
             if source_mat_id in ro_crate_names:
                 found.append((source_mat_id, ref_code, run_id))
                 log.debug(f"{source_mat_id} found")
+                log.debug(f"Removing {source_mat_id}")
+                ro_crate_names.remove(source_mat_id)
             else:
                 log.debug(f"{source_mat_id} missing")
                 missing.append((source_mat_id, ref_code, run_id))
 
-    log.debug(f"Missing {len(missing)}")
+    log.info(f"Missing {len(missing)}")
     for n in missing:
         log.debug(f"{n[0]}\t{n[1]}\t{n[2]}")
     log.debug(f"Found {len(found)}")
@@ -113,7 +123,12 @@ def parse_sheet(sheet, debug=False):
         log.debug(f"Missing {station}")
         for record in missingd[station]:
             log.debug(f"{record[0]}\t {record[1]}\t {record[2]}")
-    return foundd, missingd
+    if len(ro_crate_names) == 0:
+        log.info("All ro-crates accounted for")
+    else:
+        for ro_crate in ro_crate_names:
+            log.info(f"RO-crate present but sample not found: {ro_crate}")
+    return foundd, missingd,
 
 
 def main(debug=False):
