@@ -219,7 +219,7 @@ def _download_data_files(paths, outpath):
 
     local_paths = []
     for path in paths:
-        if not already_exists():
+        if not already_exists:
             p = Path(DATA_ARCHIVE, path)
             scp_command = ["scp", "-q", p, outpath]
             log.debug(f"scp command: {scp_command}")
