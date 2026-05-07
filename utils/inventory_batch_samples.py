@@ -23,6 +23,7 @@ SEDIMENTS_MGF_PATH = (
 
 ROCRATE_REPO = "../analysis-results-cluster-01-crate"
 
+
 def parse_sheet(sheet, debug=False):
     """
     Given an env_package name, e.g. either "sediments" or "filters",
@@ -31,7 +32,7 @@ def parse_sheet(sheet, debug=False):
 
     Found: ro-crate exists for that sequenced sample
     Missing: ro-crate does not exist for that sequenced sample
-    
+
     Return: (
             # Found
             {station: ((source_mat_id, ref_code, run_id), etc...),
@@ -47,11 +48,12 @@ def parse_sheet(sheet, debug=False):
     # Because HCMR has another - in it
     # >>> s.rsplit("-", 2) = ['EMOBON_HCMR-1_Wa_5', 'ro', 'crate']
     ro_crate_names = [
-        d.name.rsplit("-", 2)[0] for d in Path(ROCRATE_REPO).iterdir()
+        d.name.rsplit("-", 2)[0]
+        for d in Path(ROCRATE_REPO).iterdir()
         if d.is_dir() and not d.name.startswith(".")
     ]
-    
-    log.debug(f"Found {len(ro_crate_names)} ro-crates in {ROCRATE_REPO}")
+
+    log.info(f"Found {len(ro_crate_names)} ro-crates in {ROCRATE_REPO}")
     for d in ro_crate_names:
         log.debug(d)
     if sheet == "filters":
@@ -62,27 +64,34 @@ def parse_sheet(sheet, debug=False):
         sheet_path = SEDIMENTS_MGF_PATH
         # DBH_AAAAOSDA_1_1_HWLTKDRXY.UDI235_clean.fastq.gz
         name_index = -2
-        
+
     # Filters
     log.info(f"Doing {sheet}")
-    data = pd.read_csv(sheet_path, encoding='iso-8859-1')
-    
+    data = pd.read_csv(sheet_path, encoding="iso-8859-1")
+
     # Check batch numbers
     count = 0
-    for row in data[["Batch Number", "ref_code", "Forward Read Filename"]].values.tolist():
-        if row[0] in [1.0, 2.0]:
+    for row in data[
+        ["Batch Number", "ref_code", "Forward Read Filename"]
+    ].values.tolist():
+        if str(row[0]) in ["1", "2", "3", "3.0"]:
             log.debug(f"{row[0]} : {row[1]} = {row[2]}")
             count += 1
-    log.debug(f"Final count: {count} in {sheet}")
+    log.info(f"Final count: {count} in {sheet}")
 
     # Check source_mat_id
     missing = []
     found = []
-    for row in data[["Batch Number", "ref_code", "Forward Read Filename"]].values.tolist():
-        if row[0] in [1.0, 2.0]:
+    for row in data[
+        ["Batch Number", "ref_code", "Forward Read Filename"]
+    ].values.tolist():
+        if str(row[0]) in ["1", "2", "3", "3.0"]:
             run_id = row[2].split("_")[name_index]
             ref_code, source_mat_id = get_refcode_and_source_mat_id_from_run_id(run_id)
-            log.debug(f"batch {row[0]} : run_id {run_id} : ref_code {ref_code} : {source_mat_id}")
+            print(f"{ref_code}\t{source_mat_id}\t{run_id}")
+            log.debug(
+                f"batch {row[0]} : run_id {run_id} : ref_code {ref_code} : {source_mat_id}"
+            )
             if source_mat_id in ro_crate_names:
                 found.append((source_mat_id, ref_code, run_id))
                 log.debug(f"{source_mat_id} found")
@@ -99,11 +108,11 @@ def parse_sheet(sheet, debug=False):
 
     foundd = {}
     for n in found:
-        station = n[0].split('_')[1]
+        station = n[0].split("_")[1]
         foundd[station] = foundd.get(station, []) + [(n[0], n[1], n[2])]
     missingd = {}
     for n in missing:
-        station = n[0].split('_')[1]
+        station = n[0].split("_")[1]
         missingd[station] = missingd.get(station, []) + [(n[0], n[1], n[2])]
     for station in foundd:
         log.debug(f"Found {station}")
@@ -127,11 +136,10 @@ def main(debug=False):
     else:
         log_level = log.INFO
     log.basicConfig(format="\t%(levelname)s: %(message)s", level=log_level)
-   
-    for sheet in ["filters", "sediments"]: 
+
+    for sheet in ["filters", "sediments"]:
         parse_sheet(sheet)
-    
+
 
 if __name__ == "__main__":
-    main()
-
+    main(debug=False)
