@@ -98,7 +98,12 @@ def parse_sheet(sheet, repo_path=ROCRATE_REPO, debug=False):
         if str(row[0]) in ["1", "2", "3", "3.0"]:
             run_id = row[2].split("_")[name_index]
             ref_code, source_mat_id = get_refcode_and_source_mat_id_from_run_id(run_id)
-            print(f"{ref_code}\t{source_mat_id}\t{run_id}")
+            #log.debug(f"{ref_code}\t{source_mat_id}\t{run_id}")
+
+            # run_id maybe missing entirely from sheets
+            if not ref_code:
+                continue
+    
             log.debug(
                 f"batch {row[0]} : run_id {run_id} : ref_code {ref_code} : {source_mat_id}"
             )

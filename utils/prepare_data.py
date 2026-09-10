@@ -31,8 +31,8 @@ FILE_PATTERNS = [
     "final.contigs.fa",
 ]
 
-# RO_CRATE_REPO_PATH = "../analysis-results-cluster-01-crate"
-RO_CRATE_REPO_PATH = "../analysis-results-cluster-02-crate"
+RO_CRATE_REPO_PATH = "../analysis-results-cluster-01-crate"
+#RO_CRATE_REPO_PATH = "../analysis-results-cluster-02-crate"
 
 def get_existing_rorates():
     """Return a list of existing ro-crates"""

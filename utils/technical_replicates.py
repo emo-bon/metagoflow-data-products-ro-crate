@@ -53,7 +53,8 @@ BATCH3_RUN_INFO_PATH = (
     "shipment/batch-003-0/run-information-batch-003.csv"
 )
 # Path to sequence data archive
-DATA_ARCHIVE = "ceta-storage:/mnt/storage-data-pools/emo-bon-sequencing-data"
+#DATA_ARCHIVE = "ceta-storage:/mnt/storage-data-pools/emo-bon-sequencing-data"
+DATA_ARCHIVE = "/usr/local/scratch/emo-bon-geneoscope-data"
 
 BROKEN_REPLICATE_PAIRS = [
     ("EMOBON_BPNS_So_5", "EMOBON_BPNS_So_6"),
@@ -124,9 +125,17 @@ def get_technical_replicates(observatory_name, env_package):
         sheet_env_name = "water_column"
     try:
         samples = pd.read_csv(observatory_sheet)
+        log.info("Found transformed sheet")
     except urllib.error.HTTPError:
-        log.info(f"{observatory_name} {env_package} : missing - {observatory_sheet}")
-        return None
+        #Try raw sheet
+        observatory_sheet = observatory_sheet.replace("transformed", "raw")
+        try:
+            samples = pd.read_csv(observatory_sheet)
+            log.info("Found raw sheet")
+        except urllib.error.HTTPError:
+            log.info(f"{observatory_name} {env_package}: missing - {observatory_sheet}")
+            log.info("Missing 'transformed' and 'raw' sheets")
+            return None
     #samples = df.dropna(how='all')
     if env_package == "sediments":
         groups = _find_ss_grouped_replicates(samples)
@@ -202,7 +211,7 @@ def _get_raw_sequence_file_names(source_mat_id):
         env_package_upper, run, fname) for fname in filenames]
 
 
-def _download_data_files(paths, outpath):
+def _download_data_files_scp(paths, outpath):
     """
     SCP in a subprocess seems easiest
     
@@ -231,6 +240,36 @@ def _download_data_files(paths, outpath):
                 log.error(f"Error downloading file: {e}")
         local_paths.append(Path(outpath, path.name))
     return local_paths
+
+def _download_data_files_local(paths, outpath):
+    """
+    Raw sequence data files are on the local machine
+    
+    outdir is a Path() to a directory named for the source_mat_id
+    """
+    # Check to see if the raw seq files are already present in the source_mat_id
+    # directory
+    already_exists = False
+    try:
+        outpath.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        log.info(f"Directory '{outpath}' already exists.")
+        already_exists = True
+
+    local_paths = []
+    for path in paths:
+        if not already_exists:
+            p = Path(DATA_ARCHIVE, path)
+            cp_command = ["cp", p, outpath]
+            log.debug(f"cp command: {cp_command}")
+            log.info(f"Downloading: {p.name}")
+            try:
+                subprocess.run(cp_command, check=True)
+                log.debug(f"File downloaded successfully to {outpath}")
+            except subprocess.CalledProcessError as e:
+                log.error(f"Error downloading file: {e}")
+        local_paths.append(Path(outpath, path.name))
+    return local_paths
     
 
 def download_raw_sequences_of_replicate_pair(pair, outpath):
@@ -244,7 +283,11 @@ def download_raw_sequences_of_replicate_pair(pair, outpath):
     pp = []
     for source_mat_id in pair:
         paths = _get_raw_sequence_file_names(source_mat_id)
-        lps = _download_data_files(paths, Path(outpath, source_mat_id))
+
+        # If raw data are on a remote machine:
+        #lps = _download_data_files_scp(paths, Path(outpath, source_mat_id))
+
+        lps = _download_data_files_local(paths, Path(outpath, source_mat_id))
         for lp in lps:
             log.debug(f"Local file: {lp}")
         pp.append(lps)
