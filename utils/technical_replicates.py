@@ -228,8 +228,9 @@ def _download_data_files_scp(paths, outpath):
 
     local_paths = []
     for path in paths:
+        p = Path(DATA_ARCHIVE, path)
+        # Data directory does not exist download files
         if not already_exists:
-            p = Path(DATA_ARCHIVE, path)
             scp_command = ["scp", "-q", p, outpath]
             log.debug(f"scp command: {scp_command}")
             log.info(f"Downloading: {p.name}")
@@ -238,6 +239,13 @@ def _download_data_files_scp(paths, outpath):
                 log.debug(f"File downloaded successfully to {outpath}")
             except subprocess.CalledProcessError as e:
                 log.error(f"Error downloading file: {e}")
+        else:
+            # Data directory exsits, assert files exist
+            if not p.is_file():
+                log.error(f"Data directory {outpath}, but data file {p} not found")
+                sys.exit()
+            else:
+                log.info(f"Found {p} in data directory {outpath}... continuing")
         local_paths.append(Path(outpath, path.name))
     return local_paths
 
@@ -258,16 +266,23 @@ def _download_data_files_local(paths, outpath):
 
     local_paths = []
     for path in paths:
+        p = Path(DATA_ARCHIVE, path)
         if not already_exists:
-            p = Path(DATA_ARCHIVE, path)
             cp_command = ["cp", p, outpath]
             log.debug(f"cp command: {cp_command}")
             log.info(f"Downloading: {p.name}")
             try:
                 subprocess.run(cp_command, check=True)
-                log.debug(f"File downloaded successfully to {outpath}")
+                log.debug(f"File copied successfully to {outpath}")
             except subprocess.CalledProcessError as e:
-                log.error(f"Error downloading file: {e}")
+                log.error(f"Error copying file: {e}")
+        else:
+            # Data directory exsits, assert files exist
+            if not p.is_file():
+                log.error(f"Data directory {outpath}, but data file {p} not found")
+                sys.exit()
+            else:
+                log.info(f"Found {p} in data directory {outpath}... continuing")
         local_paths.append(Path(outpath, path.name))
     return local_paths
     
