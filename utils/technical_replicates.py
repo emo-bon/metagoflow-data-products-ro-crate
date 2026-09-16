@@ -242,10 +242,10 @@ def _download_data_files_scp(paths, outpath):
         else:
             # Data directory exsits, assert files exist
             if not p.is_file():
-                log.error(f"Data directory {outpath}, but data file {p} not found")
+                log.error(f"Data directory {outpath}, but data file {path} not found")
                 sys.exit()
             else:
-                log.info(f"Found {p} in data directory {outpath}... continuing")
+                log.info(f"Found {path} in data directory {outpath}... continuing")
         local_paths.append(Path(outpath, path.name))
     return local_paths
 
@@ -279,10 +279,10 @@ def _download_data_files_local(paths, outpath):
         else:
             # Data directory exsits, assert files exist
             if not p.is_file():
-                log.error(f"Data directory {outpath}, but data file {p} not found")
+                log.error(f"Data directory {outpath}, but data file {path} not found")
                 sys.exit()
             else:
-                log.info(f"Found {p} in data directory {outpath}... continuing")
+                log.info(f"Found {path} in data directory {outpath}... continuing")
         local_paths.append(Path(outpath, path.name))
     return local_paths
     
